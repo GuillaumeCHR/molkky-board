@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import com.yogistudio.molkkyboard.BuildConfig
 import com.yogistudio.molkkyboard.R
 import com.yogistudio.molkkyboard.core.designsystem.brand.YogiStudioLogo
+import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 import com.yogistudio.molkkyboard.core.designsystem.component.MolkkyBoardLogotype
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 

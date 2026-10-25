@@ -3,9 +3,11 @@ package com.yogistudio.molkkyboard.core.data
 import com.yogistudio.molkkyboard.core.database.dao.GameDao
 import com.yogistudio.molkkyboard.core.database.entity.GameEntity
 import com.yogistudio.molkkyboard.core.database.entity.GameEventEntity
+import com.yogistudio.molkkyboard.core.database.entity.GamePlayerEntity
 import com.yogistudio.molkkyboard.core.database.entity.GameSetEntity
 import com.yogistudio.molkkyboard.core.database.entity.GameTeamEntity
 import com.yogistudio.molkkyboard.core.model.GameConfig
+import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.TeamLineup
 import com.yogistudio.molkkyboard.core.scoring.MatchConfig
@@ -77,6 +79,7 @@ class RoomGameRepository
                 ),
                 GameSetEntity(id, 0, json.encodeToString(game.lineup), now),
                 game.teams.map { GameTeamEntity(id, it.id.value, it.name, it.colorIndex, it.emblem, it.memberKey) },
+                game.players.map { GamePlayerEntity(id, it.id.value, it.name, it.profileId) },
             )
             return id
         }
@@ -86,8 +89,9 @@ class RoomGameRepository
                 dao.observeGame(gameId),
                 dao.observeSets(gameId),
                 dao.observeTeams(gameId),
+                dao.observePlayers(gameId),
                 dao.observeEvents(gameId),
-            ) { game, sets, teams, events ->
+            ) { game, sets, teams, players, events ->
                 game ?: return@combine null
                 val config = json.decodeFromString<GameConfig>(game.configJson)
                 val bySet = events.groupBy { it.setIndex }
@@ -110,6 +114,7 @@ class RoomGameRepository
                             GameSetSnapshot(set.setIndex, lineup, log, replay(config, lineup, log).getOrThrow())
                         },
                     place = game.place,
+                    players = players.map { GamePlayer(PlayerId(it.playerId), it.name, it.profileId) },
                 )
             }
 

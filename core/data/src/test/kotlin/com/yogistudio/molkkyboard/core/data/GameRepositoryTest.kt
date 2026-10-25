@@ -52,6 +52,7 @@ class GameRepositoryTest {
                     GameTeam(TeamId("A"), "Alice", 0, memberKey = memberKey(listOf(alice))),
                     GameTeam(TeamId("B"), "Bruno", 1, memberKey = memberKey(listOf(bruno))),
                 ),
+            players = listOf(GamePlayer(alice, "Alice"), GamePlayer(bruno, "Bruno")),
         )
 
     private fun open(name: String? = null): MolkkyBoardDatabase =
@@ -87,12 +88,16 @@ class GameRepositoryTest {
             repository.observe(id).test {
                 val created = awaitItem()!!
                 assertEquals(listOf("Alice", "Bruno"), created.teams.map { it.name })
+                assertEquals("Alice", created.playerName(alice))
+                assertEquals("inconnu", created.playerName(PlayerId("inconnu")))
                 assertEquals(TeamId("A"), created.currentSet.replay.state.turn)
                 repository.append(id, pins(7))
+                // Plusieurs tables changent dans la transaction : on attend l'état final.
+                var item = awaitItem()!!
+                while (item.currentSet.log.isEmpty()) item = awaitItem()!!
                 assertEquals(
                     7,
-                    awaitItem()!!
-                        .currentSet.replay.state
+                    item.currentSet.replay.state
                         .team(TeamId("A"))!!
                         .score,
                 )

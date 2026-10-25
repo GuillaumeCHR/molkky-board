@@ -10,13 +10,11 @@ import androidx.compose.ui.res.stringResource
 import com.yogistudio.molkkyboard.R
 import com.yogistudio.molkkyboard.core.designsystem.catalog.DesignSystemCatalog
 import com.yogistudio.molkkyboard.core.designsystem.catalog.GameScreenMockup
+import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 
 // Build debug : la maquette de jeu et la vitrine du design system (source set debug du design system).
 
 internal const val SHOWCASE_AVAILABLE = true
-
-@Composable
-internal fun GamePreviewContent() = GameScreenMockup()
 
 @Composable
 internal fun ShowcaseScreen(onBack: () -> Unit) {

@@ -6,6 +6,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.yogistudio.molkkyboard.core.database.entity.GameEntity
 import com.yogistudio.molkkyboard.core.database.entity.GameEventEntity
+import com.yogistudio.molkkyboard.core.database.entity.GamePlayerEntity
 import com.yogistudio.molkkyboard.core.database.entity.GameSetEntity
 import com.yogistudio.molkkyboard.core.database.entity.GameTeamEntity
 import kotlinx.coroutines.flow.Flow
@@ -21,12 +22,24 @@ interface GameDao {
     @Insert
     suspend fun insertTeams(teams: List<GameTeamEntity>)
 
+    @Insert
+    suspend fun insertPlayers(players: List<GamePlayerEntity>)
+
     @Transaction
-    suspend fun createGame(game: GameEntity, firstSet: GameSetEntity, teams: List<GameTeamEntity>) {
+    suspend fun createGame(
+        game: GameEntity,
+        firstSet: GameSetEntity,
+        teams: List<GameTeamEntity>,
+        players: List<GamePlayerEntity> = emptyList(),
+    ) {
         insertGame(game)
         insertSet(firstSet)
         insertTeams(teams)
+        insertPlayers(players)
     }
+
+    @Query("SELECT * FROM game_player WHERE gameId = :gameId")
+    fun observePlayers(gameId: String): Flow<List<GamePlayerEntity>>
 
     @Query("SELECT * FROM game WHERE id = :id")
     fun observeGame(id: String): Flow<GameEntity?>

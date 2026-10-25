@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="game_title">Partie</string>
+    <string name="game_undo">Annuler le dernier lancer</string>
+    <string name="game_menu">Menu de la partie</string>
+    <string name="game_menu_log">Déroulé de la partie</string>
+    <string name="game_menu_players">Gérer les joueurs</string>
+    <string name="game_menu_rules">Règles</string>
+    <string name="game_menu_abandon">Abandonner la partie</string>
+    <string name="game_coming_soon">Bientôt disponible</string>
+    <string name="game_miss">Raté</string>
+    <string name="game_validate">Valider</string>
+    <string name="game_switch_to_quick">Saisie rapide</string>
+    <string name="game_switch_to_pins">Quilles</string>
+    <string name="game_hint_pins">Touchez les quilles tombées</string>
+    <string name="game_hint_quick">Choisissez la valeur du lancer</string>
+    <string name="game_preview_points">+%1$d → %2$d</string>
+    <string name="game_preview_miss">Raté · %1$d/%2$d</string>
+    <string name="game_preview_elimination">Raté · éliminé !</string>
+    <string name="game_preview_overshoot">+%1$d → %2$d · dépassement</string>
+    <string name="game_preview_win">+%1$d → %2$d · victoire !</string>
+    <string name="game_validated">%1$s : %2$s</string>
+    <string name="game_validated_miss">raté</string>
+    <string name="game_validated_points">+%1$d</string>
+    <string name="game_undo_action">Annuler</string>
+    <string name="game_eliminated">%1$s est éliminé</string>
+    <string name="game_overshoot_title">Aïe !</string>
+    <string name="game_overshoot_subtitle">Retour à %1$d</string>
+    <string name="game_winner">Victoire de %1$s !</string>
+    <string name="game_ranking_line">%1$d. %2$s</string>
+    <string name="game_new_game">Nouvelle partie</string>
+    <string name="game_home">Accueil</string>
+    <string name="game_abandoned">Partie abandonnée</string>
+</resources>

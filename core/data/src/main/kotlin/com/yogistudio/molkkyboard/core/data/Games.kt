@@ -18,12 +18,20 @@ data class GameTeam(
     val memberKey: String,
 )
 
+/** Joueur d'une partie : son nom affiché et, s'il vient d'un profil local, l'identifiant de ce profil. */
+data class GamePlayer(
+    val id: PlayerId,
+    val name: String,
+    val profileId: String? = null,
+)
+
 /** Ce qu'il faut pour créer une partie : règles, composition de la 1re manche et apparence des équipes. */
 data class NewGame(
     val config: GameConfig,
     val matchConfig: MatchConfig,
     val lineup: List<TeamLineup>,
     val teams: List<GameTeam>,
+    val players: List<GamePlayer> = emptyList(),
     val place: String? = null,
 )
 
@@ -45,8 +53,16 @@ data class GameSnapshot(
     val teams: List<GameTeam>,
     val sets: List<GameSetSnapshot>,
     val place: String?,
+    val players: List<GamePlayer> = emptyList(),
 ) {
     val currentSet: GameSetSnapshot get() = sets.last()
+
+    private val playerNames by lazy { players.associate { it.id to it.name } }
+    private val teamsById by lazy { teams.associateBy { it.id } }
+
+    fun playerName(id: PlayerId): String = playerNames[id] ?: id.value
+
+    fun team(id: TeamId): GameTeam? = teamsById[id]
 }
 
 /**

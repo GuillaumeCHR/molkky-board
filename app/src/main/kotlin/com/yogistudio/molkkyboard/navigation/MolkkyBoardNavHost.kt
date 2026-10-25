@@ -30,11 +30,12 @@ import com.yogistudio.molkkyboard.R
 import com.yogistudio.molkkyboard.core.designsystem.component.MolkkyBoardLogotype
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
+import com.yogistudio.molkkyboard.feature.game.GameScreen
 import com.yogistudio.molkkyboard.feature.intro.IntroScreen
+import com.yogistudio.molkkyboard.feature.setup.SetupScreen
 import com.yogistudio.molkkyboard.startup.StartupState
 import com.yogistudio.molkkyboard.ui.AboutScreen
 import com.yogistudio.molkkyboard.ui.EmptyStateScreen
-import com.yogistudio.molkkyboard.ui.GameScreen
 import com.yogistudio.molkkyboard.ui.HomeScreen
 import com.yogistudio.molkkyboard.ui.SettingsScreen
 import com.yogistudio.molkkyboard.ui.ShowcaseScreen
@@ -112,8 +113,9 @@ fun MolkkyBoardNavHost(startup: StartupState) {
                 }
                 composable<HomeRoute> {
                     HomeScreen(
-                        onNewGame = { navController.navigate(GameRoute) },
+                        onNewGame = { navController.navigate(SetupRoute) },
                         onJoin = { navController.navigate(JoinRoute) },
+                        onResume = { navController.navigate(GameRoute(it)) },
                         logotypeModifier = with(shared) { sharedLogotype(this@composable) },
                     )
                 }
@@ -129,7 +131,26 @@ fun MolkkyBoardNavHost(startup: StartupState) {
                 composable<JoinRoute> {
                     EmptyStateScreen(R.string.join_title, R.string.join_empty, onBack = navController::navigateUp)
                 }
-                composable<GameRoute> { GameScreen(onBack = navController::navigateUp) }
+                composable<SetupRoute> {
+                    SetupScreen(
+                        onBack = navController::navigateUp,
+                        onGameCreated = { id ->
+                            navController.navigate(GameRoute(id)) {
+                                popUpTo<SetupRoute> {
+                                    inclusive =
+                                        true
+                                }
+                            }
+                        },
+                    )
+                }
+                composable<GameRoute> {
+                    GameScreen(
+                        onBack = navController::navigateUp,
+                        onNewGame = { navController.navigate(SetupRoute) { popUpTo<HomeRoute>() } },
+                        onHome = { navController.popBackStack<HomeRoute>(inclusive = false) },
+                    )
+                }
                 composable<ShowcaseRoute> { ShowcaseScreen(onBack = navController::navigateUp) }
             }
         }

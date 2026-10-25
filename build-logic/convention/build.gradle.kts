@@ -32,6 +32,10 @@ gradlePlugin {
             id = "molkkyboard.android.compose"
             implementationClass = "AndroidComposeConventionPlugin"
         }
+        register("androidFeature") {
+            id = "molkkyboard.android.feature"
+            implementationClass = "AndroidFeatureConventionPlugin"
+        }
         register("hilt") {
             id = "molkkyboard.hilt"
             implementationClass = "HiltConventionPlugin"

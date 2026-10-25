@@ -34,6 +34,8 @@ dependencies {
     implementation(projects.core.scoring)
     implementation(projects.core.designsystem)
     implementation(projects.feature.intro)
+    implementation(projects.feature.setup)
+    implementation(projects.feature.game)
     implementation(projects.core.data)
 
     implementation(libs.androidx.core.ktx)

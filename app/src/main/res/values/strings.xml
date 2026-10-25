@@ -14,7 +14,10 @@
     <string name="home_new_game">Nouvelle partie</string>
     <string name="home_join">Rejoindre</string>
     <string name="home_no_game">Aucune partie en cours</string>
-    <string name="home_no_game_hint">Lancez une nouvelle partie : la saisie des lancers et le calcul des scores arrivent au prochain jalon.</string>
+    <string name="home_no_game_hint">Ajoutez les joueurs, lancez la partie : Molkky Board compte les points.</string>
+    <string name="home_ongoing">Partie en cours</string>
+    <string name="home_ongoing_turn">Au tour de %1$s</string>
+    <string name="home_resume">Reprendre</string>
 
     <!-- Écrans à venir -->
     <string name="coming_soon">Bientôt disponible</string>
@@ -23,14 +26,6 @@
     <string name="join_title">Rejoindre une partie</string>
     <string name="join_empty">Saisie du code à 6 caractères ou scan du QR code : arrive avec les parties partagées.</string>
 
-    <!-- Jeu -->
-    <string name="game_title">Partie</string>
-    <string name="game_menu">Menu de la partie</string>
-    <string name="game_menu_log">Déroulé de la partie</string>
-    <string name="game_menu_players">Gérer les joueurs</string>
-    <string name="game_menu_rules">Règles</string>
-    <string name="game_menu_abandon">Abandonner la partie</string>
-    <string name="game_preview_release">L\'écran de jeu arrive au prochain jalon.</string>
 
     <!-- Réglages -->
     <string name="settings_display">Affichage</string>

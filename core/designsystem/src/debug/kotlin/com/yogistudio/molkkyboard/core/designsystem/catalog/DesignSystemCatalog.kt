@@ -33,6 +33,7 @@ import com.yogistudio.molkkyboard.core.designsystem.component.BigActionKind
 import com.yogistudio.molkkyboard.core.designsystem.component.FitRollingNumber
 import com.yogistudio.molkkyboard.core.designsystem.component.MissIndicator
 import com.yogistudio.molkkyboard.core.designsystem.component.MolkkyBoardLogotype
+import com.yogistudio.molkkyboard.core.designsystem.component.PinGrid
 import com.yogistudio.molkkyboard.core.designsystem.component.PinView
 import com.yogistudio.molkkyboard.core.designsystem.component.PlayerChip
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPad
@@ -43,24 +44,6 @@ import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 
 // Catalogue de développement (source set debug, jamais livré) : textes d'exemple en dur, assumés.
-
-/** Formation de départ officielle, vue du lanceur (rangée du fond en haut). */
-internal val PIN_FORMATION = listOf(listOf(7, 9, 8), listOf(5, 11, 12, 6), listOf(3, 10, 4), listOf(1, 2))
-
-@Composable
-internal fun PinFormation(
-    knocked: Set<Int>,
-    onToggle: (Int, Boolean) -> Unit,
-    pinSize: androidx.compose.ui.unit.Dp = 64.dp,
-) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy((-14).dp)) {
-        PIN_FORMATION.forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                row.forEach { pin -> PinView(pin, pin in knocked, onToggle = { onToggle(pin, it) }, size = pinSize) }
-            }
-        }
-    }
-}
 
 @Composable
 private fun Section(title: String, content: @Composable () -> Unit) {
@@ -193,7 +176,12 @@ fun GameScreenMockup(modifier: Modifier = Modifier, quickMode: Boolean = false) 
             if (quickMode) {
                 QuickPad(gain, {}, QuickPadMode.PinCount, {})
             } else {
-                PinFormation(knocked, onToggle = { pin, down -> knocked = if (down) knocked + pin else knocked - pin })
+                PinGrid(knocked, onToggle = {
+                    pin,
+                    down,
+                    ->
+                    knocked = if (down) knocked + pin else knocked - pin
+                }, modifier = Modifier.height(300.dp))
             }
             Spacer(Modifier.height(4.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(MBDimens.Gap)) {

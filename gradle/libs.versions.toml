@@ -122,4 +122,5 @@ molkkyboard-android-application = { id = "molkkyboard.android.application", vers
 molkkyboard-android-library = { id = "molkkyboard.android.library", version = "unspecified" }
 molkkyboard-android-compose = { id = "molkkyboard.android.compose", version = "unspecified" }
 molkkyboard-hilt = { id = "molkkyboard.hilt", version = "unspecified" }
+molkkyboard-android-feature = { id = "molkkyboard.android.feature", version = "unspecified" }
 molkkyboard-jvm-library = { id = "molkkyboard.jvm.library", version = "unspecified" }

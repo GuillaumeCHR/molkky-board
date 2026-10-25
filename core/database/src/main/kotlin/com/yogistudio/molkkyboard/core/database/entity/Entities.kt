@@ -119,3 +119,23 @@ data class GameEventEntity(
         const val SYNC_LOCAL = "LOCAL"
     }
 }
+
+/** Joueur d'une partie : son nom affiché, et le profil local dont il vient (absent pour un invité). */
+@Entity(
+    tableName = "game_player",
+    primaryKeys = ["gameId", "playerId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = GameEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["gameId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+)
+data class GamePlayerEntity(
+    val gameId: String,
+    val playerId: String,
+    val name: String,
+    val profileId: String?,
+)

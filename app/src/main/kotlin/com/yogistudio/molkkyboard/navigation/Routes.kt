@@ -27,7 +27,13 @@ data object AboutRoute
 data object JoinRoute
 
 @Serializable
-data object GameRoute
+data object SetupRoute
+
+/** Écran de jeu ; le nom du paramètre est lu par `GameViewModel` (`GAME_ID`). */
+@Serializable
+data class GameRoute(
+    val gameId: String,
+)
 
 /** Vitrine du design system (build debug uniquement). */
 @Serializable
