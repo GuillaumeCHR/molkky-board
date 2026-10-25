@@ -51,7 +51,7 @@ sequenceDiagram
 
 ## Environnement de développement
 
-OpenJDK 21 présent. À installer : Android command-line tools (`platform-tools`, `platforms;android-<dernière API>`, `build-tools`) avant J0 ; CLI Supabase + Docker au J6.
+Vérifié le 2026-10-25 : OpenJDK 21, Android SDK (`android-37.0`, build-tools 36), Android CLI, émulateur `Medium_Phone_API_37.0`. Gradle 9.8.2 (wrapper), AGP 9.4.1, Kotlin 2.4.21. CLI Supabase + Docker à installer au J6.
 
 ## 1. Socle — base suggérée conservée
 - Kotlin + Compose + Material 3, une seule Activity, Navigation Compose à routes typées, MVVM/UDF
@@ -76,7 +76,7 @@ core:datastore          DataStore Preferences (réglages, préréglage de règle
 core:network            [Phase 4] supabase-kt + Ktor OkHttp, DTO
 core:data               repositories (source de vérité = Room) + SyncEngine [Phase 4]
 core:testing            fakes, règles de test, données de test
-feature:home | setup | game | summary | history | stats | halloffame | players | settings
+feature:intro | home | setup | game | summary | history | stats | halloffame | players | settings
 feature:auth | join | groups   [Phase 4]
 ```
 Règles de dépendance : `feature:*` → `core:data`, `core:ui`, `core:designsystem` uniquement ; les
@@ -197,7 +197,7 @@ exposition que Google) ; l'auto-hébergement est la porte de sortie.
 | J2 | Design system | thème, tokens, polices, PinView, ScoreRing, PlayerChip, BigActionButton, `@Preview` clair/sombre/« Plein soleil » | **captures Roborazzi** (demandé) |
 | J3 | Données locales | Room, DataStore, repositories, tests DAO (Robolectric) | — |
 | J4 | Jouer | feature:setup (joueurs, équipes nommées avec couleur, emblème et nom au hasard 🎲, reprise d'une équipe existante, ordre par glisser-déposer, règles avancées) et feature:game (grille, aperçu « +7 → 38 », Raté/Valider, undo + snackbar, haptique, keepScreenOn) | démo APK |
-| J5 | Fin du MVP | animation de victoire (Canvas, version réduite), feature:summary (classement, **revanche** : mêmes équipes, ordre inversé), history (déroulé des lancers), stats (Vico), `core:stats` + **Hall of Fame local** (classements testés), players, match en plusieurs manches et Mölkkout. **Fin de la Phase 3** | APK |
+| J5 | Fin du MVP | animation de victoire (Canvas, version réduite), feature:summary (classement, **revanche** : mêmes équipes, ordre inversé), history (déroulé des lancers), stats (Vico), `core:stats` + **Hall of Fame local** (classements testés), players, match en plusieurs manches et Mölkkout, **écran d'intro Yogi Studio** (feature:intro, Canvas, chargement en parallèle) et « À propos ». **Fin de la Phase 3** | APK |
 | J6 | Backend | projet Supabase UE, migrations, RLS, RPC, tests pgTAP | revue du SQL / de RLS |
 | J7 | Comptes | feature:auth (OTP, mot de passe, Google, anonyme), profil, suppression du compte | — |
 | J8 | Partage | création partagée, code et QR (code seul), SyncEngine, Realtime, rattrapage hors ligne, gestion des conflits | test à deux téléphones |
@@ -281,7 +281,7 @@ Le backlog (`CLAUDE.md`) ne démarre qu'après le MVP. Dès maintenant, quelques
 - ~~Liens d'invitation~~ : reportés après la v1 ; on rejoint par code ou QR contenant le code (décidé le 2026-10-25).
 - ~~Région Supabase~~ : **Paris (`eu-west-3`)** (décidé le 2026-10-25).
 - **Durée de conservation** des parties partagées (J9).
-- Fin de la Phase 5 tronquée dans le prompt d'origine.
+- ~~Fin de la Phase 5~~ : configuration du build release signé (prompt complété le 2026-10-25).
 
 ## Vérification par jalon
 

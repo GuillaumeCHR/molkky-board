@@ -1,0 +1,21 @@
+# Surcharges de la configuration par défaut de detekt (buildUponDefaultConfig = true).
+naming:
+  FunctionNaming:
+    # Les fonctions @Composable commencent par une majuscule.
+    ignoreAnnotated: ['Composable']
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][A-Za-z0-9_]*'
+complexity:
+  LongParameterList:
+    functionThreshold: 8
+    ignoreDefaultParameters: true
+    ignoreAnnotated: ['Composable']
+  LongMethod:
+    ignoreAnnotated: ['Composable']
+style:
+  MagicNumber:
+    # Les valeurs du jeu (12 quilles, 50 points, 3 ratés…) sont lisibles telles quelles dans les tests.
+    excludes: ['**/test/**', '**/*Test.kt']
+    ignoreAnnotated: ['Composable', 'Preview']
+  UnusedPrivateMember:
+    ignoreAnnotated: ['Preview']
