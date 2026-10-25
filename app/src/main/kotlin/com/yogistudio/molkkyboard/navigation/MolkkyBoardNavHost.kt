@@ -30,8 +30,8 @@ import com.yogistudio.molkkyboard.R
 import com.yogistudio.molkkyboard.core.designsystem.component.MolkkyBoardLogotype
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
-import com.yogistudio.molkkyboard.feature.intro.IntroLoadState
 import com.yogistudio.molkkyboard.feature.intro.IntroScreen
+import com.yogistudio.molkkyboard.startup.StartupState
 import com.yogistudio.molkkyboard.ui.AboutScreen
 import com.yogistudio.molkkyboard.ui.EmptyStateScreen
 import com.yogistudio.molkkyboard.ui.GameScreen
@@ -54,11 +54,7 @@ private enum class TopLevel(
 }
 
 @Composable
-fun MolkkyBoardNavHost(
-    loadState: IntroLoadState,
-    sunlight: Boolean,
-    onSunlightChange: (Boolean) -> Unit,
-) {
+fun MolkkyBoardNavHost(startup: StartupState) {
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val destination = backStack?.destination
@@ -106,7 +102,8 @@ fun MolkkyBoardNavHost(
                 composable<IntroRoute> {
                     val logotype = with(shared) { sharedLogotype(this@composable) }
                     IntroScreen(
-                        loadState = loadState,
+                        loadState = startup.load,
+                        short = startup.shortIntro == true,
                         onFinished = {
                             navController.navigate(HomeRoute) { popUpTo<IntroRoute> { inclusive = true } }
                         },
@@ -124,8 +121,6 @@ fun MolkkyBoardNavHost(
                 composable<HallOfFameRoute> { EmptyStateScreen(R.string.nav_hall_of_fame, R.string.hall_of_fame_empty) }
                 composable<SettingsRoute> {
                     SettingsScreen(
-                        sunlight = sunlight,
-                        onSunlightChange = onSunlightChange,
                         onAbout = { navController.navigate(AboutRoute) },
                         onShowcase = { navController.navigate(ShowcaseRoute) },
                     )

@@ -225,8 +225,8 @@ exposition que Google) ; l'auto-hébergement est la porte de sortie.
 | J0 | Squelette ✅ | build-logic, catalogue, CI, lint | — |
 | J1 | Moteur ✅ | `core:model`, `core:scoring`, 427 tests | rapport de tests ✅ |
 | J2 | Design system ✅ | thème, composants, QuickPad, grandes polices, FitToScreen ; navigation (barre du bas) ; intro Yogi Studio et icône | captures ✅ (intro : timings à valider) |
-| J1b | Moteur v2 | attribution par position, saisie rapide, `Delete`, joueurs en cours de partie, `modifiedAfterFinish`, ordre de la manche suivante, stratégie `ScoringRules` (§ 15 de la spec) | rapport de tests |
-| J3 | Données locales | Room (journal écrit à chaque événement, reprise automatique + test instrumenté), DataStore (réglages, **sélecteur de langue**, compteur de lancements → intro courte), repositories | — |
+| J1b | Moteur v2 ✅ | attribution par position, saisie rapide, `Delete`, joueurs en cours de partie, `modifiedAfterFinish`, ordre de la manche suivante, stratégie `ScoringRules` (§ 15 de la spec) | rapport de tests |
+| J3 | Données locales ✅ | Room (journal écrit à chaque événement, reprise automatique + test instrumenté), DataStore (réglages, **sélecteur de langue**, compteur de lancements → intro courte), repositories | — |
 | J4 | Jouer | création de partie (profils avec avatar emoji/mascotte ou photo, équipes nommées 🎲, glisser-déposer, règles avancées, mode famille), écran de jeu adaptatif (quilles ou pavé rapide, « Valider » obligatoire, undo + snackbar, déroulé modifiable, gestion des joueurs, coach, règles consultables, haptique, shake/retour à 25, keepScreenOn), prise en main en 3–4 bulles (test < 30 s), captures à 1,0 / 1,5 / 2,0 | démo APK |
 | J5 | Fin de partie et mémoire | animation de victoire, fin de partie, revanche et ordre de la manche suivante, historique complet (suppression), stats (Vico), `core:stats` + Hall of Fame local, match et Mölkkout, notification de partie en cours, annonces vocales (TTS) | APK |
 | J6 | Partage social | moments détectés, vignettes (3 formats, 3–4 modèles), mini-vidéo et GIF, feuille de partage, vie privée (noms masquables, sans EXIF), tests de rendu et d'encodage | captures + vidéo |

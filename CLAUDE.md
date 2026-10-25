@@ -666,5 +666,12 @@ Priorités : **P2** = V2, **P3** = plus tard.
 - L'intro fonctionne bien sur le téléphone.
 - **L'écran de jeu doit tenir sur un seul écran, sans défilement** : composant `FitToScreen` (réduction homothétique si la place manque, taps et accessibilité compris). Au J4, l'écran de jeu sera aussi rendu adaptatif (grille de quilles dimensionnée selon la hauteur disponible), `FitToScreen` restant le filet de sécurité.
 
+### Données locales (J3 — 2026-10-25)
+- Modules `core:database` (Room v1, schémas exportés dans `core/database/schemas`), `core:datastore` (réglages), `core:data` (dépôts `GameRepository`, `SettingsRepository`).
+- Journal : chaque événement est validé par le moteur (`checkInput` ou rejeu) **avant** d'être écrit, dans une transaction courte ; un événement refusé n'est jamais écrit. L'état est recalculé par rejeu à chaque changement.
+- Reprise après mort du processus : testée en fermant puis rouvrant la base depuis son fichier (Robolectric). Le test instrumenté sur appareil viendra avec l'écran de jeu (J4).
+- Langue par application : `AppCompatActivity` + `AppCompatDelegate.setApplicationLocales`, `locales_config.xml` (fr, en) ; l'anglais affiche encore le français jusqu'à la traduction (J7).
+- Intro courte (≈ 1,6 s, impact puis logotype) au choix à partir du 2e lancement ; l'écran de démarrage système reste affiché le temps de lire les réglages.
+
 ### Conventions de code
 - Documentation et UI en français ; identifiants de code en anglais.

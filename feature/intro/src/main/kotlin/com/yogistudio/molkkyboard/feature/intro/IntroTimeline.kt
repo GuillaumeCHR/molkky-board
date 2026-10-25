@@ -25,6 +25,12 @@ internal object IntroTimeline {
     /** Fin des trajectoires précalculées des éclats. */
     const val SIMULATION_END = 2_600L
 
+    /** Version courte (réglage, à partir du 2e lancement) : on part de l'arrivée du mölkky… */
+    const val SHORT_START = 1_050L
+
+    /** … et, l'explosion passée, on saute directement au logotype (≈ 1,6 s au total). */
+    const val SHORT_JUMP = 1_900L
+
     /** Version « Réduire les animations » : simple fondu du logo Yogi Studio. */
     const val REDUCED_END = 1_000L
 }

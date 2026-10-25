@@ -179,7 +179,11 @@ Produis `docs/ARCHITECTURE.md` et un plan d'implémentation découpé en jalons.
 
 ## Phase 5 — Build
 - Génère un APK debug avec `./gradlew assembleDebug` et indique son chemin ;
-- Prépare la configuration d'un build release signé (keystore hors du dépôt, secrets non commités).
+- Prépare la configuration d'un build release signé (keystore hors du dépôt, secrets non commités) ;
+- Pour le Play Store, le livrable est un **Android App Bundle** (`./gradlew bundleRelease`) avec
+  **Play App Signing** : Google conserve la clé de signature, je garde la clé d'envoi (upload key).
+  Explique-moi où stocker et sauvegarder cette clé ;
+- Versionnement : `versionCode` incrémenté à chaque envoi, `versionName` en SemVer (1.0.0…).
 
 ---
 
@@ -275,7 +279,8 @@ généreuses. Ni skeuomorphisme ni texture bois réaliste : on évoque le bois p
 6. **Stats** : graphiques Vico, records personnels
 7. **Réglages** : mode de saisie, annonces vocales, sons, version courte de l'intro,
    revoir la prise en main, « Plein soleil », données (export, suppression)
-8. **À propos** : logotype Molkky Board, version, mention « Yogi Studio »
+8. **À propos** : logotype Molkky Board, version, mention « Yogi Studio », crédits (bibliothèques open source,
+   polices), liens vers la politique de confidentialité, les conditions d'utilisation et le site de l'app
 
 ### Mouvement et retours
 - Physique de ressort (`spring`) partout ; aucune animation linéaire
@@ -552,12 +557,108 @@ Priorités : **P2** = V2, **P3** = plus tard.
 - **P2 — Mode daltonien** : couleurs d'équipe doublées d'un motif ou d'un emblème
 - **P3 — Langues** : français, anglais, finnois
 
-### Publication
-- **P2 — Préparation Play Store** : vérification préalable du nom au regard de la marque « Mölkky »
-  (prévoir un nom de repli sans ce mot), icône adaptative avec variante monochrome, politique de confidentialité,
-  formulaire « Sécurité des données » (aucune donnée collectée en mode sans compte, aucune publicité),
-  captures générées à partir des tests Roborazzi
+### Modération
 - **P2 — Modération légère** des noms d'équipes et pseudos par l'organisateur du groupe
+
+---
+
+## Publication sur le Google Play Store
+Cette section décrit tout ce qu'il faut préparer pour publier Molkky Board. Le code et les
+documents doivent être prêts **avant** l'ouverture du test fermé. Les règles de Google évoluent :
+avant chaque étape, vérifie les exigences en vigueur dans l'aide Play Console et signale-moi tout écart
+avec cette section.
+
+### Décisions déjà prises
+- **Compte développeur personnel**, nom de développeur affiché : **Yogi Studio**
+  (frais uniques de 25 $, vérification d'identité faite par moi dans la Play Console)
+- Adresse e-mail de contact publique **dédiée** (pas mon adresse personnelle) : à me rappeler de créer
+- **Aucun revenu** : app gratuite, sans publicité, sans achat intégré, sans abonnement
+- Statut au sens du DSA européen : **non-commerçant**
+- **Public cible : adultes et adolescents, pas les enfants.** Tranches d'âge déclarées : 13 ans et plus
+  (à confirmer avec moi au moment du questionnaire). L'app n'entre donc pas dans le programme « Familles »
+
+### Conséquences de « pas destiné aux enfants »
+- La fiche du store et l'app ne doivent pas donner l'impression de cibler les enfants : visuels,
+  mascottes et textes de la fiche orientés « jeu entre amis et en famille », sans esthétique enfantine
+- Les mascottes d'avatar restent sobres et dans la direction « Nordic Bold »
+- Pas de collecte de date de naissance ; les conditions d'utilisation indiquent l'âge minimum
+- Le mode famille / handicap reste présenté comme une option d'équilibrage entre joueurs de niveaux différents
+
+### « Paye-moi un café »
+- Je souhaite éventuellement un lien de soutien volontaire dans l'écran « À propos » (crédits)
+- **À vérifier avant toute implémentation** : la politique de paiements de Google Play encadre les dons
+  et les liens vers des moyens de paiement externes. Résume-moi la règle en vigueur et propose l'option conforme
+- Option par défaut, sûre : **aucun lien de don dans l'app**. Le lien « Paye-moi un café » figure uniquement
+  sur le site web de l'app (voir plus bas), et l'écran « À propos » renvoie simplement vers ce site
+- Vérifie aussi si recevoir des dons change mon statut DSA (commerçant ou non) ou les informations
+  affichées publiquement sur ma fiche développeur, et préviens-moi
+
+### Site web minimal de l'app
+- Un dépôt **public** séparé `molkky-board-site` publié avec GitHub Pages (le dépôt du code reste privé ;
+  GitHub Pages n'est pas disponible gratuitement sur un dépôt privé), en français et en anglais :
+  - page d'accueil courte (présentation, captures, lien vers le Play Store) ;
+  - **politique de confidentialité** (URL exigée par le Play Store) ;
+  - **page de demande de suppression de compte et des données**, accessible sans réinstaller l'app
+    (exigence Google pour les apps qui proposent des comptes) ;
+  - conditions d'utilisation, avec l'âge minimum ;
+  - mentions « Yogi Studio » et, éventuellement, le lien de soutien
+- La politique de confidentialité décrit exactement ce que fait l'app : rien n'est collecté en mode
+  sans compte ; en mode compte, e-mail, pseudo et données de parties, hébergés dans l'UE (selon le
+  backend retenu), avec les durées de conservation et la procédure de suppression
+
+### Exigences techniques
+- Format **AAB** et Play App Signing (voir phase 5)
+- **targetSdk** au niveau exigé par Google au moment de l'envoi (Android 16 / API 36 minimum
+  pour les nouvelles apps depuis le 31 août 2026)
+- Suppression du compte **dans l'app** et **via le site web**
+- Icône adaptative avec variante monochrome
+- Permissions minimales, chacune justifiée : caméra (scan du QR code, et photo de joueur en option),
+  notifications (partie en cours), vibration. Pas d'accès aux contacts, pas de localisation
+
+### Fiche du Play Store (à préparer dans `docs/store/`, en français et en anglais)
+- Titre (30 caractères maximum), description courte (80), description longue (4 000)
+- Icône 512×512, image de présentation 1024×500
+- Au moins 4 captures d'écran téléphone, générées à partir des tests Roborazzi
+  (accueil, écran de jeu, fin de partie, Hall of Fame), éventuellement avec un bandeau de texte
+- Une vignette de partage d'exemple pour illustrer la fonction sociale
+
+### Déclarations dans la Play Console (prépare les réponses dans `docs/store/declarations.md`)
+- **Sécurité des données** : aucune donnée collectée ni partagée en mode sans compte ; en mode compte,
+  la liste exacte des données, leur finalité, le chiffrement en transit et la possibilité de suppression
+- **Classification du contenu** (questionnaire IARC)
+- **Public cible et contenu** : 13 ans et plus, pas d'attrait spécifique pour les enfants
+- **Publicités** : aucune
+- **Accès à l'app** : comment un testeur de Google peut tester les fonctions avec compte
+  (compte de démonstration dédié, sans données réelles)
+- **Statut DSA** : non-commerçant
+
+### Test fermé obligatoire (compte personnel)
+- Au moins **12 testeurs inscrits pendant 14 jours consécutifs**. Si leur nombre passe sous 12,
+  le compteur repart à zéro : viser 15 à 20 testeurs pour garder de la marge
+- Prépare un **kit testeurs** dans `docs/store/testeurs.md` : message d'invitation, marche à suivre pour
+  rejoindre le test, scénarios à jouer (partie solo, partie en équipes, partie multi-téléphones,
+  partage d'une vignette), et un formulaire simple de retour
+- Ajoute dans l'app (version de test uniquement) un bouton « Envoyer un retour » qui ouvre un e-mail
+  pré-rempli avec la version et le modèle de téléphone, sans autre donnée
+- Tiens un **journal des retours et des corrections** pendant le test : il servira à remplir le
+  questionnaire d'accès à la production demandé par Google à la fin des 14 jours
+
+### Marque
+- Avant l'envoi, vérifie la marque « Mölkky » (bases EUIPO et INPI) et dis-moi si le nom
+  « Molkky Board » présente un risque. Prépare un **nom de repli** sans le mot « Molkky »,
+  et assure-toi qu'un changement de nom ne demande de modifier que des chaînes et des visuels
+  (l'identifiant `com.yogistudio.molkkyboard`, lui, ne changera jamais)
+
+### Distribution avant le Play Store
+- Pendant le développement, l'app est installée via `adb` sur mes appareils
+- Google renforce la vérification des développeurs pour les apps installées hors Play Store
+  (déploiement mondial prévu en 2027). Pour distribuer l'APK à mes proches avant la publication,
+  évalue le **compte de distribution limitée** pour amateurs (jusqu'à 20 appareils, sans frais)
+  par rapport au test fermé du Play Store, qui reste la voie privilégiée
+
+### Checklist finale
+Génère `docs/store/CHECKLIST.md` reprenant tous les points de cette section, avec leur statut,
+et tiens-la à jour jusqu'à la publication.
 
 ---
 

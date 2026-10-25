@@ -11,6 +11,8 @@ naming:
 complexity:
   TooManyFunctions:
     thresholdInFiles: 20
+    # Les DAO Room regroupent naturellement de nombreuses requêtes.
+    thresholdInInterfaces: 25
   LongParameterList:
     functionThreshold: 8
     ignoreDefaultParameters: true

@@ -39,5 +39,10 @@ adb shell am start -n com.yogistudio.molkkyboard.debug/com.yogistudio.molkkyboar
 | `app` | Activity unique, navigation, injection |
 | `core:model` | types partagés (Kotlin pur) |
 | `core:scoring` | moteur de score : rejeu d'un journal d'événements (Kotlin pur) |
+| `core:designsystem` | thème Nordic Bold, composants, logotype, logo Yogi Studio |
+| `core:database` | Room : parties, manches, équipes, journal d'événements, profils |
+| `core:datastore` | réglages (DataStore) |
+| `core:data` | dépôts : parties (validation par le moteur, rejeu), réglages |
+| `feature:intro` | intro animée et écran de démarrage |
 
 Les versions de toutes les dépendances sont centralisées dans `gradle/libs.versions.toml`.

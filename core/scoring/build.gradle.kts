@@ -18,6 +18,8 @@ kover {
             excludes {
                 // Classes de données sérialisables : sans logique, leur code est généré par kotlinx-serialization.
                 annotatedBy("kotlinx.serialization.Serializable")
+                // Réglages utilisateur : testés avec DataStore (core:datastore), hors du périmètre du moteur.
+                classes("com.yogistudio.molkkyboard.core.model.UserSettings", "com.yogistudio.molkkyboard.core.model.InputMode")
             }
         }
         verify {
