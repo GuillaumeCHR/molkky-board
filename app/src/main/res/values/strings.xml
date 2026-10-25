@@ -2,4 +2,46 @@
 <resources>
     <string name="app_name">Molkky Board</string>
     <string name="placeholder_tagline">Le tableau de score du Mölkky</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Accueil</string>
+    <string name="nav_history">Historique</string>
+    <string name="nav_hall_of_fame">Hall of Fame</string>
+    <string name="nav_settings">Réglages</string>
+    <string name="nav_back">Retour</string>
+
+    <!-- Accueil -->
+    <string name="home_new_game">Nouvelle partie</string>
+    <string name="home_join">Rejoindre</string>
+    <string name="home_no_game">Aucune partie en cours</string>
+    <string name="home_no_game_hint">Lancez une nouvelle partie : la saisie des lancers et le calcul des scores arrivent au prochain jalon.</string>
+
+    <!-- Écrans à venir -->
+    <string name="coming_soon">Bientôt disponible</string>
+    <string name="history_empty">Vos parties terminées apparaîtront ici, avec leur déroulé.</string>
+    <string name="hall_of_fame_empty">Les records et les palmarès apparaîtront ici après vos premières parties.</string>
+    <string name="join_title">Rejoindre une partie</string>
+    <string name="join_empty">Saisie du code à 6 caractères ou scan du QR code : arrive avec les parties partagées.</string>
+
+    <!-- Jeu -->
+    <string name="game_title">Partie</string>
+    <string name="game_menu">Menu de la partie</string>
+    <string name="game_menu_log">Déroulé de la partie</string>
+    <string name="game_menu_players">Gérer les joueurs</string>
+    <string name="game_menu_rules">Règles</string>
+    <string name="game_menu_abandon">Abandonner la partie</string>
+    <string name="game_preview_release">L\'écran de jeu arrive au prochain jalon.</string>
+
+    <!-- Réglages -->
+    <string name="settings_display">Affichage</string>
+    <string name="settings_sunlight">Plein soleil</string>
+    <string name="settings_sunlight_hint">Contraste renforcé pour jouer en plein soleil</string>
+    <string name="settings_showcase">Vitrine du design system</string>
+    <string name="settings_showcase_hint">Build de développement uniquement</string>
+    <string name="settings_about">À propos</string>
+
+    <!-- À propos -->
+    <string name="about_version">Version %1$s</string>
+    <string name="about_publisher">Une application Yogi Studio</string>
+    <string name="about_privacy">Aucune publicité, aucun traceur. Sans compte, vos parties restent sur ce téléphone.</string>
 </resources>

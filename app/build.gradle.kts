@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.molkkyboard.android.application)
     alias(libs.plugins.molkkyboard.android.compose)
     alias(libs.plugins.molkkyboard.hilt)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -37,5 +38,7 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.timber)
 }

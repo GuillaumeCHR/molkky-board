@@ -39,6 +39,98 @@ object MBIcons {
         }
     }
 
+    val Home: ImageVector by lazy {
+        stroke("home") {
+            moveTo(3.5f, 11f)
+            lineTo(12f, 4f)
+            lineTo(20.5f, 11f)
+            moveTo(6f, 9.5f)
+            lineTo(6f, 20f)
+            lineTo(18f, 20f)
+            lineTo(18f, 9.5f)
+            moveTo(10f, 20f)
+            lineTo(10f, 14.5f)
+            lineTo(14f, 14.5f)
+            lineTo(14f, 20f)
+        }
+    }
+
+    val History: ImageVector by lazy {
+        stroke("history") {
+            circle(12f, 12f, 8.5f)
+            moveTo(12f, 7.5f)
+            lineTo(12f, 12f)
+            lineTo(15f, 14f)
+        }
+    }
+
+    val Trophy: ImageVector by lazy {
+        stroke("trophy") {
+            moveTo(7f, 4f)
+            lineTo(17f, 4f)
+            lineTo(17f, 9f)
+            curveTo(17f, 12f, 15f, 14f, 12f, 14f)
+            curveTo(9f, 14f, 7f, 12f, 7f, 9f)
+            close()
+            moveTo(7f, 6f)
+            lineTo(4.5f, 6f)
+            curveTo(4.5f, 8.5f, 5.5f, 10f, 7.5f, 10.5f)
+            moveTo(17f, 6f)
+            lineTo(19.5f, 6f)
+            curveTo(19.5f, 8.5f, 18.5f, 10f, 16.5f, 10.5f)
+            moveTo(12f, 14f)
+            lineTo(12f, 17.5f)
+            moveTo(8f, 20f)
+            lineTo(16f, 20f)
+            moveTo(9.5f, 17.5f)
+            lineTo(14.5f, 17.5f)
+        }
+    }
+
+    /** Réglages : trois curseurs. */
+    val Settings: ImageVector by lazy {
+        stroke("settings") {
+            listOf(6f to 9f, 12f to 15f, 18f to 8f).forEach { (y, x) ->
+                moveTo(4f, y)
+                lineTo(x - 2f, y)
+                moveTo(x + 2f, y)
+                lineTo(20f, y)
+                circle(x, y, 2f)
+            }
+        }
+    }
+
+    val More: ImageVector by lazy {
+        stroke("more") {
+            listOf(5.5f, 12f, 18.5f).forEach { circle(12f, it, 0.05f) }
+        }
+    }
+
+    val Back: ImageVector by lazy {
+        stroke("back") {
+            moveTo(19f, 12f)
+            lineTo(5f, 12f)
+            moveTo(11f, 6f)
+            lineTo(5f, 12f)
+            lineTo(11f, 18f)
+        }
+    }
+
+    val ChevronRight: ImageVector by lazy {
+        stroke("chevron") {
+            moveTo(9f, 5.5f)
+            lineTo(15.5f, 12f)
+            lineTo(9f, 18.5f)
+        }
+    }
+
+    private fun androidx.compose.ui.graphics.vector.PathBuilder.circle(cx: Float, cy: Float, r: Float) {
+        moveTo(cx - r, cy)
+        arcTo(r, r, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = cx + r, y1 = cy)
+        arcTo(r, r, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = cx - r, y1 = cy)
+        close()
+    }
+
     private fun stroke(name: String, block: androidx.compose.ui.graphics.vector.PathBuilder.() -> Unit) =
         ImageVector
             .Builder(name, 24.dp, 24.dp, 24f, 24f)

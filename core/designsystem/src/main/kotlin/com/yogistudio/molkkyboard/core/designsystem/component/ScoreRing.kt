@@ -1,11 +1,8 @@
 package com.yogistudio.molkkyboard.core.designsystem.component
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -14,7 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,7 +35,9 @@ const val MAX_THROW_POINTS = 12
 /** À partir de ce score, la jauge commence à virer au safran (25 = score de retour après dépassement). */
 private const val WARM_FROM = 25
 
-private const val PULSE_MS = 700
+private const val PULSE_MS = 450
+private const val PULSE_COUNT = 3
+private const val PULSE_SCALE = 1.35f
 private const val FULL_CIRCLE = 360f
 private const val START_ANGLE = -90f
 
@@ -45,7 +46,7 @@ fun isOneThrowFromWin(score: Int, target: Int): Boolean = target - score in 1..M
 
 /**
  * Jauge de progression épaisse de 0 à la cible. Elle prend la couleur de l'équipe, vire au safran à
- * l'approche de la cible et pulse quand un seul lancer peut faire gagner. Le contenu (le score par défaut)
+ * l'approche de la cible et pulse (trois fois) quand un seul lancer peut faire gagner. Le contenu (le score par défaut)
  * est centré dans l'anneau.
  */
 @Composable
@@ -74,23 +75,19 @@ fun ScoreRing(
     val oneThrow = isOneThrowFromWin(score, target)
     val warmth = ((score - WARM_FROM).toFloat() / (target - MAX_THROW_POINTS - WARM_FROM)).coerceIn(0f, 1f)
     val arcColor = if (score >= target) colors.saffron else lerp(teamColor, colors.saffron, warmth)
-    val pulse =
+    // Quelques pulsations quand la victoire devient possible en un lancer, puis l'anneau reste fixe :
+    // une animation sans fin coûterait de la batterie pendant toute la partie. La valeur animée n'est lue
+    // que pendant le dessin : l'anneau est redessiné sans être recomposé.
+    val pulse = remember { Animatable(1f) }
+    LaunchedEffect(oneThrow, reduced) {
+        pulse.snapTo(1f)
         if (oneThrow && !reduced) {
-            val transition = rememberInfiniteTransition(label = "pulse")
-            transition
-                .animateFloat(
-                    initialValue = 1f,
-                    targetValue = 1.35f,
-                    animationSpec =
-                        infiniteRepeatable(
-                            tween(PULSE_MS, easing = FastOutSlowInEasing),
-                            RepeatMode.Reverse,
-                        ),
-                    label = "pulseWidth",
-                ).value
-        } else {
-            1f
+            repeat(PULSE_COUNT) {
+                pulse.animateTo(PULSE_SCALE, tween(PULSE_MS, easing = FastOutSlowInEasing))
+                pulse.animateTo(1f, tween(PULSE_MS, easing = FastOutSlowInEasing))
+            }
         }
+    }
     val description = stringResource(R.string.ds_score, score, target)
     Box(
         modifier =
@@ -117,7 +114,7 @@ fun ScoreRing(
                     useCenter = false,
                     topLeft = topLeft,
                     size = arcSize,
-                    style = Stroke(width = base * pulse, cap = StrokeCap.Round),
+                    style = Stroke(width = base * pulse.value, cap = StrokeCap.Round),
                 )
             }
         }
