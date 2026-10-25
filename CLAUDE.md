@@ -652,5 +652,11 @@ Priorités : **P2** = V2, **P3** = plus tard.
   - le backlog P1 (coach, règles, mode famille, notification, RGPD, sauvegarde) passe en V1 : les jalons sont à replanifier.
 - J2 complété par le composant QuickPad et la prise en charge des grandes polices (facteur 2,0).
 
+### Navigation, langues, tests (2026-10-25)
+- Navigation validée : **barre du bas** (Accueil, Historique, Hall of Fame, Réglages) ; « À propos » dans Réglages ; écran de jeu en plein écran avec un menu « ⋮ » (déroulé, joueurs, règles, abandon). Squelette en place dans `app` (commit 536e3fb), écrans déplacés dans `feature:*` au J4.
+- Jauge : 3 pulsations quand la victoire est à un lancer, puis anneau fixe (une animation infinie provoquait des ANR et coûterait de la batterie).
+- **Anglais demandé** (en plus du français) avec un **choix de langue dans les Réglages** : `values-en/strings.xml`, langue par application (`localeConfig` sur Android 13+, AppCompat `setApplicationLocales` en dessous). À planifier dans les jalons.
+- Tests manuels : émulateur sans fenêtre (`--headless`) pour mes vérifications ; tests de l'utilisateur sur son téléphone.
+
 ### Conventions de code
 - Documentation et UI en français ; identifiants de code en anglais.
