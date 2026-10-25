@@ -663,5 +663,9 @@ Priorités : **P2** = V2, **P3** = plus tard.
 - En attente de validation : timings des 5 étapes, icône de l'app.
 - Restent à faire (dépendances) : version courte à partir du 2e lancement et réglage associé (DataStore, J3) ; son d'impact optionnel ; vrais chargements (Room, DataStore, partie en cours, session).
 
+### Écran de jeu sans défilement (retour du test sur Fairphone 6, 2026-10-25)
+- L'intro fonctionne bien sur le téléphone.
+- **L'écran de jeu doit tenir sur un seul écran, sans défilement** : composant `FitToScreen` (réduction homothétique si la place manque, taps et accessibilité compris). Au J4, l'écran de jeu sera aussi rendu adaptatif (grille de quilles dimensionnée selon la hauteur disponible), `FitToScreen` restant le filet de sécurité.
+
 ### Conventions de code
 - Documentation et UI en français ; identifiants de code en anglais.

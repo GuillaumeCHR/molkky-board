@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -20,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.yogistudio.molkkyboard.R
+import com.yogistudio.molkkyboard.core.designsystem.component.FitToScreen
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
@@ -60,9 +59,10 @@ internal fun GameScreen(onBack: () -> Unit) {
                 }
             }
         }
-        Column(
+        // L'écran de jeu tient toujours sur un seul écran : réduction homothétique si la place manque.
+        FitToScreen(
             Modifier
-                .verticalScroll(rememberScrollState())
+                .weight(1f)
                 .navigationBarsPadding(),
         ) {
             GamePreviewContent()

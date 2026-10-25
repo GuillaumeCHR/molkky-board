@@ -10,6 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.yogistudio.molkkyboard.core.designsystem.catalog.DesignSystemCatalog
 import com.yogistudio.molkkyboard.core.designsystem.catalog.GameScreenMockup
+import com.yogistudio.molkkyboard.core.designsystem.component.FitToScreen
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import org.junit.Rule
 import org.junit.Test
@@ -88,8 +89,16 @@ class DesignSystemScreenshotTest {
             GameScreenMockup(quickMode = true)
         }
 
+    @Test
+    @Config(qualifiers = SMALL_PHONE)
+    fun jeuPetitEcranAjuste() =
+        capture("jeu_petit_ecran_ajuste", dark = false) {
+            FitToScreen { GameScreenMockup() }
+        }
+
     private companion object {
         const val CATALOG = "w420dp-h1500dp-xhdpi"
         const val PHONE = "w411dp-h891dp-xxhdpi"
+        const val SMALL_PHONE = "w360dp-h640dp-xhdpi"
     }
 }
