@@ -658,5 +658,10 @@ Priorités : **P2** = V2, **P3** = plus tard.
 - **Anglais demandé** (en plus du français) avec un **choix de langue dans les Réglages** : `values-en/strings.xml`, langue par application (`localeConfig` sur Android 13+, AppCompat `setApplicationLocales` en dessous). À planifier dans les jalons.
 - Tests manuels : émulateur sans fenêtre (`--headless`) pour mes vérifications ; tests de l'utilisateur sur son téléphone.
 
+### Écran de démarrage (avancé à la demande, 2026-10-25 — commit 328de9a)
+- Fait : icône adaptative proposée (quille dans une jauge de score, variante monochrome), SplashScreen système, logo Yogi Studio en Compose, intro en 5 étapes (`feature:intro`), `StartupLoader`, logotype partagé vers l'accueil, captures des 5 étapes et tests de comportement.
+- En attente de validation : timings des 5 étapes, icône de l'app.
+- Restent à faire (dépendances) : version courte à partir du 2e lancement et réglage associé (DataStore, J3) ; son d'impact optionnel ; vrais chargements (Room, DataStore, partie en cours, session).
+
 ### Conventions de code
 - Documentation et UI en français ; identifiants de code en anglais.
