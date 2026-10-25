@@ -673,5 +673,14 @@ Priorités : **P2** = V2, **P3** = plus tard.
 - Langue par application : `AppCompatActivity` + `AppCompatDelegate.setApplicationLocales`, `locales_config.xml` (fr, en) ; l'anglais affiche encore le français jusqu'à la traduction (J7).
 - Intro courte (≈ 1,6 s, impact puis logotype) au choix à partir du 2e lancement ; l'écran de démarrage système reste affiché le temps de lire les réglages.
 
+### Jouer (J4, 1re livraison — 2026-10-25)
+- `feature:setup` (joueurs par nom, ordre au hasard, préréglage Classique / Tournoi IMO, lancement dès 2 joueurs) et `feature:game` (vrai écran de jeu branché sur le moteur et Room).
+- Écran de jeu adaptatif : `PinGrid` dimensionne les quilles selon la place disponible ; pavé rapide dans `FitToScreen` ; bandeau des autres joueurs (scores jamais tronqués).
+- « Raté » **sélectionne** le raté, seul « Valider » enregistre. Undo en barre de titre et dans la snackbar.
+- Dépassement : animation « Aïe ! Retour à 25 » (autocollant corail penché, carte qui tremble, score qui dégringole), demandée le 2026-10-25.
+- Accueil : carte « Partie en cours » (scores, à qui le tour, « Reprendre »).
+- Demandé le 2026-10-25 : **tableau récapitulatif de série** quand les mêmes équipes enchaînent les parties (victoires, scores de chaque partie, total) — prévu au J5 avec « Revanche », calculé depuis les journaux.
+- Test sur le téléphone de l'utilisateur à la fin du J4 (les deux livraisons).
+
 ### Conventions de code
 - Documentation et UI en français ; identifiants de code en anglais.

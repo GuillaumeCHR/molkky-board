@@ -82,7 +82,11 @@ validation avant de passer à la suivante.
    - l'élimination après 3 lancers consécutifs sans faire tomber de quille (et ce qui se passe en équipe) ;
    - les lancers mordants / fautes (pied sur la ligne, etc.) si les règles officielles en prévoient ;
    - le jeu en équipes et l'ordre de passage ;
-   - la fin de partie et le déroulé d'une série de manches.
+   - la fin de partie et le déroulé d'une série de manches ;
+   - la **formation de départ** des quilles (schéma ASCII avec les numéros, vue depuis la ligne de lancer),
+     la distance de lancer et la manière de relever les quilles ;
+   - les **cas ambigus** (quille appuyée sur une autre ou sur le mölkky, quille sortie du terrain,
+     faute de pied…), qui alimenteront la FAQ de l'écran « Règles du jeu ».
 3. Liste les variantes courantes (ex. pas d'élimination, retour à 0 au lieu de 25,
    objectif différent) : elles deviendront des options paramétrables.
 4. Écris `docs/SCORING_SPEC.md` : la spécification du moteur de score sous forme de
@@ -112,7 +116,10 @@ Propose une architecture et justifie les choix. Base suggérée, à challenger :
 - **Comptes + multi-appareils** : compare Supabase (Auth + Postgres + Realtime, hébergement UE possible)
   et Firebase (Auth + Firestore). J'ai un profil cybersécurité/RGPD : je privilégie un hébergement UE,
   la minimisation des données et des règles d'accès strictes (RLS ou security rules).
-  Fais une recommandation argumentée ;
+  Intègre dans la comparaison la question de la **souveraineté** : un hébergement en région UE chez un
+  fournisseur soumis au droit américain (Cloud Act) n'est pas équivalent à un fournisseur européen.
+  Évalue aussi l'option **Supabase auto-hébergé** chez un hébergeur européen (Scaleway, OVHcloud…)
+  avec son coût d'exploitation réel pour un projet personnel. Fais une recommandation argumentée ;
 - **Gestion des conflits** : deux téléphones qui saisissent en même temps — journal d'événements
   ordonnés côté serveur, l'état étant recalculé à partir du journal. Précise comment une correction
   d'un lancer ancien se propage aux autres téléphones ;
@@ -213,11 +220,20 @@ Produis `docs/ARCHITECTURE.md` et un plan d'implémentation découpé en jalons.
   - Supabase : **supabase-kt** (modules auth, postgrest, realtime) + client **Ktor** (moteur OkHttp)
   - Firebase : **Firebase BoM** (auth, firestore)
 - Repository pattern : Room reste la source de vérité de l'UI, et la synchro distante se fait en arrière-plan (offline-first)
-- **Aucun SDK de publicité, d'analytics ou de crash reporting tiers**
+- **Aucun SDK de publicité, d'analytics ou de crash reporting tiers** (voir « Sécurité et vie privée »)
+- **Tink** (ou l'Android Keystore directement) pour chiffrer les jetons de session stockés localement
+- **AboutLibraries** pour la liste des licences open source dans les crédits
+  (pas le plugin oss-licenses de Google, qui dépend des Google Play services)
 
 ### QR code et invitation
 - Génération : **zxing core**
-- Scan : **CameraX** + **ML Kit Barcode Scanning** (version embarquée, qui ne dépend pas des Google Play services pour la détection)
+- Scan : **CameraX** (`ImageAnalysis`) + décodage **zxing-cpp** (wrapper Android, licence Apache 2.0,
+  activement maintenu, aucune connexion réseau). Analyse limitée à la zone de cadrage et à quelques images
+  par seconde, gestion des reflets d'écran (contraste, tentative en image inversée)
+- Pas de ML Kit : même en version embarquée, il envoie des statistiques d'usage à Google, ce qui
+  contredit notre engagement « aucun traceur »
+- **Saisie manuelle du code à 6 caractères** toujours proposée sur l'écran de scan, en secours
+  (soleil direct, écran rayé, caméra refusée)
 - **Android App Links** pour qu'un lien d'invitation ouvre directement la partie
 
 ### Qualité
@@ -279,8 +295,9 @@ généreuses. Ni skeuomorphisme ni texture bois réaliste : on évoque le bois p
 6. **Stats** : graphiques Vico, records personnels
 7. **Réglages** : mode de saisie, annonces vocales, sons, version courte de l'intro,
    revoir la prise en main, « Plein soleil », données (export, suppression)
-8. **À propos** : logotype Molkky Board, version, mention « Yogi Studio », crédits (bibliothèques open source,
-   polices), liens vers la politique de confidentialité, les conditions d'utilisation et le site de l'app
+8. **À propos** : logotype Molkky Board, version, mention « Yogi Studio », encart « Vie privée »
+   (voir « Sécurité et vie privée »), crédits (bibliothèques open source via AboutLibraries, polices),
+   liens vers la politique de confidentialité, les conditions d'utilisation et le site de l'app
 
 ### Mouvement et retours
 - Physique de ressort (`spring`) partout ; aucune animation linéaire
@@ -400,9 +417,58 @@ clair/sombre, et montre-moi les captures Roborazzi pour validation.
   surligner la quille gagnante sur la grille, et signaler la zone de danger quand le risque de dépasser 50 est élevé
 - Désactivable dans les réglages
 
-### Règles consultables
-- Écran « Règles » accessible en un tap pendant la partie, avec des schémas animés
-  (formation de départ, retour à 25, élimination)
+### Guide des règles et placement des quilles
+Objectif : quelqu'un qui n'a jamais joué doit pouvoir installer le jeu et lancer une partie
+correcte avec l'app seule.
+
+**Écran « Règles du jeu »** (accessible depuis l'accueil, le menu de l'écran de jeu et les réglages)
+- Contenu issu de `docs/RULES.md` (phase 1), reformulé simplement, en sections courtes et illustrées :
+  1. **Le matériel** : 12 quilles numérotées, la quille de lancer (le mölkky), la ligne de lancer ;
+  2. **L'installation** : formation de départ des quilles, distance de lancer ;
+  3. **Le lancer** : lancer à la cuillère, depuis la ligne, à tour de rôle ;
+  4. **Compter les points** : une quille seule = son numéro ; plusieurs quilles = le nombre de quilles ;
+     une quille appuyée sur une autre ou sur le mölkky ne compte pas ;
+  5. **Relever les quilles** : debout, à l'endroit exact où elles sont tombées ;
+  6. **Gagner** : atteindre exactement 50 ; au-delà, retour à 25 ;
+  7. **Les ratés** : trois lancers consécutifs sans quille tombée = élimination ;
+  8. **Jouer en équipes** et **enchaîner les manches** ;
+  9. **Les variantes** activables dans l'app (en renvoyant vers les options correspondantes)
+- Chaque règle est illustrée par un **petit schéma animé** dessiné avec les composants du design system
+  (PinView), pas par des images figées : quille seule qui tombe = son numéro, trois quilles qui tombent = 3,
+  dépassement de 50 et retour à 25, trois ratés et élimination
+- Un sommaire en haut, une recherche simple, et une section « Questions fréquentes » (quille couchée sur
+  une autre, quille sortie du terrain, faute de pied…) alimentée par les cas ambigus relevés en phase 1
+- Lisible en plein soleil et hors ligne
+
+**Schéma interactif de placement des quilles**
+- La **formation de départ** est affichée telle que vue depuis la ligne de lancer, quilles serrées en
+  4 rangées (selon les règles officielles : 1-2 devant, puis 3-10-4, puis 5-11-12-6, et 7-9-8 au fond ;
+  **vérifie cette formation dans les sources de la phase 1**)
+- Mode **« Placer les quilles »** pas à pas : les quilles apparaissent une par une à leur position,
+  avec leur numéro en grand, pour que l'on puisse les poser au fur et à mesure ; boutons « Suivant » / « Tout afficher »
+- Indication de la **distance de lancer** (3 à 4 mètres selon les règles retenues) avec un repère concret
+  (« environ 4 grands pas d'adulte »), et rappel qu'on peut la réduire en mode famille
+- Option « Vue depuis le côté » pour aider à aligner les rangées
+
+**Actions rapides pour les débutants**
+- **Rappel en début de partie** : après « Lancer la partie », une carte « Prêts à jouer ? » propose
+  « Voir le placement des quilles » ou « C'est parti ». Elle s'affiche par défaut lors des 3 premières
+  parties, puis seulement si l'utilisateur l'a réactivée (case « Ne plus afficher » et réglage dédié)
+- **Bouton « Quilles »** permanent mais discret sur l'écran de jeu : ouvre le schéma de placement en
+  surimpression (bottom sheet) sans quitter la partie, utile entre deux manches
+- **Entre deux manches** : rappel « Replacez les quilles en formation de départ » avec le schéma miniature
+- **Mode débutant** (proposé à la première partie, désactivable) : après chaque lancer validé, petit
+  rappel contextuel non bloquant (« Relevez les quilles là où elles sont tombées »), et explication en une
+  phrase lors du premier retour à 25 ou du premier deuxième raté consécutif
+- **Raccourcis de l'icône de l'app** (appui long sur l'icône) : « Nouvelle partie », « Placer les quilles »,
+  « Règles du jeu », « Rejoindre une partie »
+- Accès aux règles depuis le coach de fin de partie et depuis l'explication d'une élimination
+
+**Contraintes**
+- Les textes de règles sont des chaînes externalisées, prêtes pour la traduction
+- Annonces vocales : lecture possible du placement pas à pas (« Quille 1 à gauche devant… »)
+- TalkBack : chaque quille du schéma a une description de sa position (« Quille 12, troisième rangée, au centre droit »)
+- Captures Roborazzi du schéma de placement et de chaque illustration de règle
 
 ### Mode famille / handicap
 - Score de départ personnalisé par joueur, objectif réduit, élimination désactivable pour certains joueurs,
@@ -559,6 +625,141 @@ Priorités : **P2** = V2, **P3** = plus tard.
 
 ### Modération
 - **P2 — Modération légère** des noms d'équipes et pseudos par l'organisateur du groupe
+
+---
+
+## Sécurité et vie privée
+Je suis professionnel de la cybersécurité et attaché à la protection des données : la sécurité
+et la vie privée sont des **exigences de premier rang**, au même niveau que l'expérience utilisateur.
+Référentiel cible : **OWASP MASVS v2** (niveau L1 pour toute l'app, contrôles renforcés sur
+l'authentification et le stockage), vérifié avec le guide de test **OWASP MASTG**.
+Les recommandations de la **CNIL** pour les applications mobiles servent de référence pour la partie RGPD.
+
+### Analyse de risques (avant la phase 4)
+- Rédige `docs/security/THREAT_MODEL.md`, une analyse de risques légère inspirée d'**EBIOS Risk Manager** :
+  biens essentiels (comptes, données de groupe, intégrité des scores et des records), sources de risque
+  (joueur tricheur, curieux qui énumère les codes d'invitation, attaquant opportuniste sur les comptes,
+  contenu malveillant dans les noms d'équipe), scénarios et mesures retenues
+- Mets-le à jour à chaque fonctionnalité qui ajoute des données ou une surface d'exposition
+  (partage, lien spectateur, groupes, photos)
+
+### Minimisation et cycle de vie des données
+- **Mode sans compte : aucune donnée ne quitte le téléphone**, aucun appel réseau
+  (vérifiable : aucune requête sortante pendant une partie locale, à tester)
+- Mode compte : seulement l'e-mail (pour l'authentification), un pseudo, l'avatar et les données de parties.
+  L'e-mail n'est **jamais** visible des autres joueurs
+- Pas de nom réel, pas de date de naissance, pas de localisation, pas d'identifiant publicitaire,
+  pas de lecture des contacts
+- Les photos de joueurs restent **sur le téléphone** par défaut. Si elles sont synchronisées un jour :
+  stockage privé, URL signées à durée limitée, métadonnées EXIF supprimées avant envoi
+- **Durées de conservation** définies et appliquées automatiquement côté serveur : comptes inactifs
+  depuis 3 ans prévenus puis supprimés, données des parties supprimées avec le compte, codes
+  d'invitation expirés purgés
+- **Suppression** de compte effective sous 30 jours maximum, y compris dans les sauvegardes
+  (documenter la rotation des sauvegardes)
+- **Portabilité** : export JSON complet des données de l'utilisateur
+- Rédige `docs/privacy/REGISTRE.md` (registre simplifié des traitements : finalités, base légale,
+  catégories de données, durées, sous-traitants, localisation) et la liste publique des sous-traitants
+  pour le site web
+
+### Aucun traceur, et le prouver
+- Zéro SDK publicitaire, d'analytics, d'attribution ou de crash reporting tiers ; pas de Firebase,
+  pas de ML Kit, pas de Facebook SDK, pas de police téléchargée depuis Google Fonts à l'exécution
+- **Rapports de plantage** : uniquement à la demande de l'utilisateur. Après un plantage, proposer
+  « Envoyer le rapport par e-mail » avec un aperçu du contenu (trace technique, version, modèle,
+  aucune donnée de partie ni identifiant). Rien n'est envoyé automatiquement
+- Contrôle en CI : un script échoue si une dépendance connue pour embarquer un traceur apparaît
+  dans le graphe de dépendances (liste de signatures inspirée d'Exodus Privacy)
+- Après publication, faire analyser l'app par **Exodus Privacy** et afficher le résultat
+  (0 traceur) sur le site web
+
+### Encart « Vie privée » dans l'écran « À propos »
+Texte court et sincère, en français et en anglais, par exemple :
+- « Molkky Board ne contient **aucune publicité, aucun traceur publicitaire, aucun outil de mesure
+  d'audience** et ne revend aucune donnée. »
+- « Sans compte, tout reste sur votre téléphone. Avec un compte, seules les données nécessaires
+  au jeu partagé sont stockées, en Europe [à adapter selon l'hébergeur retenu]. »
+- « Vous pouvez exporter ou supprimer vos données à tout moment. »
+- Lien vers la politique de confidentialité, la liste des sous-traitants et le rapport Exodus Privacy
+Chaque affirmation de cet encart doit être **vraie et vérifiable** : si un choix technique la rend
+fausse, préviens-moi au lieu de modifier le texte.
+
+### Backend et API (phase 4)
+- **Row Level Security** (ou équivalent) activée sur toutes les tables, avec un refus par défaut ;
+  un joueur ne lit que les parties et groupes dont il est membre
+- La clé de service (service role) n'est **jamais** dans l'app ; les opérations privilégiées passent
+  par des fonctions serveur
+- **Validation côté serveur de chaque événement** de partie : l'auteur est bien membre de la partie,
+  le lancer est cohérent (0 à 12 quilles, numéros valides), la séquence est respectée, les droits de
+  correction sont vérifiés. Le serveur recalcule l'état ; un client modifié ne peut pas forcer un score
+  ou un record
+- **Codes d'invitation** : générés avec un aléa cryptographique, alphabet sans caractères ambigus,
+  expiration (24 h par défaut), révocables par l'organisateur, et **limitation du nombre d'essais**
+  par compte et par adresse IP pour empêcher l'énumération. Le QR code contient un jeton plus long
+  que le code court
+- Limitation de débit sur l'authentification, la création de parties et l'envoi d'événements
+- Noms d'équipes, pseudos et textes libres : longueur bornée, caractères de contrôle refusés,
+  échappement systématique à l'affichage (notamment sur la page spectateur web)
+- Journalisation de sécurité côté serveur (connexions, échecs, suppressions de compte) sans données
+  de partie, conservée 6 mois
+- Sauvegardes chiffrées, dans l'UE, avec un test de restauration documenté
+
+### Authentification
+- Connexion par **lien magique** ou **passkey** (Credential Manager) ; mot de passe en option, avec
+  vérification contre les mots de passe compromis si le backend le permet ; pas de SMS
+- Jetons d'accès courts, rotation des jetons de rafraîchissement, déconnexion révoquant le jeton,
+  et action « Se déconnecter de tous les appareils »
+- Liste des appareils connectés visible dans les réglages du compte
+- Confirmation renforcée pour la suppression du compte (nouvelle authentification récente)
+
+### Application Android
+- **Transport** : HTTPS uniquement, trafic en clair interdit dans `network_security_config`.
+  Pas d'épinglage de certificat strict (risque de panne lors des rotations du fournisseur) ;
+  documente ce choix dans le modèle de menaces
+- **Stockage local** : jetons de session chiffrés avec une clé de l'Android Keystore ; base Room
+  protégée par le chiffrement du système de fichiers Android (données peu sensibles, choix à documenter)
+- **Sauvegarde Android** : `dataExtractionRules` excluant les jetons de session et les clés de la
+  sauvegarde cloud et du transfert d'appareil ; les parties locales peuvent être sauvegardées
+- **Composants exportés** : le strict minimum ; liens profonds via **App Links vérifiés**
+  (`autoVerify`) et validation stricte de tous les paramètres entrants
+- `FileProvider` limité au seul dossier des fichiers de partage, fichiers temporaires nettoyés
+- Aucune WebView ; pas de chargement de code dynamique
+- Release : `debuggable=false`, R8 activé, aucun log (Timber sans arbre en release), pas de
+  données sensibles dans les messages d'erreur
+- Protection contre le **tapjacking** (`filterTouchesWhenObscured`) sur les actions sensibles :
+  suppression de compte, déconnexion de tous les appareils
+- Permissions demandées au moment de leur usage, avec une explication ; l'app fonctionne si elles sont refusées
+- Pas de Play Integrity API (elle implique des échanges avec Google) ; l'intégrité des scores repose
+  sur la validation serveur
+
+### Page spectateur web
+- Lecture seule, accès par jeton non devinable et expirant à la fin de la partie
+- **Content Security Policy** stricte, aucun script ni police tiers, aucun cookie, aucune mesure d'audience
+- Seuls les pseudos et scores sont exposés, jamais les e-mails
+
+### Chaîne d'approvisionnement et CI
+- **Vérification des dépendances Gradle** (`verification-metadata.xml`) et verrouillage des versions
+- Validation du wrapper Gradle dans la CI
+- Analyse des vulnérabilités des dépendances (**osv-scanner**) et génération d'un **SBOM** CycloneDX à chaque release
+- Analyse statique de sécurité : règles de sécurité de detekt et Android Lint, **MobSF** en analyse
+  statique sur l'AAB de release, **semgrep** sur le code serveur
+- Mises à jour de dépendances automatisées (Dependabot ou Renovate) avec revue manuelle
+- Dépôt GitHub : protection de la branche principale, détection de secrets (secret scanning et
+  push protection), aucun secret dans le dépôt, secrets de CI limités au strict nécessaire
+- La clé d'envoi Play Store n'est **jamais** dans la CI ni dans le dépôt
+
+### Tests et preuves
+- Tests automatisés des règles d'accès du backend (un utilisateur ne peut ni lire ni modifier
+  la partie d'un autre groupe, un code expiré ou révoqué est refusé, la limitation d'essais fonctionne)
+- Test qu'une partie locale n'émet **aucune requête réseau**
+- Avant la publication : revue complète selon la checklist **MASVS** (`docs/security/MASVS_CHECKLIST.md`,
+  avec le statut de chaque contrôle et sa justification), puis je ferai moi-même un test d'intrusion léger
+- **Divulgation de vulnérabilités** : `SECURITY.md` dans le dépôt et `/.well-known/security.txt`
+  sur le site, avec une adresse de contact dédiée
+
+### Ouverture (P3)
+- Étudier la publication du code en **open source** et une distribution sur **F-Droid**, qui apportent
+  une preuve forte de l'absence de traceurs
 
 ---
 

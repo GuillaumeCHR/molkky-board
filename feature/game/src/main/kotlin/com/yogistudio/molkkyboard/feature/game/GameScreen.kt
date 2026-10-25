@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
@@ -191,47 +192,50 @@ fun GameContent(
     onOvershootShown: () -> Unit = {},
     shakeKey: Int = 0,
 ) {
-    Box(Modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize()) {
-            GameTopBar(state, actions)
-            if (state.loading) return@Column
-            OpponentsStrip(state)
-            ActiveCard(state, shakeKey)
-            PreviewLine(state, actions)
-            Box(
-                Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = MBDimens.ScreenPadding),
-                contentAlignment = Alignment.Center,
-            ) {
-                when (state.inputMode) {
-                    InputMode.PINS -> {
-                        PinGrid(
-                            knocked = (state.selection as? Selection.Pins)?.pins.orEmpty(),
-                            onToggle = actions.onTogglePin,
-                            enabled = !state.finished,
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    }
-
-                    InputMode.QUICK -> {
-                        FitToScreen(Modifier.fillMaxSize()) {
-                            QuickPad(
-                                selected = (state.selection as? Selection.Quick)?.value,
-                                onSelect = actions.onQuick,
-                                mode = state.quickMode,
-                                onModeChange = actions.onQuickMode,
+    // Surface parente : fond et couleur de texte du thème (clair, sombre, Plein soleil).
+    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        Box(Modifier.fillMaxSize()) {
+            Column(Modifier.fillMaxSize()) {
+                GameTopBar(state, actions)
+                if (state.loading) return@Column
+                OpponentsStrip(state)
+                ActiveCard(state, shakeKey)
+                PreviewLine(state, actions)
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = MBDimens.ScreenPadding),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    when (state.inputMode) {
+                        InputMode.PINS -> {
+                            PinGrid(
+                                knocked = (state.selection as? Selection.Pins)?.pins.orEmpty(),
+                                onToggle = actions.onTogglePin,
+                                enabled = !state.finished,
+                                modifier = Modifier.fillMaxSize(),
                             )
+                        }
+
+                        InputMode.QUICK -> {
+                            FitToScreen(Modifier.fillMaxSize()) {
+                                QuickPad(
+                                    selected = (state.selection as? Selection.Quick)?.value,
+                                    onSelect = actions.onQuick,
+                                    mode = state.quickMode,
+                                    onModeChange = actions.onQuickMode,
+                                )
+                            }
                         }
                     }
                 }
+                ActionButtons(state, actions)
             }
-            ActionButtons(state, actions)
+            SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp))
+            OvershootSticker(overshoot, onOvershootShown, Modifier.align(Alignment.Center))
+            if (state.finished || state.abandoned) FinishPanel(state, actions)
         }
-        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp))
-        OvershootSticker(overshoot, onOvershootShown, Modifier.align(Alignment.Center))
-        if (state.finished || state.abandoned) FinishPanel(state, actions)
     }
 }
 
@@ -300,7 +304,8 @@ private fun OpponentsStrip(state: GameUiState) {
                 name = team.name,
                 color = colors[team.colorIndex % colors.size],
                 score = team.score,
-                modifier = Modifier.alpha(if (team.out) OUT_ALPHA else 1f),
+                // Largeur bornée : dans un bandeau qui défile, le nom s'abrège au lieu de disparaître.
+                modifier = Modifier.widthIn(max = CHIP_MAX_WIDTH).alpha(if (team.out) OUT_ALPHA else 1f),
             )
         }
     }
@@ -360,22 +365,48 @@ private fun ActiveCard(state: GameUiState, shakeKey: Int) {
 private fun previewText(state: GameUiState): String {
     val preview = state.preview
     return when (preview.kind) {
-        PreviewKind.NONE -> stringResource(if (state.inputMode == InputMode.PINS) R.string.game_hint_pins else R.string.game_hint_quick)
-        PreviewKind.MISS -> stringResource(R.string.game_preview_miss, preview.misses, state.missLimit)
-        PreviewKind.ELIMINATION -> stringResource(R.string.game_preview_elimination)
-        PreviewKind.POINTS -> stringResource(R.string.game_preview_points, preview.points, preview.newScore)
-        PreviewKind.OVERSHOOT -> stringResource(R.string.game_preview_overshoot, preview.points, preview.newScore)
-        PreviewKind.WIN -> stringResource(R.string.game_preview_win, preview.points, preview.newScore)
+        PreviewKind.NONE -> {
+            stringResource(
+                if (state.inputMode ==
+                    InputMode.PINS
+                ) {
+                    R.string.game_hint_pins
+                } else {
+                    R.string.game_hint_quick
+                },
+            )
+        }
+
+        PreviewKind.MISS -> {
+            stringResource(R.string.game_preview_miss, preview.misses, state.missLimit)
+        }
+
+        PreviewKind.ELIMINATION -> {
+            stringResource(R.string.game_preview_elimination)
+        }
+
+        PreviewKind.POINTS -> {
+            stringResource(R.string.game_preview_points, preview.points, preview.newScore)
+        }
+
+        PreviewKind.OVERSHOOT -> {
+            stringResource(R.string.game_preview_overshoot, preview.points, preview.newScore)
+        }
+
+        PreviewKind.WIN -> {
+            stringResource(R.string.game_preview_win, preview.points, preview.newScore)
+        }
     }
 }
 
 @Composable
-private fun previewColor(kind: PreviewKind) = when (kind) {
-    PreviewKind.NONE -> MaterialTheme.colorScheme.onSurfaceVariant
-    PreviewKind.MISS, PreviewKind.ELIMINATION, PreviewKind.OVERSHOOT -> MolkkyBoardTheme.colors.coralText
-    PreviewKind.WIN -> MaterialTheme.colorScheme.primary
-    PreviewKind.POINTS -> MaterialTheme.colorScheme.onSurface
-}
+private fun previewColor(kind: PreviewKind) =
+    when (kind) {
+        PreviewKind.NONE -> MaterialTheme.colorScheme.onSurfaceVariant
+        PreviewKind.MISS, PreviewKind.ELIMINATION, PreviewKind.OVERSHOOT -> MolkkyBoardTheme.colors.coralText
+        PreviewKind.WIN -> MaterialTheme.colorScheme.primary
+        PreviewKind.POINTS -> MaterialTheme.colorScheme.onSurface
+    }
 
 @Composable
 private fun PreviewLine(state: GameUiState, actions: GameActions) {
@@ -552,5 +583,6 @@ private fun FinishPanel(state: GameUiState, actions: GameActions) {
 
 private const val DOUBLE_VIBRATION_GAP_MS = 180L
 private const val OUT_ALPHA = 0.45f
+private val CHIP_MAX_WIDTH = 200.dp
 private const val STICKER_MS = 1_600L
 private const val COMING_SOON_MS = 2_000L
