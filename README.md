@@ -19,6 +19,7 @@ scores, règles officielles et variantes, historique et Hall of Fame. Éditeur :
 ```bash
 ./gradlew :app:assembleDebug        # APK : app/build/outputs/apk/debug/app-debug.apk
 ./gradlew test                      # tests unitaires
+./gradlew :core:scoring:koverHtmlReport   # couverture du moteur (core/scoring/build/reports/kover/html)
 ./gradlew ktlintCheck detekt        # lint (ktlintFormat corrige le style automatiquement)
 ```
 

@@ -6,6 +6,8 @@ naming:
   TopLevelPropertyNaming:
     constantPattern: '[A-Z][A-Za-z0-9_]*'
 complexity:
+  TooManyFunctions:
+    thresholdInFiles: 20
   LongParameterList:
     functionThreshold: 8
     ignoreDefaultParameters: true
@@ -13,9 +15,15 @@ complexity:
   LongMethod:
     ignoreAnnotated: ['Composable']
 style:
-  MagicNumber:
-    # Les valeurs du jeu (12 quilles, 50 points, 3 ratés…) sont lisibles telles quelles dans les tests.
-    excludes: ['**/test/**', '**/*Test.kt']
-    ignoreAnnotated: ['Composable', 'Preview']
   UnusedPrivateMember:
     ignoreAnnotated: ['Preview']
+  ReturnCount:
+    # Les validations du moteur s'écrivent en clauses de garde (`?: return Outcome.Err(...)`).
+    max: 3
+    excludeGuardClauses: true
+    excludeReturnFromLambda: true
+  MagicNumber:
+    # Valeurs du jeu (12 quilles, 50 points…) : lisibles telles quelles dans les tests et les constantes.
+    excludes: ['**/test/**', '**/*Test.kt']
+    ignoreAnnotated: ['Composable', 'Preview']
+    ignorePropertyDeclaration: true

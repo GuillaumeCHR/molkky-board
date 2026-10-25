@@ -37,6 +37,7 @@ roborazzi = "1.77.0"
 turbine = "1.2.1"
 
 detekt = "1.23.8"
+kover = "0.9.11"
 ktlint-gradle = "14.2.0"
 ktlint = "1.8.0"
 
@@ -107,6 +108,7 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-gradle" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 
 # Convention plugins (build-logic)
 molkky-android-application = { id = "molkky.android.application", version = "unspecified" }

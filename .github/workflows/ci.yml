@@ -32,8 +32,8 @@ jobs:
       - name: Lint
         run: ./gradlew ktlintCheck detekt
 
-      - name: Tests unitaires
-        run: ./gradlew test
+      - name: Tests unitaires et couverture du moteur
+        run: ./gradlew test :core:scoring:koverVerify
 
       - name: APK debug
         run: ./gradlew :app:assembleDebug

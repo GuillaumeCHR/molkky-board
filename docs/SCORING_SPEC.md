@@ -118,6 +118,7 @@ Sauf mention contraire : configuration « Classique », 2 équipes d'un joueur, 
 | T3 | A, B, C ; A atteint 50 (`FirstToTarget`) | fin immédiate : B et C ne lancent pas |
 | T4 | Lancer saisi pour une équipe dont ce n'est pas le tour (sans `WrongTeam`) | Erreur `NOT_YOUR_TURN` |
 | T5 | Lancer saisi par un joueur qui n'appartient pas à l'équipe | Erreur `UNKNOWN_PLAYER` |
+| T6 | Lancer saisi par un coéquipier qui n'est pas le lanceur attendu (hors faute `WRONG_PLAYER`) | Erreur `NOT_YOUR_TURN` |
 
 ## 7. Fautes (`F`)
 
@@ -226,3 +227,28 @@ Séquence de `2T` lancers : l'équipe du lancer *k* (k = 0…2T−1) est **A** s
 | S4 | …, lancer, `Undo`, …, victoire | `FINISHED`, `corrected = false` (un Undo n'est pas une correction) |
 | S5 | `Abandon` sur une manche FINISHED | Erreur `SET_FINISHED` |
 | S6 | `Abandon` puis `Undo` | la manche redevient `IN_PROGRESS` |
+
+## 14. Précisions d'implémentation (J1, 2026-10-25)
+
+Choix faits en codant `core:scoring`, là où la spec ci-dessus laissait une marge. Tous sont couverts par des tests.
+
+- **Undo et Correct ciblent un identifiant** (`EventId`, UUID) plutôt qu'un index : plus sûr pour la
+  synchronisation. `Undo(target)` n'est accepté que si `target` est le dernier événement du journal effectif
+  (sinon `NOTHING_TO_UNDO`) ; le remplaçant d'une correction garde l'identifiant de l'événement corrigé, qu'on
+  peut donc annuler ensuite.
+- **Erreurs ajoutées** : `DUPLICATE_TEAM` (même équipe deux fois), `UNKNOWN_TEAM`, `INVALID_EVENT`
+  (`WrongTeam` par l'équipe dont c'est le tour, ou par une équipe éliminée ou déjà classée), `UNKNOWN_EVENT`
+  (correction d'un événement absent du journal effectif).
+- **Classement en fin de manche** : vainqueur(s), puis les équipes encore en lice par score décroissant (à
+  égalité, ordre de passage), puis les éliminées de la dernière à la première éliminée.
+- **Rebond** : le score ne descend jamais sous 0.
+- **Rejoindre un score** (`catchUpReset`) : l'équipe rejointe redescend à la moitié de sa cible (25 pour 50),
+  seulement si elle est encore en lice et au-dessus de cette moitié (sinon ce serait un bonus).
+- **Lancer perdu** (`WrongTeam`) : il suit l'option `faultsCountAsMiss` comme les autres fautes ; s'il y en a
+  plusieurs, un seul est consommé par tour.
+- **Surcharges par équipe** (mode handicap, préparé pour le backlog) : score de départ, cible, exemption de la
+  sanction des ratés (le compteur continue). Toute surcharge rend la partie `handicap`, donc non `isStandard`.
+- **Match** : l'ordre de la 1re manche est l'ordre des équipes fourni (la première commence) ;
+  `DecisiveByPoints` n'a d'effet qu'à deux équipes, sinon on alterne ; un point de manche manquant compte 0.
+- **Mölkkout** : deux équipes seulement. Si les tailles diffèrent, chaque équipe lance `max(T)` fois et ses
+  joueurs tournent ; un tour supplémentaire compte `max(taille)` lancers par équipe.

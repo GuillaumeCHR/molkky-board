@@ -93,7 +93,9 @@ features ne dépendent jamais les unes des autres ; `core:scoring` et `core:stat
   déterministe** et signalé : tous les appareils convergent vers le même état.
 - Tests : un test JUnit 5 paramétré par cas de `SCORING_SPEC.md` (identifiants P1…X7 dans le nom
   des tests), plus des tests de propriétés maison (journaux aléatoires valides : score toujours dans
-  [0, cible], « ajout puis Undo = identité »). Objectif : 100 % des lignes et branches couvertes.
+  [0, cible], « ajout puis Undo = identité »). Couverture vérifiée par **Kover** (`koverVerify`, en CI) :
+  100 % des lignes et ≥ 98 % des branches. Les classes `@Serializable` sans logique sont exclues de la mesure
+  (code généré) ; les 5 branches restantes sont inatteignables (tests de nullité générés par Kotlin sur `turn`).
 
 ## 4. Données locales (offline-first)
 - Tables Room : `player_profile` (profils locaux réutilisables), `game` (config sérialisée en JSON,
