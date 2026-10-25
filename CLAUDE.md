@@ -658,7 +658,8 @@ Priorités : **P2** = V2, **P3** = plus tard.
 
 ### Écran de démarrage (avancé à la demande, 2026-10-25 — commit 328de9a)
 - Fait : icône adaptative proposée (quille dans une jauge de score, variante monochrome), SplashScreen système, logo Yogi Studio en Compose, intro en 5 étapes (`feature:intro`), `StartupLoader`, logotype partagé vers l'accueil, captures des 5 étapes et tests de comportement.
-- En attente de validation : timings des 5 étapes, icône de l'app.
+- 2026-10-25 — Retour du test sur Fairphone 6 : animation jugée bonne ; demandé plus spectaculaire → quilles +30 %, explosion qui sort de l'écran en moins d'une seconde, puis **fondu** du logotype Molkky Board avant le menu (remplace l'assemblage des éclats de l'étape 5). Signature Yogi Studio conservée entre les deux (à confirmer).
+- En attente de validation : timings, icône de l'app.
 - Restent à faire (dépendances) : version courte à partir du 2e lancement et réglage associé (DataStore, J3) ; son d'impact optionnel ; vrais chargements (Room, DataStore, partie en cours, session).
 
 ### Écran de jeu sans défilement (retour du test sur Fairphone 6, 2026-10-25)
