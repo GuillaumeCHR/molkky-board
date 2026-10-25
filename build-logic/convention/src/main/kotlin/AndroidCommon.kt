@@ -9,6 +9,14 @@ internal fun Project.configureAndroid(extension: CommonExtension) {
         compileOptions.sourceCompatibility = JAVA_VERSION
         compileOptions.targetCompatibility = JAVA_VERSION
         testOptions.unitTests.isIncludeAndroidResources = true
+        testOptions.unitTests.all { test ->
+            // Robolectric (SDK 36) sur JDK 21 accède à jdk.internal.access.
+            test.jvmArgs(
+                "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
+                "--add-exports=java.base/jdk.internal.access=ALL-UNNAMED",
+            )
+            test.maxHeapSize = "1536m"
+        }
     }
     configureKotlin()
     configureQuality()

@@ -21,9 +21,10 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "molkky"
+rootProject.name = "MolkkyBoard"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
 include(":core:model")
 include(":core:scoring")
+include(":core:designsystem")

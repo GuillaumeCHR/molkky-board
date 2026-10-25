@@ -1,14 +1,14 @@
 plugins {
-    alias(libs.plugins.molkky.android.application)
-    alias(libs.plugins.molkky.android.compose)
-    alias(libs.plugins.molkky.hilt)
+    alias(libs.plugins.molkkyboard.android.application)
+    alias(libs.plugins.molkkyboard.android.compose)
+    alias(libs.plugins.molkkyboard.hilt)
 }
 
 android {
-    namespace = "fr.molkky.app"
+    namespace = "com.yogistudio.molkkyboard"
 
     defaultConfig {
-        applicationId = "fr.molkky.app"
+        applicationId = "com.yogistudio.molkkyboard"
         versionCode = 1
         versionName = "0.1.0"
     }
@@ -31,6 +31,7 @@ android {
 
 dependencies {
     implementation(projects.core.scoring)
+    implementation(projects.core.designsystem)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)

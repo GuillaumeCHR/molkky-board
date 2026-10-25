@@ -2,7 +2,7 @@ plugins {
     `kotlin-dsl`
 }
 
-group = "fr.molkky.buildlogic"
+group = "com.yogistudio.molkkyboard.buildlogic"
 
 kotlin {
     jvmToolchain(21)
@@ -21,23 +21,23 @@ dependencies {
 gradlePlugin {
     plugins {
         register("androidApplication") {
-            id = "molkky.android.application"
+            id = "molkkyboard.android.application"
             implementationClass = "AndroidApplicationConventionPlugin"
         }
         register("androidLibrary") {
-            id = "molkky.android.library"
+            id = "molkkyboard.android.library"
             implementationClass = "AndroidLibraryConventionPlugin"
         }
         register("androidCompose") {
-            id = "molkky.android.compose"
+            id = "molkkyboard.android.compose"
             implementationClass = "AndroidComposeConventionPlugin"
         }
         register("hilt") {
-            id = "molkky.hilt"
+            id = "molkkyboard.hilt"
             implementationClass = "HiltConventionPlugin"
         }
         register("jvmLibrary") {
-            id = "molkky.jvm.library"
+            id = "molkkyboard.jvm.library"
             implementationClass = "JvmLibraryConventionPlugin"
         }
     }

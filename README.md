@@ -1,7 +1,7 @@
-# Mölkky
+# Molkky Board
 
 Application Android de gestion de parties de Mölkky : saisie des lancers, calcul automatique des
-scores, règles officielles et variantes, historique et Hall of Fame. Éditeur : Yogi Studio.
+scores, règles officielles et variantes, historique et Hall of Fame. Éditeur : Yogi Studio (`com.yogistudio.molkkyboard`).
 
 - Règles : [`docs/RULES.md`](docs/RULES.md)
 - Moteur de score : [`docs/SCORING_SPEC.md`](docs/SCORING_SPEC.md)
@@ -28,7 +28,7 @@ scores, règles officielles et variantes, historique et Hall of Fame. Éditeur :
 ```bash
 android emulator start Medium_Phone_API_37.0
 ./gradlew :app:installDebug
-adb shell am start -n fr.molkky.app.debug/fr.molkky.app.MainActivity
+adb shell am start -n com.yogistudio.molkkyboard.debug/com.yogistudio.molkkyboard.MainActivity
 ```
 
 ## Modules

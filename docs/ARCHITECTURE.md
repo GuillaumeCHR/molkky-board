@@ -1,4 +1,4 @@
-# Architecture — application Mölkky
+# Architecture — Molkky Board
 
 > Validée le 2026-10-25 (Phase 2). Règles : [`RULES.md`](RULES.md) · moteur : [`SCORING_SPEC.md`](SCORING_SPEC.md).
 > Décisions résumées dans `CLAUDE.md` § Décisions.

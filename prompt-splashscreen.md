@@ -8,8 +8,11 @@
   Convertis-les en VectorDrawable pour l'app (pas de PNG si le vectoriel suffit)
 - « Yogi Studio » apparaît dans l'animation de démarrage, dans l'écran « À propos »
   (avec la version de l'app) et dans les métadonnées de publication
-- Le logo Yogi Studio n'est **pas** l'icône de l'application : l'icône de l'app Mölkky reste à concevoir
-  séparément, dans la direction artistique « Nordic Bold »
+- Le logo Yogi Studio n'est **pas** l'icône de l'application : l'icône de **Molkky Board** reste à concevoir
+  séparément, dans la direction artistique « Nordic Bold » (proposition attendue : une quille stylisée
+  et un « MB » ou un tableau de score, lisible en 48dp)
+- Logotype **Molkky Board** à créer pour l'intro et l'en-tête de l'accueil : « Molkky » en Bricolage Grotesque
+  800 vert forêt, « Board » en safran, chiffres et lettres sur une même ligne de base
 
 ### Principe technique
 - L'écran de démarrage système d'Android 12+ (API SplashScreen) est très limité en durée et en animation :
@@ -43,9 +46,10 @@
 4. **2,6 – 3,6 s — La signature** : pendant que les éclats retombent et s'estompent,
    le logo Yogi Studio apparaît au centre (le cercle safran se trace, puis le personnage
    apparaît avec un rebond), accompagné de la mention « Yogi Studio présente »
-5. **3,6 – 4,5 s — L'ouverture** : les éclats restants sont balayés vers les bords comme par
-   un souffle, le logo se réduit et le menu d'accueil apparaît derrière
-   (transition à éléments partagés si possible : le titre « Mölkky » prend sa place dans l'en-tête de l'accueil)
+5. **3,6 – 4,5 s — Le titre et l'ouverture** : le logo Yogi Studio s'efface, et les derniers éclats
+   de bois s'assemblent en vol pour former le logotype **« Molkky Board »** au centre. Après un court
+   temps de pause, le logotype glisse et se réduit vers l'en-tête de l'accueil pendant que le menu
+   apparaît derrière (transition à éléments partagés : c'est le même logotype qui sert de titre à l'accueil)
 
 ### Contraintes
 - 60 images/s visées sur une machine modeste : nombre de particules borné (≈ 150 au total),

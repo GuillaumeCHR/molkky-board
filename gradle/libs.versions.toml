@@ -86,6 +86,7 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
 roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
+roborazzi-rule = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 # Plugins utilisés par build-logic
@@ -111,8 +112,8 @@ ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-gradle" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 
 # Convention plugins (build-logic)
-molkky-android-application = { id = "molkky.android.application", version = "unspecified" }
-molkky-android-library = { id = "molkky.android.library", version = "unspecified" }
-molkky-android-compose = { id = "molkky.android.compose", version = "unspecified" }
-molkky-hilt = { id = "molkky.hilt", version = "unspecified" }
-molkky-jvm-library = { id = "molkky.jvm.library", version = "unspecified" }
+molkkyboard-android-application = { id = "molkkyboard.android.application", version = "unspecified" }
+molkkyboard-android-library = { id = "molkkyboard.android.library", version = "unspecified" }
+molkkyboard-android-compose = { id = "molkkyboard.android.compose", version = "unspecified" }
+molkkyboard-hilt = { id = "molkkyboard.hilt", version = "unspecified" }
+molkkyboard-jvm-library = { id = "molkkyboard.jvm.library", version = "unspecified" }
