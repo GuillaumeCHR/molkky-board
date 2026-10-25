@@ -4,6 +4,10 @@ import kotlinx.serialization.Serializable
 
 // Routes typées de Navigation Compose.
 
+/** Intro animée (destination de départ, retirée de la pile une fois finie). */
+@Serializable
+data object IntroRoute
+
 @Serializable
 data object HomeRoute
 

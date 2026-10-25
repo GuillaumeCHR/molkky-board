@@ -33,6 +33,7 @@ android {
 dependencies {
     implementation(projects.core.scoring)
     implementation(projects.core.designsystem)
+    implementation(projects.feature.intro)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)

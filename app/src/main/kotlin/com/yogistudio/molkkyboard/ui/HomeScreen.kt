@@ -28,6 +28,7 @@ import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 internal fun HomeScreen(
     onNewGame: () -> Unit,
     onJoin: () -> Unit,
+    logotypeModifier: Modifier = Modifier,
 ) {
     Column(
         modifier =
@@ -38,7 +39,7 @@ internal fun HomeScreen(
                 .padding(MBDimens.ScreenPadding),
         verticalArrangement = Arrangement.spacedBy(MBDimens.Gap),
     ) {
-        MolkkyBoardLogotype(Modifier.padding(top = 8.dp, bottom = 24.dp))
+        MolkkyBoardLogotype(Modifier.padding(top = 8.dp, bottom = 24.dp).then(logotypeModifier))
         BigActionButton(
             text = stringResource(R.string.home_new_game),
             onClick = onNewGame,

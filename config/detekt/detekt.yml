@@ -27,7 +27,8 @@ style:
     excludeReturnFromLambda: true
   MagicNumber:
     # Valeurs du jeu (12 quilles, 50 points…) : lisibles telles quelles dans les tests et les constantes.
-    # Le design system est fait de valeurs de design (tailles, proportions, couleurs) : on ne les nomme pas toutes.
-    excludes: ['**/test/**', '**/*Test.kt', '**/designsystem/**']
+    # Le design system et l'intro animée sont faits de valeurs de design (tailles, proportions, couleurs,
+    # timings) : on ne les nomme pas toutes.
+    excludes: ['**/test/**', '**/*Test.kt', '**/designsystem/**', '**/feature/intro/**']
     ignoreAnnotated: ['Composable', 'Preview']
     ignorePropertyDeclaration: true

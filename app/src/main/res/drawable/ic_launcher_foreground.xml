@@ -1,14 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Icône provisoire : une quille stylisée au sommet biseauté (zone sûre de 66 dp). -->
+<!-- Icône Molkky Board : une quille au sommet biseauté dans une jauge de score safran (zone sûre de 66 dp). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- Jauge : arc de 300° ouvert en haut, la quille dépasse dans l'ouverture. -->
     <path
-        android:fillColor="#F2A93B"
-        android:pathData="M42,40 L66,32 L66,76 Q66,80 62,80 L46,80 Q42,80 42,76 Z" />
+        android:pathData="M67.5,30.62 A27,27 0 1,1 40.5,30.62"
+        android:strokeWidth="6"
+        android:strokeColor="#F2A93B"
+        android:strokeLineCap="round" />
+    <!-- Corps de la quille -->
     <path
-        android:fillColor="#FFFAF2"
-        android:pathData="M42,40 L66,32 L66,38 L42,46 Z" />
+        android:fillColor="#F4EBDD"
+        android:pathData="M44,37 L64,31 L64,69 Q64,74 59,74 L49,74 Q44,74 44,69 Z" />
+    <!-- Flanc ombré -->
+    <path
+        android:fillColor="#E2C99E"
+        android:pathData="M60,32.2 L64,31 L64,69 Q64,74 59,74 L60,74 Z" />
+    <!-- Biseau (bois de bout) -->
+    <path
+        android:fillColor="#E2C99E"
+        android:pathData="M44,37 L64,31 L64,35.5 L44,41.5 Z" />
 </vector>

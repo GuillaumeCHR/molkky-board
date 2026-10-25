@@ -11,13 +11,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yogistudio.molkkyboard.BuildConfig
 import com.yogistudio.molkkyboard.R
+import com.yogistudio.molkkyboard.core.designsystem.brand.YogiStudioLogo
 import com.yogistudio.molkkyboard.core.designsystem.component.MolkkyBoardLogotype
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 
-/** « À propos » : logotype, version, éditeur. Le logo Yogi Studio y sera ajouté au J5. */
+/** « À propos » : logotype, version, éditeur (logo Yogi Studio). */
 @Composable
 internal fun AboutScreen(onBack: () -> Unit) {
     Column(Modifier.fillMaxSize()) {
@@ -36,6 +38,7 @@ internal fun AboutScreen(onBack: () -> Unit) {
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(stringResource(R.string.about_publisher), style = MaterialTheme.typography.bodyLarge)
+            YogiStudioLogo(markSize = 56.dp)
             Text(
                 stringResource(R.string.about_privacy),
                 style = MaterialTheme.typography.bodyMedium,

@@ -1,6 +1,9 @@
 package com.yogistudio.molkkyboard.navigation
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -15,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -23,8 +27,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.yogistudio.molkkyboard.R
+import com.yogistudio.molkkyboard.core.designsystem.component.MolkkyBoardLogotype
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
+import com.yogistudio.molkkyboard.feature.intro.IntroLoadState
+import com.yogistudio.molkkyboard.feature.intro.IntroScreen
 import com.yogistudio.molkkyboard.ui.AboutScreen
 import com.yogistudio.molkkyboard.ui.EmptyStateScreen
 import com.yogistudio.molkkyboard.ui.GameScreen
@@ -47,7 +54,11 @@ private enum class TopLevel(
 }
 
 @Composable
-fun MolkkyBoardNavHost(sunlight: Boolean, onSunlightChange: (Boolean) -> Unit) {
+fun MolkkyBoardNavHost(
+    loadState: IntroLoadState,
+    sunlight: Boolean,
+    onSunlightChange: (Boolean) -> Unit,
+) {
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val destination = backStack?.destination
@@ -85,33 +96,59 @@ fun MolkkyBoardNavHost(sunlight: Boolean, onSunlightChange: (Boolean) -> Unit) {
             }
         },
     ) { padding ->
-        NavHost(
-            navController = navController,
-            startDestination = HomeRoute,
-            modifier = Modifier.padding(padding).consumeWindowInsets(padding),
-        ) {
-            composable<HomeRoute> {
-                HomeScreen(
-                    onNewGame = { navController.navigate(GameRoute) },
-                    onJoin = { navController.navigate(JoinRoute) },
-                )
+        SharedTransitionLayout {
+            val shared = this
+            NavHost(
+                navController = navController,
+                startDestination = IntroRoute,
+                modifier = Modifier.padding(padding).consumeWindowInsets(padding),
+            ) {
+                composable<IntroRoute> {
+                    val logotype = with(shared) { sharedLogotype(this@composable) }
+                    IntroScreen(
+                        loadState = loadState,
+                        onFinished = {
+                            navController.navigate(HomeRoute) { popUpTo<IntroRoute> { inclusive = true } }
+                        },
+                        logotype = { MolkkyBoardLogotype(it.then(logotype), fontSize = INTRO_LOGOTYPE_SIZE) },
+                    )
+                }
+                composable<HomeRoute> {
+                    HomeScreen(
+                        onNewGame = { navController.navigate(GameRoute) },
+                        onJoin = { navController.navigate(JoinRoute) },
+                        logotypeModifier = with(shared) { sharedLogotype(this@composable) },
+                    )
+                }
+                composable<HistoryRoute> { EmptyStateScreen(R.string.nav_history, R.string.history_empty) }
+                composable<HallOfFameRoute> { EmptyStateScreen(R.string.nav_hall_of_fame, R.string.hall_of_fame_empty) }
+                composable<SettingsRoute> {
+                    SettingsScreen(
+                        sunlight = sunlight,
+                        onSunlightChange = onSunlightChange,
+                        onAbout = { navController.navigate(AboutRoute) },
+                        onShowcase = { navController.navigate(ShowcaseRoute) },
+                    )
+                }
+                composable<AboutRoute> { AboutScreen(onBack = navController::navigateUp) }
+                composable<JoinRoute> {
+                    EmptyStateScreen(R.string.join_title, R.string.join_empty, onBack = navController::navigateUp)
+                }
+                composable<GameRoute> { GameScreen(onBack = navController::navigateUp) }
+                composable<ShowcaseRoute> { ShowcaseScreen(onBack = navController::navigateUp) }
             }
-            composable<HistoryRoute> { EmptyStateScreen(R.string.nav_history, R.string.history_empty) }
-            composable<HallOfFameRoute> { EmptyStateScreen(R.string.nav_hall_of_fame, R.string.hall_of_fame_empty) }
-            composable<SettingsRoute> {
-                SettingsScreen(
-                    sunlight = sunlight,
-                    onSunlightChange = onSunlightChange,
-                    onAbout = { navController.navigate(AboutRoute) },
-                    onShowcase = { navController.navigate(ShowcaseRoute) },
-                )
-            }
-            composable<AboutRoute> { AboutScreen(onBack = navController::navigateUp) }
-            composable<JoinRoute> {
-                EmptyStateScreen(R.string.join_title, R.string.join_empty, onBack = navController::navigateUp)
-            }
-            composable<GameRoute> { GameScreen(onBack = navController::navigateUp) }
-            composable<ShowcaseRoute> { ShowcaseScreen(onBack = navController::navigateUp) }
         }
     }
 }
+
+private const val LOGOTYPE_KEY = "logotype"
+private val INTRO_LOGOTYPE_SIZE = 52.sp
+
+/** Le logotype de l'intro glisse et se réduit jusqu'à l'en-tête de l'accueil (même élément). */
+@Composable
+private fun SharedTransitionScope.sharedLogotype(scope: AnimatedVisibilityScope): Modifier =
+    Modifier.sharedBounds(
+        sharedContentState = rememberSharedContentState(LOGOTYPE_KEY),
+        animatedVisibilityScope = scope,
+        resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(),
+    )

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Variante monochrome (icônes thématiques Android 13+) : même silhouette, biseau évidé. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M67.5,30.62 A27,27 0 1,1 40.5,30.62"
+        android:strokeWidth="6"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M44,43.5 L64,37.5 L64,69 Q64,74 59,74 L49,74 Q44,74 44,69 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M44,37 L64,31 L64,33.5 L44,39.5 Z" />
+</vector>

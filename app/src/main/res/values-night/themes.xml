@@ -7,6 +7,7 @@
     <style name="Theme.MolkkyBoard.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/night_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/forest</item>
         <item name="postSplashScreenTheme">@style/Theme.MolkkyBoard</item>
     </style>
 </resources>
