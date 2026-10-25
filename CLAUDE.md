@@ -643,14 +643,12 @@ Priorités : **P2** = V2, **P3** = plus tard.
 - Logotype « Molkky Board » (Bricolage 800, « Molkky » vert forêt + « Board » safran, même ligne de base) : composant `MolkkyBoardLogotype` du design system, livré au J2. Icône du lanceur : proposition au J5 avec l'intro.
 - Play Store (P2) : vérifier le nom au regard de la marque « Mölkky », prévoir un nom de repli.
 
-### Prompt du 2026-10-25 (soir) — impacts à valider
-- Le prompt a été réécrit : périmètre V1 élargi (coach, règles consultables, mode famille, annonces vocales, notification de partie, RGPD et sauvegarde, partage social avec vignettes et mini-vidéos), nouvelles exigences sur le moteur et l'écran de jeu.
-- **Décisions antérieures remises en cause, en attente de validation** :
-  - `LINEUP_LOCKED` (M8) : remplacé par des événements d'ajout, de retrait et de réordonnancement de joueurs en cours de partie ;
-  - éligibilité aux records : « corrigée » devient « modifiée après la fin » (les corrections pendant la partie sont normales) ;
-  - liens profonds reportés : la boucle virale (QR des vignettes, bouton « Défier », invitation de groupe) a besoin de liens, donc d'un domaine ou du schéma `molkkyboard://` ;
-  - le backlog P1 (coach, règles, mode famille, notification, RGPD, sauvegarde) passe en V1 : les jalons sont à replanifier.
-- J2 complété par le composant QuickPad et la prise en charge des grandes polices (facteur 2,0).
+### Prompt du 2026-10-25 (soir) — décisions validées le même jour
+- Moteur v2 (`SCORING_SPEC.md` § 15) : **attribution des lancers par position** dans le journal ; saisie « Quilles » ou « Rapide » ; `Delete` de n'importe quel lancer ; joueurs ajoutés (en fin d'ordre, à 0), retirés (classés derniers, « parti »), réordonnés **entre deux tours** ; règles sous forme de stratégie `ScoringRules`.
+- Records : seules les modifications **après la fin** excluent une partie ; l'annulation immédiate du lancer gagnant est tolérée.
+- Partage social : QR et « Défier » vers la **fiche Play Store** + code à 6 caractères ; App Links quand un domaine existera.
+- Anglais : sélecteur de langue au J3, traduction complète au J7 (fin de V1).
+- Jalons replanifiés (`ARCHITECTURE.md` § 9) : J1b moteur v2, J3 données, J4 jeu, J5 fin de partie, J6 partage social, J7 confiance et langues, puis Phase 4.
 
 ### Navigation, langues, tests (2026-10-25)
 - Navigation validée : **barre du bas** (Accueil, Historique, Hall of Fame, Réglages) ; « À propos » dans Réglages ; écran de jeu en plein écran avec un menu « ⋮ » (déroulé, joueurs, règles, abandon). Squelette en place dans `app` (commit 536e3fb), écrans déplacés dans `feature:*` au J4.

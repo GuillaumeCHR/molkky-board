@@ -69,14 +69,16 @@ core:model              Kotlin pur — identifiants, Player, Team, GameConfig (t
 core:scoring            Kotlin pur — moteur (reduce/fold), Mölkkout, Match ; dépend seulement de
                         core:model et kotlinx-serialization. Structuré pour passer en KMP plus tard
 core:stats              Kotlin pur — résumés de partie et classements (Hall of Fame) calculés depuis les journaux
-core:designsystem       thème Nordic Bold, tokens, typo, PinView, ScoreRing, PlayerChip, BigActionButton
+core:designsystem       thème Nordic Bold, tokens, typo, PinView, QuickPad, ScoreRing, PlayerChip, BigActionButton,
+                        FitToScreen, logotype, logo Yogi Studio
 core:ui                 composables métier partagés (grille de quilles, bandeau joueurs)
 core:database           Room (entités, DAO, migrations exportées)
 core:datastore          DataStore Preferences (réglages, préréglage de règles, « Plein soleil »)
 core:network            [Phase 4] supabase-kt + Ktor OkHttp, DTO
 core:data               repositories (source de vérité = Room) + SyncEngine [Phase 4]
+core:share              [J6] rendu des vignettes (Compose → bitmap) et encodage des mini-vidéos
 core:testing            fakes, règles de test, données de test
-feature:intro | home | setup | game | summary | history | stats | halloffame | players | settings
+feature:intro | home | setup | game | summary | history | stats | halloffame | players | settings | share | rules
 feature:auth | join | groups   [Phase 4]
 ```
 Règles de dépendance : `feature:*` → `core:data`, `core:ui`, `core:designsystem` uniquement ; les
@@ -91,6 +93,14 @@ features ne dépendent jamais les unes des autres ; `core:scoring` et `core:stat
   corrections.
 - Un événement invalide au rejeu (par exemple un lancer arrivé après la fin) est **ignoré de façon
   déterministe** et signalé : tous les appareils convergent vers le même état.
+- **Moteur v2** (validé le 2026-10-25, détail dans `SCORING_SPEC.md` § 15) :
+  - un lancer est **attribué par sa position** dans le journal effectif (le lanceur du moment) ; le champ
+    `by` n'est vérifié qu'à la saisie (`checkInput`). Supprimer un doublon réattribue la suite aux bons joueurs ;
+  - `ThrowResult = Pins | Points` : mode « Quilles » (stats par quille) et mode « Rapide » ;
+  - nouveaux événements `Delete`, `AddPlayer`, `RemovePlayer`, `Reorder` (entre deux tours) ;
+  - les règles sont une **stratégie** `ScoringRules` (implémentation `StandardRules(config)`) : de futures
+    variantes de jeu se brancheront sur le même journal ;
+  - `modifiedAfterFinish` remplace `corrected` pour l'éligibilité aux records.
 - Tests : un test JUnit 5 paramétré par cas de `SCORING_SPEC.md` (identifiants P1…X7 dans le nom
   des tests), plus des tests de propriétés maison (journaux aléatoires valides : score toujours dans
   [0, cible], « ajout puis Undo = identité »). Couverture vérifiée par **Kover** (`koverVerify`, en CI) :
@@ -106,6 +116,11 @@ features ne dépendent jamais les unes des autres ; `core:scoring` et `core:stat
 - L'état d'une partie n'est **pas stocké** : `Flow<List<GameEvent>>` → `replay()` → `UiState`
   (moins de 200 événements par manche, recalcul négligeable). Les stats et le Hall of Fame sont
   calculés par `core:stats` à partir des journaux (§ 10).
+- **Aucune partie perdue** : chaque événement validé est écrit dans Room avant que l'UI n'avance (transaction
+  courte). Au démarrage, `StartupLoader` détecte une partie en cours et l'accueil propose de la reprendre ;
+  test instrumenté dédié (mort du processus, redémarrage du téléphone).
+- Réglages (DataStore) : mode de saisie, langue, « Plein soleil », annonces vocales, sons, coach, intro courte,
+  compteur de lancements, prise en main vue.
 - Le mode « un seul téléphone » fonctionne sans compte ni réseau : les modules réseau sont injectés
   mais inactifs tant qu'on ne partage pas la partie.
 
@@ -159,6 +174,12 @@ exposition que Google) ; l'auto-hébergement est la porte de sortie.
     renvoyé avec le nouveau `expected_seq` ;
   - s'il est devenu invalide (le même lancer saisi deux fois → `NOT_YOUR_TURN`), il passe en
     REJECTED et un snackbar s'affiche : « Lancer déjà saisi par Bruno ».
+- **Corrections** : `Correct`, `Delete` et les événements de joueurs sont des événements comme les autres,
+  ajoutés au journal serveur. Chaque téléphone les reçoit, rejoue le journal et compare l'ancien et le nouvel
+  état : un lancer passé modifié affiche « Lancer de Léa corrigé » ; si le vainqueur change, l'écran de fin se
+  referme et la partie reprend partout.
+- Le contrôle « c'est bien mon tour » se fait **à la saisie** et au rejeu de la boîte d'envoi après un
+  `SEQ_CONFLICT` (le lanceur attendu a-t-il changé ?), pas au rejeu du journal (attribution par position).
 - **Temps réel** : abonnement Realtime au canal `game_events:game_id=eq.X` tant que l'écran de jeu est
   ouvert.
 - **Retour en ligne** : `select … where seq > lastSeq`, puis vidage de la boîte d'envoi. Room reste
@@ -172,11 +193,14 @@ exposition que Google) ; l'auto-hébergement est la porte de sortie.
   (pas de 0/O, 1/I/L), soit environ 887 millions de combinaisons. Il expire à la fin de la partie ou
   après 24 h, avec limitation de débit sur `join_game`.
 - **QR** : contient **uniquement le code** (texte `ABC123`), généré avec zxing et scanné avec CameraX
-  et ML Kit (version embarquée) ; le scan remplit le champ « Rejoindre ». **Les liens d'invitation
-  (`molkky://` ou App Links `https://`) sont reportés** : aucun intent-filter de deep link en v1, donc
-  aucune surface d'entrée externe. À reprendre quand un domaine existera.
-- **Rôles** : l'organisateur peut tout faire (corriger, saisir pour les invités, clore la partie) ; un
-  joueur saisit ses propres lancers. Pas d'interface d'administration en v1.
+  et ML Kit (version embarquée) ; le scan remplit le champ « Rejoindre » (objectif : rejoindre en moins de
+  10 s). **Les liens profonds restent reportés** (schéma `molkkyboard://` réservé) : aucun intent-filter en V1.
+- **Partage social (décision du 2026-10-25)** : le QR des vignettes et « Défier » mènent à la **fiche Play
+  Store** ; l'invitation de groupe ou la revanche passent par le **code à 6 caractères** écrit dans le message.
+  Vrais liens (App Links) quand un domaine sera acquis, en même temps que le lien spectateur.
+- **Rôles** : chacun saisit son propre lancer et peut corriger **son dernier lancer** ; l'organisateur peut
+  corriger ou supprimer n'importe quel lancer, gérer les joueurs (ordre, ajout, retrait), saisir pour les
+  invités et clore la partie. Pas d'interface d'administration en V1.
 
 ## 8. Sécurité et RGPD (par conception)
 - Données collectées : e-mail (Auth), pseudo, couleur, lancers. Ni localisation, ni contacts, ni
@@ -192,20 +216,26 @@ exposition que Google) ; l'auto-hébergement est la porte de sortie.
   du scan uniquement, `network_security_config` en HTTPS seulement.
 
 ## 9. Jalons
+
+> Replanifiés le 2026-10-25 après l'élargissement de la V1 (prompt du soir). Fait : J0, J1, J2, navigation et intro.
+
 | # | Jalon | Contenu | Arrêt pour validation |
 |---|---|---|---|
-| J0 | Squelette | build-logic, `libs.versions.toml` (versions stables vérifiées), app vide, ktlint, detekt, CI GitHub Actions (tests, lint, assembleDebug, APK en artefact) | — |
-| J1 | Moteur | `core:model` et `core:scoring` en TDD sur SCORING_SPEC, tests de propriétés | rapport de tests |
-| J2 | Design system | thème, tokens, polices, PinView, ScoreRing, PlayerChip, BigActionButton, `@Preview` clair/sombre/« Plein soleil » | **captures Roborazzi** (demandé) |
-| J3 | Données locales | Room, DataStore, repositories, tests DAO (Robolectric) | — |
-| J4 | Jouer | feature:setup (joueurs, équipes nommées avec couleur, emblème et nom au hasard 🎲, reprise d'une équipe existante, ordre par glisser-déposer, règles avancées) et feature:game (grille, aperçu « +7 → 38 », Raté/Valider, undo + snackbar, haptique, keepScreenOn) | démo APK |
-| J5 | Fin du MVP | animation de victoire (Canvas, version réduite), feature:summary (classement, **revanche** : mêmes équipes, ordre inversé), history (déroulé des lancers), stats (Vico), `core:stats` + **Hall of Fame local** (classements testés), players, match en plusieurs manches et Mölkkout, **écran d'intro Yogi Studio** (feature:intro, Canvas, chargement en parallèle) et « À propos ». **Fin de la Phase 3** | APK |
-| J6 | Backend | projet Supabase UE, migrations, RLS, RPC, tests pgTAP | revue du SQL / de RLS |
-| J7 | Comptes | feature:auth (OTP, mot de passe, Google, anonyme), profil, suppression du compte | — |
-| J8 | Partage | création partagée, code et QR (code seul), SyncEngine, Realtime, rattrapage hors ligne, gestion des conflits | test à deux téléphones |
-| J9 | Rôles, groupes et durcissement | correction par l'organisateur, invités, **groupes et Hall of Fame de groupe**, animation de victoire synchronisée, limitation de débit, confidentialité. **Fin de la Phase 4** | — |
-| J10 | Finitions et build | Baseline Profiles, audit d'accessibilité (TalkBack, contraste), APK debug, préparation de la release (Phase 5) | APK |
-| J11 | Compléments optionnels | records secondaires, badges, carte de résultat partageable : **uniquement après validation** | oui, avant de commencer |
+| J0 | Squelette ✅ | build-logic, catalogue, CI, lint | — |
+| J1 | Moteur ✅ | `core:model`, `core:scoring`, 427 tests | rapport de tests ✅ |
+| J2 | Design system ✅ | thème, composants, QuickPad, grandes polices, FitToScreen ; navigation (barre du bas) ; intro Yogi Studio et icône | captures ✅ (intro : timings à valider) |
+| J1b | Moteur v2 | attribution par position, saisie rapide, `Delete`, joueurs en cours de partie, `modifiedAfterFinish`, ordre de la manche suivante, stratégie `ScoringRules` (§ 15 de la spec) | rapport de tests |
+| J3 | Données locales | Room (journal écrit à chaque événement, reprise automatique + test instrumenté), DataStore (réglages, **sélecteur de langue**, compteur de lancements → intro courte), repositories | — |
+| J4 | Jouer | création de partie (profils avec avatar emoji/mascotte ou photo, équipes nommées 🎲, glisser-déposer, règles avancées, mode famille), écran de jeu adaptatif (quilles ou pavé rapide, « Valider » obligatoire, undo + snackbar, déroulé modifiable, gestion des joueurs, coach, règles consultables, haptique, shake/retour à 25, keepScreenOn), prise en main en 3–4 bulles (test < 30 s), captures à 1,0 / 1,5 / 2,0 | démo APK |
+| J5 | Fin de partie et mémoire | animation de victoire, fin de partie, revanche et ordre de la manche suivante, historique complet (suppression), stats (Vico), `core:stats` + Hall of Fame local, match et Mölkkout, notification de partie en cours, annonces vocales (TTS) | APK |
+| J6 | Partage social | moments détectés, vignettes (3 formats, 3–4 modèles), mini-vidéo et GIF, feuille de partage, vie privée (noms masquables, sans EXIF), tests de rendu et d'encodage | captures + vidéo |
+| J7 | Confiance et langues | export JSON, sauvegarde/restauration fichier, **traduction anglaise complète** | APK — **fin de la V1 locale (Phase 3)** |
+| J8 | Backend | Supabase UE, migrations, RLS, RPC, pgTAP | revue SQL / RLS |
+| J9 | Comptes | auth (OTP, mot de passe, Google, anonyme), profil, suppression du compte | — |
+| J10 | Multi-appareils | partie partagée, code et QR (< 10 s), SyncEngine, Realtime, rattrapage, conflits, propagation des corrections | test à deux téléphones |
+| J11 | Rôles et groupes | droits de correction, invités, groupes et Hall of Fame de groupe, victoire synchronisée, « Défier » par code. **Fin de la Phase 4** | — |
+| J12 | Finitions et build | Baseline Profiles, audit d'accessibilité, build release signé (Phase 5) | APK |
+| J13 | Compléments | records secondaires, badges : **après validation** | oui |
 
 ## 10. Équipes nommées, victoire, Hall of Fame et groupes
 
@@ -222,10 +252,12 @@ exposition que Google) ; l'auto-hébergement est la porte de sortie.
 
 ### Statut d'une partie (dérivé du journal)
 - Nouvel événement `Abandon` (organisateur ou téléphone local) → statut `ABANDONED`.
-- `corrected = true` dès que le journal effectif contient un `Correct`. Un `Undo` du dernier lancer
-  est une rectification de saisie, **pas** une correction.
-- **Éligible aux records** = manche `FINISHED` ∧ ¬`ABANDONED` ∧ ¬`corrected`. Les autres restent dans
-  l'historique avec un badge (« abandonnée », « corrigée »).
+- Les corrections **pendant** la partie sont normales (`hasCorrections`, simple mention dans l'historique).
+- `modifiedAfterFinish` : correction, suppression ou annulation acceptée alors que la manche était terminée,
+  sauf l'annulation immédiate du lancer gagnant (validé le 2026-10-25).
+- **Éligible aux records** = manche `FINISHED` ∧ ¬`ABANDONED` ∧ ¬`modifiedAfterFinish`. Les autres restent dans
+  l'historique avec un badge (« abandonnée », « modifiée après la fin »).
+- Les lancers en mode « Rapide » comptent partout, sauf dans les classements portant sur une quille précise.
 
 ### `core:stats` (Kotlin pur, tout depuis les journaux)
 - `summarize(game, effectiveLog) → GameSummary` (vainqueur, lancers par équipe et par joueur, date,
@@ -282,7 +314,8 @@ Le backlog (`CLAUDE.md`) ne démarre qu'après le MVP. Dès maintenant, quelques
 ## Points ouverts (non bloquants, à trancher au jalon indiqué)
 - ~~Liens d'invitation~~ : reportés après la v1 ; on rejoint par code ou QR contenant le code (décidé le 2026-10-25).
 - ~~Région Supabase~~ : **Paris (`eu-west-3`)** (décidé le 2026-10-25).
-- **Durée de conservation** des parties partagées (J9).
+- **Durée de conservation** des parties partagées (J11).
+- **Domaine** pour les App Links et le lien spectateur : à acquérir plus tard (décision du 2026-10-25).
 - ~~Fin de la Phase 5~~ : configuration du build release signé (prompt complété le 2026-10-25).
 
 ## Vérification par jalon

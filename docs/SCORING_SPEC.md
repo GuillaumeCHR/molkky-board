@@ -116,9 +116,9 @@ Sauf mention contraire : configuration « Classique », 2 équipes d'un joueur, 
 | T1 | A=[Alice, Arthur], B=[Bruno, Béa, Benoît] | Alice, Bruno, Arthur, Béa, Alice, Benoît, Arthur, Bruno, … (chaque équipe fait tourner ses propres joueurs) |
 | T2 | A, B, C ; ✗B au 2e tour | …, A, C, A, C, … |
 | T3 | A, B, C ; A atteint 50 (`FirstToTarget`) | fin immédiate : B et C ne lancent pas |
-| T4 | Lancer saisi pour une équipe dont ce n'est pas le tour (sans `WrongTeam`) | Erreur `NOT_YOUR_TURN` |
-| T5 | Lancer saisi par un joueur qui n'appartient pas à l'équipe | Erreur `UNKNOWN_PLAYER` |
-| T6 | Lancer saisi par un coéquipier qui n'est pas le lanceur attendu (hors faute `WRONG_PLAYER`) | Erreur `NOT_YOUR_TURN` |
+| T4 | Lancer saisi pour une équipe dont ce n'est pas le tour (sans `WrongTeam`) | Erreur `NOT_YOUR_TURN` **à la saisie** (v2 : contrôle d'entrée, voir § 15.2) |
+| T5 | Lancer saisi par un joueur qui n'appartient pas à l'équipe | Erreur `UNKNOWN_PLAYER` **à la saisie** (v2) |
+| T6 | Lancer saisi par un coéquipier qui n'est pas le lanceur attendu (hors faute `WRONG_PLAYER`) | Erreur `NOT_YOUR_TURN` **à la saisie** (v2) |
 
 ## 7. Fautes (`F`)
 
@@ -183,7 +183,7 @@ Sauf mention contraire : configuration « Classique », 2 équipes d'un joueur, 
 | M5 | `LoserStarts` | M1 gagnée par A | M2 : B commence |
 | M6 | 3 équipes, `Alternate` | — | la première équipe tourne : A, B, C, A… ; l'ordre relatif est conservé |
 | M7 | preset IMO | M1 gagnée par élimination de B (A avait 30) | points de manche enregistrés : A 50, B 0 |
-| M8 | — | composition / ordre des joueurs modifiés entre deux manches | accepté ; refusé pendant une manche (`LINEUP_LOCKED`) |
+| M8 | — | composition / ordre des joueurs modifiés entre deux manches | accepté. ~~Refusé pendant une manche~~ : **remplacé en v2** par les événements de joueurs (§ 15.5) |
 
 ## 11. Mölkkout (`K`)
 
@@ -223,7 +223,7 @@ Séquence de `2T` lancers : l'équipe du lancer *k* (k = 0…2T−1) est **A** s
 |---|---|---|
 | S1 | …, A atteint 50 | `FINISHED`, `corrected = false`, éligible aux records |
 | S2 | …, `Abandon` | `ABANDONED`, plus aucun lancer accepté (`SET_FINISHED`), non éligible |
-| S3 | …, `Correct(k, …)`, …, victoire | `FINISHED`, `corrected = true`, non éligible, reste dans l'historique |
+| S3 | …, `Correct(k, …)`, …, victoire | **v2** : `FINISHED`, correction **pendant** la partie → éligible (voir § 15.6) |
 | S4 | …, lancer, `Undo`, …, victoire | `FINISHED`, `corrected = false` (un Undo n'est pas une correction) |
 | S5 | `Abandon` sur une manche FINISHED | Erreur `SET_FINISHED` |
 | S6 | `Abandon` puis `Undo` | la manche redevient `IN_PROGRESS` |
@@ -252,3 +252,110 @@ Choix faits en codant `core:scoring`, là où la spec ci-dessus laissait une mar
   `DecisiveByPoints` n'a d'effet qu'à deux équipes, sinon on alterne ; un point de manche manquant compte 0.
 - **Mölkkout** : deux équipes seulement. Si les tailles diffèrent, chaque équipe lance `max(T)` fois et ses
   joueurs tournent ; un tour supplémentaire compte `max(taille)` lancers par équipe.
+
+## 15. Moteur v2 (prompt du 2026-10-25 soir, décisions validées le même jour)
+
+Nouvelles exigences : corriger **ou supprimer** n'importe quel lancer passé, deux modes de saisie, joueurs
+ajoutés, retirés ou réordonnés en cours de partie, records exclus seulement si la partie est modifiée
+**après sa fin**, ordre de la manche suivante paramétrable, règles injectées sous forme de stratégie.
+
+### 15.1 Modèle
+
+```
+Throw(id, result: ThrowResult, by: PlayerId?)      // le lanceur est déduit de la position (15.2)
+ThrowResult = Pins(pins: List<Int>)                 // mode « Quilles » : alimente les stats par quille
+            | Points(value: Int, kind: SINGLE_PIN | PIN_COUNT)   // mode « Rapide »
+Fault(id, kind, by: PlayerId?)                      // WRONG_PLAYER : by = le joueur fautif (obligatoire)
+WrongTeam(id, team, player, result)                 // inchangé : l'équipe fautive est explicite
+Delete(id, target)                                  // supprime n'importe quel événement du journal effectif
+AddPlayer(id, player, team)                         // team existante : fin de sa rotation ; sinon nouvelle équipe en fin d'ordre
+RemovePlayer(id, player)                            // quitte la partie ; équipe vide → « partie » (LEFT)
+Reorder(id, teams: List<TeamId>, players: Map<TeamId, List<PlayerId>>)   // entre deux tours seulement
+```
+
+`TeamState` gagne `turns` (tours joués, fautes et lancers perdus compris ; `WrongTeam` ne compte pas) et
+`left` (équipe partie). Les règles de score (dépassement, sanction des ratés, règle des 37, rattrapage…) sont
+une **stratégie** `ScoringRules` injectée dans `reduce` ; `StandardRules(config)` implémente `GameConfig`.
+Les futures variantes (« Killer », mort subite…) seront d'autres stratégies sur le même journal.
+
+### 15.2 Attribution par position (`A`)
+
+Un lancer appartient au joueur dont c'est le tour **à sa position dans le journal effectif**. Le champ `by`
+n'est vérifié qu'**à la saisie** (`checkInput`) : un téléphone ne peut pas saisir pour un autre joueur que le
+lanceur attendu. Au rejeu, il est ignoré.
+
+| ID | Journal | Action | Résultat |
+|---|---|---|---|
+| A1 | A, B, C ; A `{5}`, A `{5}` saisi deux fois par erreur (le 2e est attribué à B), C `{3}` (attribué à A) | `Delete(2e lancer)` | B n'a rien lancé ; `{3}` est réattribué à **B** ; tour de C |
+| A2 | même journal | `Correct(2e lancer, Throw({7}))` | le lancer de B vaut 7 ; rien d'autre ne change |
+| A3 | tour d'Alice | `checkInput(Throw(by = Bruno))` | `NOT_YOUR_TURN` (T4–T6 deviennent des contrôles de saisie) |
+| A4 | `by` absent (saisie locale) | `Throw({4})` | attribué au lanceur courant |
+
+### 15.3 Saisie rapide (`Q`)
+
+| ID | Lancer | Points | Note |
+|---|---|---|---|
+| Q1 | `Points(7, SINGLE_PIN)` | 7 | une quille seule |
+| Q2 | `Points(7, PIN_COUNT)` | 7 | sept quilles |
+| Q3 | `Points(0, …)` | 0 | raté |
+| Q4 | `Points(1, PIN_COUNT)` | erreur `INVALID_POINTS` | une seule quille vaut sa valeur : saisir en `SINGLE_PIN` |
+| Q5 | `Points(13, …)` | erreur `INVALID_POINTS` | |
+| Q6 | partie mixte `Pins` / `Points` | même score | les stats par quille ne comptent que les lancers `Pins` |
+
+### 15.4 Suppression (`D`)
+
+| ID | Journal | Action | Résultat |
+|---|---|---|---|
+| D1 | A `{9}` (45 → 25), … | `Delete(ce lancer)` | A reste à 45 ; tout est recalculé ; le retour à 25 disparaît |
+| D2 | … 3e raté consécutif de A (élimination) … | `Delete(un des ratés)` | A n'est plus éliminé ; la suite est rejouée |
+| D3 | … lancer gagnant de A … | `Delete(lancer gagnant)` | statut `IN_PROGRESS`, la partie reprend (l'écran de fin se referme) |
+| D4 | … | `Delete(lancer)` qui ferait gagner une autre équipe plus tôt, la suite devenant postérieure à la fin | erreur `CORRECTION_INVALIDATES_LOG`, journal inchangé |
+| D5 | — | `Delete(inconnu)` | erreur `UNKNOWN_EVENT` |
+
+### 15.5 Joueurs en cours de partie (`L`)
+
+Un **tour** est terminé quand toutes les équipes en lice ont le même nombre de `turns`.
+
+| ID | État | Action | Résultat |
+|---|---|---|---|
+| L1 | A, B ; tour 3 en cours | `AddPlayer(Chloé, C)` (nouvelle équipe) | C démarre à 0 (ou au score de départ du mode famille), **en fin d'ordre** ; ses `turns` valent le minimum des équipes en lice : elle lance à la fin du tour en cours |
+| L2 | A = [Alice, Arthur] | `AddPlayer(Anna, A)` | Anna s'ajoute **à la fin de la rotation** de A |
+| L3 | A, B, C ; tour de B | `RemovePlayer(Bruno)` (seul dans B) | B est **partie** (`left`), retirée du tour ; le tour passe à C ; classée **dernière, « partie »** |
+| L4 | A, B | `RemovePlayer(Bruno)` | il ne reste que A : **A gagne** ; classement [A, B] |
+| L5 | A = [Alice, Arthur], prochain lanceur Arthur | `RemovePlayer(Arthur)` | la rotation de A continue avec Alice |
+| L6 | fin d'un tour (tous à égalité de `turns`) | `Reorder([C, A, B], …)` | accepté ; C lance, puis A, puis B ; dans chaque équipe, le premier de la nouvelle liste lance ensuite |
+| L7 | en plein tour | `Reorder(…)` | erreur `NOT_BETWEEN_ROUNDS` |
+| L8 | — | `Reorder` qui n'est pas une permutation des équipes en lice (ou des joueurs d'une équipe) | erreur `INVALID_EVENT` |
+| L9 | — | `AddPlayer` d'un joueur déjà présent | erreur `PLAYER_IN_MULTIPLE_TEAMS` |
+
+Classement final : vainqueur(s), équipes en lice par score, éliminées (de la dernière à la première), puis
+équipes **parties** (de la dernière à la première partie).
+
+### 15.6 Records : modification après la fin (`R`, remplace S3)
+
+`modifiedAfterFinish` est vrai dès qu'un `Correct` ou un `Delete` est accepté **alors que la manche était
+terminée**, ou qu'un `Undo` est accepté sur une manche terminée **sauf** l'annulation immédiate du lancer
+gagnant (l'`Undo` qui suit directement, dans le journal brut, l'événement qui a terminé la manche).
+Éligible aux records = `FINISHED` ∧ ¬`ABANDONED` ∧ ¬`modifiedAfterFinish`.
+
+| ID | Journal | Résultat |
+|---|---|---|
+| R1 | …, `Correct(k)` pendant la partie, …, victoire | éligible (`hasCorrections = true`, affiché « corrigée en cours de partie ») |
+| R2 | …, victoire, `Undo` immédiat, …, victoire | éligible |
+| R3 | …, victoire, `Correct(k)` (la manche reste gagnée) | **non éligible** |
+| R4 | …, victoire, `Delete(lancer gagnant)`, …, nouvelle victoire | non éligible |
+| R5 | …, victoire, `Abandon` | refusé (`SET_FINISHED`) |
+
+### 15.7 Ordre de la manche suivante (`N`)
+
+`NextStarter` : `Same` (ordre identique), `Rotate` (la 1re équipe passe en dernier ; ex-`Alternate`),
+`LoserFirst` (le dernier du classement commence, ordre relatif conservé), `WinnerLast` (le vainqueur joue en
+dernier, ordre relatif conservé), `DecisiveByPoints` (inchangé).
+
+| ID | Manche précédente (ordre A, B, C ; classement) | Option | Ordre suivant |
+|---|---|---|---|
+| N1 | [B, C, A] | `Same` | A, B, C |
+| N2 | [B, C, A] | `Rotate` | B, C, A |
+| N3 | [B, C, A] | `LoserFirst` | A, B, C (A est dernier) |
+| N4 | [B, C, A] | `WinnerLast` | C, A, B |
+| N5 | 2 équipes, A gagne | `WinnerLast` | B, A |
