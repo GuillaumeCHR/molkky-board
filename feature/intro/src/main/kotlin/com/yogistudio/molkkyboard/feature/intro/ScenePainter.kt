@@ -68,13 +68,14 @@ internal class ScenePainter(
         scope: DrawScope,
         time: Long,
         numbers: Array<TextLayoutResult>,
+        flyingNumbers: Array<TextLayoutResult>,
         presents: TextLayoutResult,
         background: Color,
     ) = with(scope) {
         drawRect(background)
         val shake = shakeOffset(time)
         translate(left = shake) {
-            if (time < IntroTimeline.IMPACT) drawPins(time, numbers) else drawShards(time, numbers)
+            if (time < IntroTimeline.IMPACT) drawPins(time, numbers) else drawShards(time, flyingNumbers)
             if (time in IntroTimeline.SETUP_END..IntroTimeline.IMPACT + MOLKKY_FADE) drawMolkky(time)
         }
         if (time >= IntroTimeline.SHATTER_END) drawSignature(time, presents)

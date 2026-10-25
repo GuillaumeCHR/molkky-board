@@ -192,6 +192,11 @@ private fun ShatterScene(elapsed: MutableLongState) {
             remember(simulation, numberStyle) {
                 Array(13) { measurer.measure(it.toString(), numberStyle) }
             }
+        // Numéros emportés par les éclats : couleur du texte du thème (clairs en mode sombre).
+        val flyingNumbers =
+            remember(simulation, numberStyle, ink) {
+                Array(13) { measurer.measure(it.toString(), numberStyle.copy(color = ink)) }
+            }
         val presentsLayout =
             remember(presents, ink) {
                 measurer.measure(
@@ -211,7 +216,7 @@ private fun ShatterScene(elapsed: MutableLongState) {
                 )
             }
         Canvas(Modifier.fillMaxSize()) {
-            painter.draw(this, elapsed.longValue, numbers, presentsLayout, background)
+            painter.draw(this, elapsed.longValue, numbers, flyingNumbers, presentsLayout, background)
         }
     }
 }
