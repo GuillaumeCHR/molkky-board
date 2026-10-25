@@ -35,9 +35,9 @@ class EdgeCaseTest {
     @Test
     fun `une equipe eliminee ne peut pas commettre de faute de mauvaise equipe`() {
         val s = newSet(teams = soloTeams(3)).given(C, eliminated = true)
-        assertEquals(ScoringError.INVALID_EVENT, reduce(s, WrongTeam(nextId(), C, chloe, listOf(1))).errorOrNull())
-        assertEquals(ScoringError.DUPLICATE_PIN, reduce(s, WrongTeam(nextId(), B, bruno, listOf(2, 2))).errorOrNull())
-        assertEquals(ScoringError.INVALID_PIN, reduce(s, WrongTeam(nextId(), B, bruno, listOf(0))).errorOrNull())
+        assertEquals(ScoringError.INVALID_EVENT, reduce(s, wrongTeam(C, chloe, 1)).errorOrNull())
+        assertEquals(ScoringError.DUPLICATE_PIN, reduce(s, wrongTeam(B, bruno, 2, 2)).errorOrNull())
+        assertEquals(ScoringError.INVALID_PIN, reduce(s, wrongTeam(B, bruno, 0)).errorOrNull())
     }
 
     @Test
@@ -64,10 +64,10 @@ class EdgeCaseTest {
     }
 
     @Test
-    fun `faute d'une equipe inconnue`() =
+    fun `faute de mauvais joueur par un joueur absent de la partie`() =
         assertEquals(
-            ScoringError.UNKNOWN_TEAM,
-            reduce(newSet(), Fault(nextId(), C, chloe, FaultKind.ABSENT)).errorOrNull(),
+            ScoringError.UNKNOWN_PLAYER,
+            reduce(newSet(), Fault(nextId(), FaultKind.WRONG_PLAYER, chloe)).errorOrNull(),
         )
 
     @Test

@@ -65,17 +65,28 @@ fun SetState.score(team: TeamId) = team(team)!!.score
 
 fun SetState.misses(team: TeamId) = team(team)!!.misses
 
-fun SetState.throwOf(team: TeamId, vararg pins: Int, player: PlayerId = team(team)!!.nextPlayer) =
-    Throw(nextId(), team, player, pins.toList())
+fun pins(vararg pins: Int) = ThrowResult.Pins(pins.toList())
+
+fun throwOf(vararg pins: Int, by: PlayerId? = null) = Throw(nextId(), pins(*pins), by)
+
+fun wrongTeam(team: TeamId, player: PlayerId, vararg pins: Int) = WrongTeam(nextId(), team, player, pins(*pins))
 
 /** Lancer du joueur courant ; `play()` sans quille = raté. */
-fun SetState.play(vararg pins: Int): SetState = reduce(this, throwOf(turn!!, *pins)).getOrThrow()
+fun SetState.play(vararg pins: Int): SetState = reduce(this, throwOf(*pins)).getOrThrow()
 
-fun SetState.tryThrow(team: TeamId, vararg pins: Int, player: PlayerId = team(team)!!.nextPlayer): Outcome<SetState> =
-    reduce(this, Throw(nextId(), team, player, pins.toList()))
+/** Contrôle de saisie d'un lancer annoncé par [player] (par défaut le prochain lanceur de [team]). */
+fun SetState.tryThrow(
+    team: TeamId,
+    vararg pins: Int,
+    player: PlayerId = team(team)?.nextPlayer ?: PlayerId("?"),
+): ScoringError? =
+    checkInput(this, throwOf(*pins, by = player))
 
-fun SetState.fault(kind: FaultKind, player: PlayerId = currentPlayer!!): SetState =
-    reduce(this, Fault(nextId(), turn!!, player, kind)).getOrThrow()
+fun SetState.fault(kind: FaultKind, by: PlayerId? = null): SetState =
+    reduce(
+        this,
+        Fault(nextId(), kind, by),
+    ).getOrThrow()
 
 /** Construit un journal brut lancer par lancer, en lisant l'état courant obtenu par rejeu. */
 class LogBuilder(
@@ -88,10 +99,7 @@ class LogBuilder(
 
     val state: SetState get() = result().state
 
-    fun play(vararg pins: Int): Throw {
-        val s = state
-        return Throw(nextId(), s.turn!!, s.currentPlayer!!, pins.toList()).also { events += it }
-    }
+    fun play(vararg pins: Int): Throw = throwOf(*pins).also { events += it }
 
     fun add(event: SetEvent): SetEvent = event.also { events += it }
 

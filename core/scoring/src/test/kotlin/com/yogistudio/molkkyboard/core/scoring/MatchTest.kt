@@ -38,6 +38,13 @@ class MatchTest {
     }
 
     @Test
+    fun `belle en rotation simple sans calcul de points`() {
+        val results = listOf(result(A to 50, B to 10), result(A to 10, B to 50))
+        val config = MatchConfig(nextStarter = NextStarter.Rotate)
+        assertEquals(MatchStatus.NextSet(3, listOf(A, B)), matchStatus(config, ab, results))
+    }
+
+    @Test
     fun `egalite sans departage on alterne`() {
         val results = listOf(result(A to 50, B to 40), result(A to 40, B to 50))
         val config = MatchConfig(tieBreak = TieBreak.None)
@@ -46,7 +53,7 @@ class MatchTest {
 
     @Test
     fun `M4 alternance`() {
-        val config = MatchConfig(setsToWin = 3, nextStarter = NextStarter.Alternate)
+        val config = MatchConfig(setsToWin = 3, nextStarter = NextStarter.Rotate)
         val results = listOf(result(A to 50, B to 0), result(A to 0, B to 50))
         assertEquals(MatchStatus.NextSet(1, listOf(A, B)), matchStatus(config, ab, emptyList()))
         assertEquals(MatchStatus.NextSet(2, listOf(B, A)), matchStatus(config, ab, results.take(1)))
@@ -55,14 +62,14 @@ class MatchTest {
 
     @Test
     fun `M5 le perdant commence`() {
-        val config = MatchConfig(nextStarter = NextStarter.LoserStarts)
+        val config = MatchConfig(nextStarter = NextStarter.LoserFirst)
         assertEquals(MatchStatus.NextSet(2, listOf(B, A)), matchStatus(config, ab, listOf(result(A to 50, B to 10))))
     }
 
     @Test
     fun `M6 a trois equipes l'ordre relatif est conserve`() {
         val abc = listOf(A, B, C)
-        val config = MatchConfig(setsToWin = 3, nextStarter = NextStarter.Alternate)
+        val config = MatchConfig(setsToWin = 3, nextStarter = NextStarter.Rotate)
         val results = listOf(result(A to 50, B to 0, C to 0), result(A to 0, B to 50, C to 0))
         assertEquals(MatchStatus.NextSet(2, listOf(B, C, A)), matchStatus(config, abc, results.take(1)))
         assertEquals(MatchStatus.NextSet(3, listOf(C, A, B)), matchStatus(config, abc, results))
@@ -88,15 +95,8 @@ class MatchTest {
     }
 
     @Test
-    fun `M8 composition modifiable entre deux manches seulement`() {
-        assertEquals(ScoringError.LINEUP_LOCKED, checkLineupChange(newSet()))
-        assertNull(checkLineupChange(newSet().given(A, score = 45).play(5)))
-        assertNull(checkLineupChange(null))
-    }
-
-    @Test
     fun `preset IMO`() {
-        assertEquals(NextStarter.Alternate, MatchConfig.ImoTournament.nextStarter)
+        assertEquals(NextStarter.Rotate, MatchConfig.ImoTournament.nextStarter)
         assertEquals(A, SetResult(listOf(A, B), emptyMap()).winner)
     }
 }

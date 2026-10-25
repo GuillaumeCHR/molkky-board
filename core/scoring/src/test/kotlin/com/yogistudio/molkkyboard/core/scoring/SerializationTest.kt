@@ -16,17 +16,21 @@ class SerializationTest {
     fun `aller-retour des evenements`() {
         val events: List<SetEvent> =
             listOf(
-                Throw(EventId("1"), A, alice, listOf(12, 4)),
-                Fault(EventId("2"), B, bruno, FaultKind.TRESPASS),
-                WrongTeam(EventId("3"), A, alice, emptyList()),
+                Throw(EventId("1"), ThrowResult.Pins(listOf(12, 4)), by = alice),
+                Fault(EventId("2"), FaultKind.TRESPASS),
+                WrongTeam(EventId("3"), A, alice, ThrowResult.Points(0, PointsKind.PIN_COUNT)),
+                AddPlayer(EventId("8"), chloe, C),
+                RemovePlayer(EventId("9"), bruno),
+                Reorder(EventId("10"), listOf(B, A), mapOf(A to listOf(alice))),
+                Delete(EventId("11"), EventId("2")),
                 Abandon(EventId("4")),
                 Undo(EventId("5"), EventId("4")),
-                Correct(EventId("6"), EventId("1"), Throw(EventId("7"), A, alice, listOf(3))),
+                Correct(EventId("6"), EventId("1"), Throw(EventId("7"), ThrowResult.Points(3, PointsKind.SINGLE_PIN))),
             )
         val encoded = json.encodeToString(events)
         assertEquals(events, json.decodeFromString<List<SetEvent>>(encoded))
         assertEquals(
-            """{"type":"throw","id":"1","team":"A","player":"Alice","pins":[12,4]}""",
+            """{"type":"throw","id":"1","result":{"type":"pins","pins":[12,4]},"by":"Alice"}""",
             json.encodeToString<SetEvent>(events.first()),
         )
     }

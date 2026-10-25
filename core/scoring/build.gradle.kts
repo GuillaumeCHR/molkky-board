@@ -23,9 +23,10 @@ kover {
         verify {
             rule("Moteur de score entièrement couvert") {
                 minBound(100, CoverageUnit.LINE)
-                // Les seules branches non couvertes sont les tests de nullité générés par Kotlin quand on
-                // compare une équipe au `turn` nullable : inatteignables, car `turn` est non nul en cours de manche.
-                minBound(98, CoverageUnit.BRANCH)
+                // Les seules branches non couvertes sont inatteignables : tests de nullité générés par Kotlin sur
+                // des identifiants (`turn` est non nul en cours de manche) et cas « liste vide » de `minOf`/`maxOf`
+                // (une manche en cours a toujours au moins deux équipes en lice).
+                minBound(97, CoverageUnit.BRANCH)
             }
         }
     }

@@ -15,10 +15,10 @@ class ValidationTest {
     @ParameterizedTest
     @ValueSource(ints = [0, 13, -1])
     fun `X1 quille inexistante`(pin: Int) =
-        assertEquals(ScoringError.INVALID_PIN, newSet().tryThrow(A, pin).errorOrNull())
+        assertEquals(ScoringError.INVALID_PIN, newSet().tryThrow(A, pin))
 
     @Test
-    fun `X2 quille en double`() = assertEquals(ScoringError.DUPLICATE_PIN, newSet().tryThrow(A, 4, 4).errorOrNull())
+    fun `X2 quille en double`() = assertEquals(ScoringError.DUPLICATE_PIN, newSet().tryThrow(A, 4, 4))
 
     @Test
     fun `X3 moins de deux equipes`() =
@@ -67,9 +67,9 @@ class ValidationTest {
     fun `X7 aucun evenement de jeu sur une manche terminee`() {
         val finished = newSet().given(A, score = 45).play(5)
         listOf(
-            Throw(nextId(), B, bruno, listOf(1)),
-            Fault(nextId(), B, bruno, FaultKind.TRESPASS),
-            WrongTeam(nextId(), B, bruno, listOf(1)),
+            throwOf(1),
+            Fault(nextId(), FaultKind.TRESPASS),
+            wrongTeam(B, bruno, 1),
             Abandon(nextId()),
         ).forEach { assertEquals(ScoringError.SET_FINISHED, reduce(finished, it).errorOrNull()) }
     }

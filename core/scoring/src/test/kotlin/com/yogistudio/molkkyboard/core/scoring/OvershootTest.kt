@@ -52,6 +52,6 @@ class OvershootTest {
     @Test
     fun `O9 aucun lancer apres la fin`() {
         val finished = newSet().given(A, score = 45).play(5)
-        assertEquals(ScoringError.SET_FINISHED, finished.tryThrow(B, 3).errorOrNull())
+        assertEquals(ScoringError.SET_FINISHED, finished.tryThrow(B, 3))
     }
 }

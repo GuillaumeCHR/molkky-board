@@ -61,7 +61,7 @@ class FaultTest {
         val s =
             newSet(imo, listOf(lineup(A, alice, arthur), lineup(B, bruno)))
                 .given(A, score = 40)
-                .fault(FaultKind.WRONG_PLAYER, player = arthur)
+                .fault(FaultKind.WRONG_PLAYER, by = arthur)
         assertEquals(25, s.score(A))
         assertEquals(1, s.misses(A))
         assertEquals(arthur, s.team(A)!!.nextPlayer)
@@ -77,7 +77,7 @@ class FaultTest {
 
     private fun wrongTeamByB(config: GameConfig): SetState {
         val s = newSet(config, listOf(lineup(A, alice), lineup(B, bruno, bea))).given(B, score = 40)
-        return reduce(s, WrongTeam(nextId(), B, bruno, listOf(5))).getOrThrow()
+        return reduce(s, wrongTeam(B, bruno, 5)).getOrThrow()
     }
 
     @Test
@@ -111,7 +111,7 @@ class FaultTest {
     @Test
     fun `un lancer perdu peut eliminer et terminer la manche`() {
         val s = newSet().given(B, misses = 2)
-        val afterWrongTeam = reduce(s, WrongTeam(nextId(), B, bruno, emptyList())).getOrThrow()
+        val afterWrongTeam = reduce(s, wrongTeam(B, bruno)).getOrThrow()
         val end = afterWrongTeam.play(4)
         assertEquals(SetStatus.FINISHED, end.status)
         assertEquals(listOf(A, B), end.ranking)
@@ -122,12 +122,13 @@ class FaultTest {
         val s = newSet(teams = listOf(lineup(A, alice, arthur), lineup(B, bruno)))
 
         fun err(event: PlayEvent) = reduce(s, event).errorOrNull()
-        assertEquals(ScoringError.NOT_YOUR_TURN, err(Fault(nextId(), A, arthur, FaultKind.TRESPASS)))
-        assertEquals(ScoringError.UNKNOWN_PLAYER, err(Fault(nextId(), A, bruno, FaultKind.TRESPASS)))
-        assertEquals(ScoringError.NOT_YOUR_TURN, err(Fault(nextId(), B, bruno, FaultKind.TRESPASS)))
-        assertEquals(ScoringError.INVALID_EVENT, err(WrongTeam(nextId(), A, alice, listOf(1))))
-        assertEquals(ScoringError.UNKNOWN_TEAM, err(WrongTeam(nextId(), C, chloe, listOf(1))))
-        assertEquals(ScoringError.UNKNOWN_PLAYER, err(WrongTeam(nextId(), B, alice, listOf(1))))
-        assertEquals(ScoringError.INVALID_PIN, err(WrongTeam(nextId(), B, bruno, listOf(13))))
+        assertEquals(ScoringError.NOT_YOUR_TURN, checkInput(s, Fault(nextId(), FaultKind.TRESPASS, by = arthur)))
+        assertEquals(ScoringError.NOT_YOUR_TURN, checkInput(s, Fault(nextId(), FaultKind.TRESPASS, by = bruno)))
+        assertEquals(ScoringError.INVALID_EVENT, err(Fault(nextId(), FaultKind.WRONG_PLAYER)))
+        assertEquals(ScoringError.UNKNOWN_PLAYER, err(Fault(nextId(), FaultKind.WRONG_PLAYER, by = bruno)))
+        assertEquals(ScoringError.INVALID_EVENT, err(wrongTeam(A, alice, 1)))
+        assertEquals(ScoringError.UNKNOWN_TEAM, err(wrongTeam(C, chloe, 1)))
+        assertEquals(ScoringError.UNKNOWN_PLAYER, err(wrongTeam(B, alice, 1)))
+        assertEquals(ScoringError.INVALID_PIN, err(wrongTeam(B, bruno, 13)))
     }
 }

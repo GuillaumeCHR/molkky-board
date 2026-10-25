@@ -19,7 +19,7 @@ class StatusTest {
     fun `S1 victoire normale eligible`() {
         val result = LogBuilder().apply { aliceWins() }.result()
         assertEquals(SetStatus.FINISHED, result.state.status)
-        assertFalse(result.corrected)
+        assertFalse(result.modifiedAfterFinish)
         assertTrue(result.eligibleForRecords)
     }
 
@@ -28,7 +28,7 @@ class StatusTest {
         val log = LogBuilder()
         log.play(3)
         log.add(Abandon(nextId()))
-        log.add(Throw(nextId(), B, bruno, listOf(1)))
+        log.add(throwOf(1))
         val result = log.result()
         assertEquals(SetStatus.ABANDONED, result.state.status)
         assertNull(result.state.turn)
@@ -37,13 +37,14 @@ class StatusTest {
     }
 
     @Test
-    fun `S3 une partie corrigee n'est pas eligible`() {
+    fun `S3 R3 une partie corrigee apres sa fin n'est pas eligible`() {
         val log = LogBuilder().apply { aliceWins() }
         val firstOfB = log.result().effectiveLog[1]
-        log.add(Correct(nextId(), firstOfB.id, Throw(nextId(), B, bruno, listOf(2))))
+        log.add(Correct(nextId(), firstOfB.id, throwOf(2)))
         val result = log.result()
         assertEquals(SetStatus.FINISHED, result.state.status)
-        assertTrue(result.corrected)
+        assertTrue(result.hasCorrections)
+        assertTrue(result.modifiedAfterFinish)
         assertFalse(result.eligibleForRecords)
     }
 
@@ -54,7 +55,7 @@ class StatusTest {
         log.undoLast()
         log.aliceWins()
         val result = log.result()
-        assertFalse(result.corrected)
+        assertFalse(result.hasCorrections)
         assertTrue(result.eligibleForRecords)
     }
 

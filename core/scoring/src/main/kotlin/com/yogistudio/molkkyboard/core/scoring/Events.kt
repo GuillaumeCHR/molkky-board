@@ -14,7 +14,7 @@ value class EventId(
 )
 
 /**
- * Événement du journal d'une manche. Le journal est en ajout seul : [Undo] et [Correct] sont
+ * Événement du journal d'une manche. Le journal est en ajout seul : [Undo], [Correct] et [Delete] sont
  * eux-mêmes des événements, interprétés par [replay].
  */
 @Serializable
@@ -26,24 +26,47 @@ sealed interface SetEvent {
 @Serializable
 sealed interface PlayEvent : SetEvent
 
-/** Lancer régulier ; `pins` vide = raté. Liste brute pour pouvoir détecter les doublons. */
+/** Résultat d'un lancer : quilles touchées (mode « Quilles ») ou points saisis (mode « Rapide »). */
+@Serializable
+sealed interface ThrowResult {
+    /** Liste brute des quilles tombées (vide = raté) : alimente les statistiques par quille. */
+    @Serializable
+    @SerialName("pins")
+    data class Pins(
+        val pins: List<Int>,
+    ) : ThrowResult
+
+    /** Saisie rapide : la valeur d'une quille seule, ou un nombre de quilles tombées (0 = raté). */
+    @Serializable
+    @SerialName("points")
+    data class Points(
+        val value: Int,
+        val kind: PointsKind,
+    ) : ThrowResult
+}
+
+@Serializable
+enum class PointsKind { SINGLE_PIN, PIN_COUNT }
+
+/**
+ * Lancer régulier. Il appartient au lanceur dont c'est le tour **à sa position dans le journal** :
+ * [by] (le joueur qui saisit) n'est contrôlé qu'à la saisie par [checkInput], jamais au rejeu.
+ */
 @Serializable
 @SerialName("throw")
 data class Throw(
     override val id: EventId,
-    val team: TeamId,
-    val player: PlayerId,
-    val pins: List<Int>,
+    val result: ThrowResult,
+    val by: PlayerId? = null,
 ) : PlayEvent
 
-/** Faute de l'équipe dont c'est le tour. Pour [FaultKind.WRONG_PLAYER], `player` est le joueur fautif. */
+/** Faute de l'équipe dont c'est le tour. Pour [FaultKind.WRONG_PLAYER], [by] est le joueur fautif (obligatoire). */
 @Serializable
 @SerialName("fault")
 data class Fault(
     override val id: EventId,
-    val team: TeamId,
-    val player: PlayerId,
     val kind: FaultKind,
+    val by: PlayerId? = null,
 ) : PlayEvent
 
 @Serializable
@@ -76,7 +99,7 @@ data class WrongTeam(
     override val id: EventId,
     val team: TeamId,
     val player: PlayerId,
-    val pins: List<Int>,
+    val result: ThrowResult,
 ) : PlayEvent
 
 /** Abandon de la manche : plus aucun lancer n'est accepté. */
@@ -84,6 +107,35 @@ data class WrongTeam(
 @SerialName("abandon")
 data class Abandon(
     override val id: EventId,
+) : PlayEvent
+
+/**
+ * Un joueur rejoint la partie en cours. [team] existante : il s'ajoute à la fin de sa rotation ;
+ * sinon une nouvelle équipe est créée en fin d'ordre de passage, avec le score de départ.
+ */
+@Serializable
+@SerialName("add_player")
+data class AddPlayer(
+    override val id: EventId,
+    val player: PlayerId,
+    val team: TeamId,
+) : PlayEvent
+
+/** Un joueur quitte la partie ; une équipe qui n'a plus de joueur est « partie ». */
+@Serializable
+@SerialName("remove_player")
+data class RemovePlayer(
+    override val id: EventId,
+    val player: PlayerId,
+) : PlayEvent
+
+/** Nouvel ordre de passage des équipes et, pour les équipes citées, de leurs joueurs. Entre deux tours seulement. */
+@Serializable
+@SerialName("reorder")
+data class Reorder(
+    override val id: EventId,
+    val teams: List<TeamId>,
+    val players: Map<TeamId, List<PlayerId>> = emptyMap(),
 ) : PlayEvent
 
 /** Annule l'événement [target], qui doit être le dernier du journal effectif. */
@@ -94,11 +146,19 @@ data class Undo(
     val target: EventId,
 ) : SetEvent
 
-/** Remplace l'événement [target] du journal effectif (correction par l'organisateur). */
+/** Remplace l'événement [target] du journal effectif (correction). */
 @Serializable
 @SerialName("correct")
 data class Correct(
     override val id: EventId,
     val target: EventId,
     val replacement: PlayEvent,
+) : SetEvent
+
+/** Supprime l'événement [target] du journal effectif, où qu'il soit : tout est recalculé. */
+@Serializable
+@SerialName("delete")
+data class Delete(
+    override val id: EventId,
+    val target: EventId,
 ) : SetEvent

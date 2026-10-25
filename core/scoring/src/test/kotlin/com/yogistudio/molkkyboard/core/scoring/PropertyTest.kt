@@ -15,8 +15,9 @@ import org.junit.jupiter.params.provider.MethodSource
 import kotlin.random.Random
 
 /**
- * Tests de propriétés maison sur des journaux aléatoires (graine fixe, donc reproductibles) :
- * invariants de l'état et `U9` : `fold(L + e) puis Undo == fold(L)`.
+ * Tests de propriétés maison sur des journaux aléatoires (graine fixe, donc reproductibles) : invariants de
+ * l'état, `U9` (`fold(L + e) puis Undo == fold(L)`), et rejeu déterministe après suppressions et changements
+ * de joueurs.
  */
 class PropertyTest {
     private val configs =
@@ -34,38 +35,66 @@ class PropertyTest {
             TeamLineup(TeamId("T$t"), (0 until nextInt(1, 4)).map { PlayerId("T$t-P$it") })
         }
 
-    private fun Random.pins(): List<Int> =
+    private fun Random.randomPins(): List<Int> =
         when (nextInt(10)) {
             0, 1 -> emptyList()
             in 2..6 -> listOf(nextInt(1, 13))
             else -> ALL_PINS.shuffled(this).take(nextInt(2, 6))
         }
 
+    /** Quilles ou saisie rapide ; parfois une saisie rapide invalide (1 quille en « nombre », 13…). */
+    private fun Random.result(): ThrowResult =
+        if (nextInt(3) == 0) {
+            ThrowResult.Points(nextInt(0, 14), PointsKind.entries.random(this))
+        } else {
+            ThrowResult.Pins(randomPins())
+        }
+
     /** Un événement valide la plupart du temps, parfois invalide pour exercer les rejets. */
     private fun Random.event(state: SetState): PlayEvent {
         val team = state.currentTeam!!
         val other = state.teams.filter { it.active && it.id != team.id }.randomOrNull(this)
+        val everyone = state.teams.flatMap { it.players }
         return when (nextInt(100)) {
-            in 0..79 -> {
-                Throw(nextId(), team.id, team.nextPlayer, pins())
+            in 0..64 -> {
+                Throw(nextId(), result())
             }
 
-            in 80..87 -> {
-                Fault(nextId(), team.id, team.nextPlayer, FaultKind.entries.random(this))
+            in 65..72 -> {
+                val kind = FaultKind.entries.random(this)
+                Fault(nextId(), kind, by = if (kind == FaultKind.WRONG_PLAYER) team.players.random(this) else null)
             }
 
-            in 88..92 -> {
+            in 73..77 -> {
                 if (other !=
                     null
                 ) {
-                    WrongTeam(nextId(), other.id, other.nextPlayer, pins())
+                    WrongTeam(nextId(), other.id, other.nextPlayer, result())
                 } else {
                     Abandon(nextId())
                 }
             }
 
-            in 93..97 -> {
-                Throw(nextId(), team.id, team.nextPlayer, listOf(nextInt(0, 14)))
+            in 78..81 -> {
+                Throw(nextId(), ThrowResult.Pins(listOf(nextInt(0, 14))))
+            }
+
+            in 82..85 -> {
+                val target = if (nextBoolean()) state.teams.random(this).id else TeamId("N${nextInt(50)}")
+                AddPlayer(nextId(), PlayerId("late-${nextInt(1_000)}"), target)
+            }
+
+            in 86..88 -> {
+                RemovePlayer(nextId(), everyone.random(this))
+            }
+
+            in 89..96 -> {
+                val shuffledTeam = state.teams.random(this)
+                Reorder(
+                    nextId(),
+                    state.teams.map { it.id }.shuffled(this),
+                    mapOf(shuffledTeam.id to shuffledTeam.players.shuffled(this)),
+                )
             }
 
             else -> {
@@ -77,7 +106,8 @@ class PropertyTest {
     private fun SetState.assertInvariants() {
         teams.forEach { team ->
             assertTrue(team.score in 0..config.targetFor(team.id), "score hors bornes : $team")
-            assertTrue(team.misses >= 0 && team.pendingForfeit >= 0)
+            assertTrue(team.misses >= 0 && team.pendingForfeit >= 0 && team.turns >= 0)
+            assertTrue(team.left == team.players.isEmpty(), "équipe partie ⇔ sans joueur : $team")
         }
         when (status) {
             SetStatus.IN_PROGRESS -> {
@@ -87,6 +117,7 @@ class PropertyTest {
             }
 
             SetStatus.FINISHED -> {
+                assertEquals(teams.size, ranking.size, "chaque équipe classée une fois : $ranking")
                 assertEquals(teams.map { it.id }.toSet(), ranking.toSet())
             }
 
@@ -98,7 +129,7 @@ class PropertyTest {
 
     @ParameterizedTest(name = "graine {0}")
     @MethodSource("seeds")
-    fun `journaux aleatoires invariants et annulation`(seed: Int) {
+    fun `journaux aleatoires invariants annulation et suppression`(seed: Int) {
         val random = Random(seed)
         val config = configs[seed % configs.size]
         val teams = random.teams()
@@ -123,6 +154,16 @@ class PropertyTest {
             }
             state.assertInvariants()
             assertEquals(state, fold(initial, after.effectiveLog).getOrThrow())
+        }
+        // Suppressions au hasard : le rejeu reste déterministe et les invariants tiennent.
+        repeat(5) {
+            val effective = replay(config, teams, log).getOrThrow().effectiveLog
+            if (effective.isEmpty()) return@repeat
+            log += Delete(nextId(), effective.random(random).id)
+            val first = replay(config, teams, log).getOrThrow()
+            assertEquals(first, replay(config, teams, log).getOrThrow())
+            first.state.assertInvariants()
+            assertEquals(first.state, fold(initial, first.effectiveLog).getOrThrow())
         }
     }
 

@@ -98,7 +98,7 @@ class UndoCorrectTest {
     fun `U6 annuler retire aussi le lancer perdu derive`() {
         val teams = listOf(lineup(A, alice), lineup(B, bruno, bea))
         val log = LogBuilder(GameConfig.ImoTournament, teams)
-        log.add(WrongTeam(nextId(), B, bruno, listOf(5)))
+        log.add(wrongTeam(B, bruno, 5))
         val afterF10 = log.state
         log.play(3)
         assertEquals(1, log.state.misses(B))
@@ -114,12 +114,12 @@ class UndoCorrectTest {
         log.play(5)
         log.play(6)
         log.play(7)
-        val corrected = Throw(nextId(), B, bruno, listOf(8))
+        val corrected = throwOf(8)
         log.add(Correct(nextId(), e2.id, corrected))
         val result = log.result()
         assertEquals(15, result.state.score(A))
         assertEquals(14, result.state.score(B))
-        assertTrue(result.corrected)
+        assertTrue(result.hasCorrections)
         assertEquals(e2.id, result.effectiveLog[1].id)
     }
 
@@ -134,19 +134,19 @@ class UndoCorrectTest {
         log.play(1)
         log.play(1)
         val before = log.result()
-        log.add(Correct(nextId(), target.id, Throw(nextId(), A, alice, listOf(12))))
+        log.add(Correct(nextId(), target.id, throwOf(12)))
         val after = log.result()
         assertEquals(ScoringError.CORRECTION_INVALIDATES_LOG, after.rejected.single().error)
         assertEquals(before.effectiveLog, after.effectiveLog)
         assertEquals(before.state, after.state)
-        assertFalse(after.corrected)
+        assertFalse(after.hasCorrections)
     }
 
     @Test
     fun `correction d'un evenement inconnu`() {
         val log = LogBuilder()
         log.play(3)
-        log.add(Correct(nextId(), EventId("inconnu"), Throw(nextId(), A, alice, listOf(1))))
+        log.add(Correct(nextId(), EventId("inconnu"), throwOf(1)))
         assertEquals(
             ScoringError.UNKNOWN_EVENT,
             log
@@ -162,7 +162,7 @@ class UndoCorrectTest {
         val log = LogBuilder()
         log.play(3)
         val e2 = log.play(4)
-        log.add(Correct(nextId(), e2.id, Throw(nextId(), B, bruno, listOf(9))))
+        log.add(Correct(nextId(), e2.id, throwOf(9)))
         log.add(Undo(nextId(), e2.id))
         assertEquals(1, log.result().effectiveLog.size)
         assertEquals(0, log.state.score(B))
@@ -171,11 +171,11 @@ class UndoCorrectTest {
     @Test
     fun `corrections de fautes et d'abandon`() {
         val log = LogBuilder(GameConfig.ImoTournament, listOf(lineup(A, alice), lineup(B, bruno, bea)))
-        val fault = log.add(Fault(nextId(), A, alice, FaultKind.DROPPED))
-        val wrongTeam = log.add(WrongTeam(nextId(), A, alice, listOf(2)))
+        val fault = log.add(Fault(nextId(), FaultKind.DROPPED))
+        val wrongTeam = log.add(wrongTeam(A, alice, 2))
         val abandon = log.add(Abandon(nextId()))
-        log.add(Correct(nextId(), fault.id, Fault(nextId(), A, alice, FaultKind.TIMEOUT)))
-        log.add(Correct(nextId(), wrongTeam.id, WrongTeam(nextId(), A, alice, listOf(3))))
+        log.add(Correct(nextId(), fault.id, Fault(nextId(), FaultKind.TIMEOUT)))
+        log.add(Correct(nextId(), wrongTeam.id, wrongTeam(A, alice, 3)))
         log.add(Correct(nextId(), abandon.id, Abandon(nextId())))
         val result = log.result()
         assertTrue(result.rejected.isEmpty())
@@ -186,10 +186,10 @@ class UndoCorrectTest {
     @Test
     fun `un evenement invalide au rejeu est ignore et signale`() {
         val log = LogBuilder()
-        log.add(Throw(nextId(), B, bruno, listOf(3)))
+        log.add(throwOf(13))
         log.play(4)
         val result = log.result()
-        assertEquals(ScoringError.NOT_YOUR_TURN, result.rejected.single().error)
+        assertEquals(ScoringError.INVALID_PIN, result.rejected.single().error)
         assertEquals(4, result.state.score(A))
     }
 

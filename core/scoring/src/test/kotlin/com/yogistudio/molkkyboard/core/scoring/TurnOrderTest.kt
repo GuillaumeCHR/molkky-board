@@ -37,20 +37,26 @@ class TurnOrderTest {
     }
 
     @Test
-    fun `T4 lancer d'une equipe dont ce n'est pas le tour`() =
-        assertEquals(ScoringError.NOT_YOUR_TURN, newSet().tryThrow(B, 3).errorOrNull())
+    fun `T4 lancer saisi pour une equipe dont ce n'est pas le tour`() =
+        assertEquals(ScoringError.NOT_YOUR_TURN, newSet().tryThrow(B, 3))
 
     @Test
-    fun `T5 joueur qui n'appartient pas a l'equipe`() =
-        assertEquals(ScoringError.UNKNOWN_PLAYER, newSet().tryThrow(A, 3, player = bruno).errorOrNull())
+    fun `T5 joueur d'une autre equipe`() =
+        assertEquals(
+            ScoringError.NOT_YOUR_TURN,
+            newSet().tryThrow(A, 3, player = bruno),
+        )
 
     @Test
     fun `T6 coequipier qui n'est pas le lanceur attendu`() {
         val s = newSet(teams = listOf(lineup(A, alice, arthur), lineup(B, bruno)))
-        assertEquals(ScoringError.NOT_YOUR_TURN, s.tryThrow(A, 3, player = arthur).errorOrNull())
+        assertEquals(ScoringError.NOT_YOUR_TURN, s.tryThrow(A, 3, player = arthur))
     }
 
     @Test
-    fun `equipe inconnue`() =
-        assertEquals(ScoringError.UNKNOWN_TEAM, newSet().tryThrow(C, 3, player = chloe).errorOrNull())
+    fun `joueur absent de la partie`() =
+        assertEquals(
+            ScoringError.UNKNOWN_PLAYER,
+            newSet().tryThrow(A, 3, player = chloe),
+        )
 }

@@ -634,7 +634,7 @@ Priorités : **P2** = V2, **P3** = plus tard.
 - J0 : Gradle 9.8.2, AGP 9.4.1 (Kotlin intégré), Kotlin 2.4.21, KSP 2.3.12, compileSdk/targetSdk 37, JVM cible 17 compilée avec le JDK 21.
 - Material 3 stable = 1.4.0 : les composants Expressive (1.5) ne sont pas encore stables, donc non utilisés. detekt 1.23.8 (la 2.0 est en alpha).
 - Style : ktlint `ktlint_official`, detekt avec clauses de garde autorisées ; JUnit Jupiter (JUnit 6) pour les modules Kotlin purs.
-- J1 : Undo/Correct ciblent un `EventId` ; précisions de règles dans `SCORING_SPEC.md` § 14. Couverture Kover : 100 % des lignes, ≥ 98 % des branches (seuil vérifié en CI).
+- J1 : Undo/Correct ciblent un `EventId` ; précisions de règles dans `SCORING_SPEC.md` § 14. Couverture Kover : 100 % des lignes, ≥ 97 % des branches depuis le moteur v2 (seuil vérifié en CI).
 
 ### Identité « Molkky Board » (reçue le 2026-10-25)
 - Nom de l'app : **Molkky Board** ; « Mölkky » (avec tréma) désigne le jeu dans les textes. Éditeur : Yogi Studio.

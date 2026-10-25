@@ -20,13 +20,18 @@ data class TeamState(
     val finishedRank: Int? = null,
     /** Lancers réguliers à perdre après une faute « mauvaise équipe ». */
     val pendingForfeit: Int = 0,
+    /** Tours joués (lancers, fautes et lancers perdus) : sert à repérer la fin d'un tour. */
+    val turns: Int = 0,
+    /** L'équipe a quitté la partie (plus aucun joueur). */
+    val left: Boolean = false,
 ) {
     val nextPlayer: PlayerId get() = players[nextPlayerIdx]
 
-    /** Encore en lice : ni éliminée, ni classée. */
-    val active: Boolean get() = !eliminated && finishedRank == null
+    /** Encore en lice : ni éliminée, ni classée, ni partie. */
+    val active: Boolean get() = !eliminated && finishedRank == null && !left
 
-    internal fun advancePlayer(): TeamState = copy(nextPlayerIdx = (nextPlayerIdx + 1) % players.size)
+    /** Le tour de l'équipe est consommé : son prochain joueur lancera la fois suivante. */
+    internal fun consumeTurn(): TeamState = copy(nextPlayerIdx = (nextPlayerIdx + 1) % players.size, turns = turns + 1)
 }
 
 /** État immuable d'une manche. Obtenu uniquement par [start] puis [reduce] (ou [replay]). */
@@ -40,6 +45,9 @@ data class SetState(
     val ranking: List<TeamId> = emptyList(),
     /** Équipes dans l'ordre de leur élimination (sert au classement). */
     val eliminationOrder: List<TeamId> = emptyList(),
+    /** Équipes dans l'ordre de leur départ (classées en dernier). */
+    val departureOrder: List<TeamId> = emptyList(),
+    val rules: ScoringRules = StandardRules,
 ) {
     fun team(id: TeamId): TeamState? = teams.firstOrNull { it.id == id }
 
@@ -49,9 +57,17 @@ data class SetState(
 
     val winner: TeamId? get() = ranking.firstOrNull()
 
+    /** Fin d'un tour : toutes les équipes en lice ont joué le même nombre de fois. */
+    val betweenRounds: Boolean get() =
+        teams
+            .filter { it.active }
+            .map { it.turns }
+            .distinct()
+            .size <= 1
+
     /**
      * Points de manche (utiles au match et au départage) : scores réels, ou, en mode IMO
-     * [EliminationSetScore.WinnerTargetLoserZero], cible pour le vainqueur et 0 pour les éliminés.
+     * [EliminationSetScore.WinnerTargetLoserZero], cible pour le vainqueur et 0 pour les éliminés et les partis.
      */
     val setPoints: Map<TeamId, Int>
         get() =
@@ -61,7 +77,7 @@ data class SetState(
                         config.eliminationSetScore == EliminationSetScore.Keep -> team.score
                         status != SetStatus.FINISHED -> team.score
                         team.id == winner -> config.targetFor(team.id)
-                        team.eliminated -> 0
+                        team.eliminated || team.left -> 0
                         else -> team.score
                     }
                 team.id to points
