@@ -11,19 +11,19 @@ internal object IntroTimeline {
     /** 2. Le lancer : le mölkky arrive du bas en tournoyant. */
     const val IMPACT = 1_200L
 
-    /** 3. L'impact : les quilles volent en éclats (jusqu'à la fin des éclats). */
-    const val SHATTER_END = 2_600L
+    /** 3. L'impact : les quilles volent en éclats et sortent de l'écran. */
+    const val SHATTER_END = 2_300L
 
     /** 4. La signature Yogi Studio ; on y reste tant que le chargement n'est pas fini. */
     const val SIGNATURE_END = 3_600L
 
-    /** 5. Les derniers éclats forment le logotype, qui apparaît ici. */
-    const val LOGOTYPE_IN = 4_000L
-    const val LOGOTYPE_SHOWN = 4_300L
+    /** 5. Fondu du logotype Molkky Board, puis le menu apparaît. */
+    const val LOGOTYPE_IN = 3_700L
+    const val LOGOTYPE_SHOWN = 4_200L
     const val END = 4_500L
 
     /** Fin des trajectoires précalculées des éclats. */
-    const val SIMULATION_END = 4_300L
+    const val SIMULATION_END = 2_600L
 
     /** Version « Réduire les animations » : simple fondu du logo Yogi Studio. */
     const val REDUCED_END = 1_000L

@@ -51,8 +51,8 @@ enum class IntroLoadState {
 }
 
 /**
- * Intro animée (≈ 4,5 s) : mise en place des quilles, lancer, éclats de bois, signature Yogi Studio,
- * puis les derniers éclats forment le logotype Molkky Board. [onFinished] est appelé quand l'animation
+ * Intro animée (≈ 4,5 s) : mise en place des quilles, lancer, explosion qui sort de l'écran, signature
+ * Yogi Studio, puis fondu du logotype Molkky Board. [onFinished] est appelé quand l'animation
  * ET le chargement sont terminés ; si le chargement traîne, on reste sur la signature avec un indicateur.
  * Un tap passe directement au logotype. Avec « Réduire les animations », simple fondu du logo Yogi Studio.
  *

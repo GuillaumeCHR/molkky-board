@@ -167,40 +167,25 @@ internal class ScenePainter(
         }
     }
 
-    /** Étapes 3 à 5 : éclats précalculés ; un sur quatre rejoint ensuite le logotype. */
+    /** Étape 3 : éclats précalculés, projetés hors de l'écran ; les numéros s'envolent avec eux. */
     private fun DrawScope.drawShards(time: Long, numbers: Array<TextLayoutResult>) {
-        val assemble = easeInOutCubic(progress(time, IntroTimeline.SIGNATURE_END, IntroTimeline.LOGOTYPE_IN + 100))
+        val alpha = 1f - progress(time, IntroTimeline.SHATTER_END, IntroTimeline.SHATTER_END + SHARD_FADE)
+        if (alpha <= 0f) return
         for (s in 0 until sim.shardCount) {
-            val keeps = sim.assembles(s)
-            val alpha =
-                if (keeps) {
-                    1f - progress(time, IntroTimeline.LOGOTYPE_IN + 150, IntroTimeline.LOGOTYPE_SHOWN)
-                } else {
-                    1f - progress(time, IntroTimeline.SHATTER_END, IntroTimeline.SIGNATURE_END)
-                }
-            if (alpha <= 0f) continue
-            var x = sim.x(s, time)
-            var y = sim.y(s, time)
-            var angle = sim.rotation(s, time)
-            if (keeps && assemble > 0f) {
-                x += (sim.targetX[s] - x) * assemble
-                y += (sim.targetY[s] - y) * assemble
-                angle *= 1f - assemble
-            }
+            val x = sim.x(s, time)
+            val y = sim.y(s, time)
+            val angle = sim.rotation(s, time)
             buildShard(s, x, y, angle)
             drawPath(shard, WOOD[sim.shardColor[s]].copy(alpha = alpha))
             // Le premier éclat de chaque quille emporte son numéro.
             if (s % ShatterSimulation.SHARDS_PER_PIN == 0) {
                 val label = numbers[sim.pinNumbers[sim.shardPin[s]]]
-                val fade = alpha * (1f - progress(time, IntroTimeline.SHATTER_END, IntroTimeline.SIGNATURE_END))
-                if (fade > 0f) {
-                    rotate(angle, pivot = Offset(x, y)) {
-                        drawText(
-                            label,
-                            topLeft = Offset(x - label.size.width / 2f, y - label.size.height / 2f),
-                            alpha = fade,
-                        )
-                    }
+                rotate(angle, pivot = Offset(x, y)) {
+                    drawText(
+                        label,
+                        topLeft = Offset(x - label.size.width / 2f, y - label.size.height / 2f),
+                        alpha = alpha,
+                    )
                 }
             }
         }
@@ -253,13 +238,14 @@ internal class ScenePainter(
         const val MOLKKY_FADE = 300L
         const val SPIN_DEGREES = 900f
         const val SHAKE_SECONDS = 0.4f
-        const val SHAKE_AMPLITUDE = 10f
+        const val SHAKE_AMPLITUDE = 16f
         const val SHAKE_HZ = 22f
         const val SHAKE_DECAY = 0.12f
         const val RING_MS = 500L
-        const val CHARACTER_START = 3_000L
+        const val CHARACTER_START = 2_700L
         const val CHARACTER_MS = 450L
-        const val PRESENTS_START = 3_100L
+        const val PRESENTS_START = 2_850L
         const val SIGNATURE_FADE = 200L
+        const val SHARD_FADE = 300L
     }
 }
