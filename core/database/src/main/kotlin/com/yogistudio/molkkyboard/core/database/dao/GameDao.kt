@@ -2,6 +2,7 @@ package com.yogistudio.molkkyboard.core.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import com.yogistudio.molkkyboard.core.database.entity.GameEntity
@@ -37,6 +38,12 @@ interface GameDao {
         insertTeams(teams)
         insertPlayers(players)
     }
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertTeamIfAbsent(team: GameTeamEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertPlayer(player: GamePlayerEntity)
 
     @Query("SELECT * FROM game_player WHERE gameId = :gameId")
     fun observePlayers(gameId: String): Flow<List<GamePlayerEntity>>

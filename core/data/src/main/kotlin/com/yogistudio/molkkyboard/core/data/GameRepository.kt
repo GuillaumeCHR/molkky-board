@@ -10,6 +10,7 @@ import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.TeamLineup
+import com.yogistudio.molkkyboard.core.scoring.AddPlayer
 import com.yogistudio.molkkyboard.core.scoring.MatchConfig
 import com.yogistudio.molkkyboard.core.scoring.Outcome
 import com.yogistudio.molkkyboard.core.scoring.PlayEvent
@@ -42,6 +43,12 @@ interface GameRepository {
     suspend fun append(gameId: String, event: SetEvent): Outcome<ReplayResult>
 
     suspend fun startNextSet(gameId: String, lineup: List<TeamLineup>)
+
+    /**
+     * Un joueur rejoint la partie en cours : l'événement `AddPlayer` est validé et écrit, puis son nom (et son
+     * équipe si elle est nouvelle) sont enregistrés.
+     */
+    suspend fun addParticipant(gameId: String, event: AddPlayer, player: GamePlayer, team: GameTeam): Outcome<ReplayResult>
 
     /** Identifiant de la partie en cours la plus récente, à proposer en reprise. */
     fun observeOngoingGameId(): Flow<String?>
@@ -168,7 +175,21 @@ class RoomGameRepository
             dao.insertSet(GameSetEntity(gameId, index, json.encodeToString(lineup), time.now()))
         }
 
-        override fun observeOngoingGameId(): Flow<String?> = dao.observeOngoing().map { it?.id }
+        override suspend fun addParticipant(
+        gameId: String,
+        event: AddPlayer,
+        player: GamePlayer,
+        team: GameTeam,
+    ): Outcome<ReplayResult> {
+        val outcome = append(gameId, event)
+        if (outcome is Outcome.Ok) {
+            dao.insertTeamIfAbsent(GameTeamEntity(gameId, team.id.value, team.name, team.colorIndex, team.emblem, team.memberKey))
+            dao.upsertPlayer(GamePlayerEntity(gameId, player.id.value, player.name, player.profileId))
+        }
+        return outcome
+    }
+
+    override fun observeOngoingGameId(): Flow<String?> = dao.observeOngoing().map { it?.id }
 
         override suspend fun close(gameId: String) = dao.close(gameId, time.now())
 

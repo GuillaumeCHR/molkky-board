@@ -456,3 +456,22 @@ object PlayerIds {
         com.yogistudio.molkkyboard.core.model
             .PlayerId("Zoé")
 }
+
+class LogEntriesTest {
+    @Test
+    fun `chaque evenement est attribue a son lanceur avec les scores avant et apres`() {
+        val teams = listOf(lineup(A, alice), lineup(B, bruno, bea))
+        val log = listOf(
+            throwOf(7),
+            Fault(nextId(), FaultKind.WRONG_PLAYER, by = bea),
+            wrongTeam(B, bruno, 3),
+            Fault(nextId(), FaultKind.ABSENT),
+            AddPlayer(nextId(), chloe, C),
+        )
+        val entries = describe(newSet(GameConfig.Classic, teams), log)
+        assertEquals(listOf(A, B, B, A, null), entries.map { it.team })
+        assertEquals(listOf(alice, bea, bruno, alice, null), entries.map { it.player })
+        assertEquals(listOf(0, 0, 0, 7, null), entries.map { it.scoreBefore })
+        assertEquals(listOf(7, 0, 0, 7, null), entries.map { it.scoreAfter })
+    }
+}

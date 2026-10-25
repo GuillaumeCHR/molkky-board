@@ -253,4 +253,28 @@ class GameRepositoryTest {
                     .score,
             )
         }
+
+    @Test
+    fun `un retardataire rejoint la partie avec son nom`() =
+        runTest {
+            val id = repository.create(newGame)
+            val chloe = PlayerId("chloe")
+            val team = GameTeam(TeamId("C"), "Chloé", 2, memberKey = memberKey(listOf(chloe)))
+            val event =
+                com.yogistudio.molkkyboard.core.scoring
+                    .AddPlayer(EventId("add"), chloe, TeamId("C"))
+            assertEquals(true, repository.addParticipant(id, event, GamePlayer(chloe, "Chloé"), team) is Outcome.Ok)
+            val game = repository.observe(id).first()!!
+            assertEquals("Chloé", game.playerName(chloe))
+            assertEquals("Chloé", game.team(TeamId("C"))!!.name)
+            // Un ajout refusé (joueur déjà présent) n'enregistre rien.
+            val again =
+                com.yogistudio.molkkyboard.core.scoring
+                    .AddPlayer(EventId("add2"), chloe, TeamId("D"))
+            assertEquals(
+                ScoringError.PLAYER_IN_MULTIPLE_TEAMS,
+                repository.addParticipant(id, again, GamePlayer(chloe, "X"), team.copy(id = TeamId("D"))).errorOrNull(),
+            )
+            assertNull(repository.observe(id).first()!!.team(TeamId("D")))
+        }
 }
