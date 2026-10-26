@@ -66,15 +66,17 @@ fun checkInput(state: SetState, event: PlayEvent): ScoringError? {
 /** Applique un événement de jeu. Fonction pure : l'état reçu n'est jamais modifié. */
 fun reduce(state: SetState, event: PlayEvent): Outcome<SetState> {
     if (state.status != SetStatus.IN_PROGRESS) return Outcome.Err(ScoringError.SET_FINISHED)
-    return when (event) {
-        is Throw -> applyThrow(state, event)
-        is Fault -> applyFault(state, event)
-        is WrongTeam -> applyWrongTeam(state, event)
-        is Abandon -> Outcome.Ok(state.copy(status = SetStatus.ABANDONED, turn = null))
-        is AddPlayer -> applyAddPlayer(state, event)
-        is RemovePlayer -> applyRemovePlayer(state, event)
-        is Reorder -> applyReorder(state, event)
-    }
+    val outcome =
+        when (event) {
+            is Throw -> applyThrow(state, event)
+            is Fault -> applyFault(state, event)
+            is WrongTeam -> applyWrongTeam(state, event)
+            is Abandon -> Outcome.Ok(state.copy(status = SetStatus.ABANDONED, turn = null))
+            is AddPlayer -> applyAddPlayer(state, event)
+            is RemovePlayer -> applyRemovePlayer(state, event)
+            is Reorder -> applyReorder(state, event)
+        }
+    return outcome.flatMap { Outcome.Ok(it.withRound()) }
 }
 
 private fun applyThrow(state: SetState, event: Throw): Outcome<SetState> {
@@ -124,20 +126,29 @@ private fun applyAddPlayer(state: SetState, event: AddPlayer): Outcome<SetState>
     val existing = state.team(event.team)
     if (existing != null) {
         if (existing.eliminated || existing.finishedRank != null) return Outcome.Err(ScoringError.INVALID_EVENT)
-        val turns = if (existing.left) state.teams.filter { it.active }.minOf { it.turns } else existing.turns
+        val turns = if (existing.left) state.turnsOnArrival(existing.id) else existing.turns
         val rejoined = existing.copy(players = existing.players + event.player, left = false, turns = turns)
         return Outcome.Ok(state.replace(rejoined).copy(departureOrder = state.departureOrder - existing.id))
     }
     // Nouvelle équipe en fin d'ordre : elle lancera à la fin du tour en cours.
-    val turns = state.teams.filter { it.active }.minOf { it.turns }
     val newcomer =
         TeamState(
             id = event.team,
             players = listOf(event.player),
             score = state.config.startScoreFor(event.team).coerceIn(0, state.config.targetFor(event.team) - 1),
-            turns = turns,
+            turns = state.round - 1,
         )
     return Outcome.Ok(state.copy(teams = state.teams + newcomer))
+}
+
+/**
+ * Tours joués attribués à une équipe partie qui revient : si sa place dans l'ordre vient après l'équipe au
+ * tour, elle lance encore dans le tour en cours ; sinon sa place est déjà passée et elle attend le suivant.
+ */
+private fun SetState.turnsOnArrival(id: TeamId): Int {
+    val index = teams.indexOfFirst { it.id == id }
+    val current = teams.indexOfFirst { it.id == turn }
+    return if (index > current) round - 1 else round
 }
 
 private fun applyRemovePlayer(state: SetState, event: RemovePlayer): Outcome<SetState> {

@@ -13,6 +13,8 @@ data class LogEntry(
     val player: PlayerId?,
     val scoreBefore: Int?,
     val scoreAfter: Int?,
+    /** Tour pendant lequel l'événement a eu lieu (déroulé groupé par tour). */
+    val round: Int,
 )
 
 /** Rejoue [effectiveLog] depuis [initial] et décrit chaque événement. */
@@ -33,8 +35,9 @@ fun describe(initial: SetState, effectiveLog: List<PlayEvent>): List<LogEntry> {
                 else -> null
             }
         val before = scoreOf(state, team)
+        val round = state.round
         state = reduce(state, event).getOrThrow()
-        LogEntry(event, team, player, before, scoreOf(state, team))
+        LogEntry(event, team, player, before, scoreOf(state, team), round)
     }
 }
 

@@ -41,6 +41,11 @@ data class SetState(
     /** Équipe qui doit lancer ; `null` si la manche n'est pas en cours. */
     val turn: TeamId?,
     val status: SetStatus = SetStatus.IN_PROGRESS,
+    /**
+     * Tour en cours, à partir de 1 (`SCORING_SPEC.md` § 16) : 1 + le moins de tours joués parmi les équipes en
+     * lice. Figé à la fin de la manche sur le tour de l'événement décisif.
+     */
+    val round: Int = 1,
     /** Classement final (1er, 2e, …), rempli à la fin de la manche. */
     val ranking: List<TeamId> = emptyList(),
     /** Équipes dans l'ordre de leur élimination (sert au classement). */
@@ -83,3 +88,7 @@ data class SetState(
                 team.id to points
             }
 }
+
+/** Tour dérivé des tours joués ; une manche terminée garde le tour de l'événement décisif. */
+internal fun SetState.withRound(): SetState =
+    if (status == SetStatus.IN_PROGRESS) copy(round = 1 + teams.filter { it.active }.minOf { it.turns }) else this

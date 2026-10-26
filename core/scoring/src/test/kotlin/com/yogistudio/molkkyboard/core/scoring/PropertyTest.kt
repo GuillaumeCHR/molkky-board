@@ -112,6 +112,10 @@ class PropertyTest {
         when (status) {
             SetStatus.IN_PROGRESS -> {
                 assertTrue(currentTeam!!.active, "l'équipe au tour doit être en lice")
+                // § 16 : 1 + le moins de tours joués ; l'équipe au tour n'a pas encore lancé dans ce tour.
+                assertEquals(1 + teams.filter { it.active }.minOf { it.turns }, round)
+                assertEquals(round - 1, currentTeam!!.turns, "l'équipe au tour doit lancer dans le tour $round")
+                assertTrue(teams.filter { it.active }.all { it.turns in round - 1..round })
                 assertTrue(teams.count { it.active } >= 2)
                 assertTrue(ranking.isEmpty())
             }
