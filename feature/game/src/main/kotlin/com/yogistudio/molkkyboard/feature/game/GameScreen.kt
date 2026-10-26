@@ -1,5 +1,6 @@
 package com.yogistudio.molkkyboard.feature.game
 
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -91,6 +92,8 @@ import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.InputMode
+import com.yogistudio.molkkyboard.core.model.PlayerId
+import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.scoring.EventId
 import com.yogistudio.molkkyboard.core.scoring.ScoringError
 import com.yogistudio.molkkyboard.core.scoring.ThrowResult
@@ -112,6 +115,9 @@ data class GameActions(
     val onHome: () -> Unit = {},
     val onCorrect: (EventId, ThrowResult) -> Unit = { _, _ -> },
     val onDelete: (EventId) -> Unit = {},
+    val onReorder: (List<TeamId>) -> Unit = {},
+    val onAddPlayer: (String) -> Unit = {},
+    val onRemovePlayer: (PlayerId) -> Unit = {},
 )
 
 @Composable
@@ -141,6 +147,7 @@ fun GameScreen(
     KeepScreenOn()
     LaunchedEffect(viewModel) {
         viewModel.effectFlow.collect { effect ->
+            sheetMessage(context, effect)?.let { logMessage = it }
             when (effect) {
                 is GameEffect.Validated -> {
                     scope.launch {
@@ -167,21 +174,16 @@ fun GameScreen(
                     shakeKey++
                 }
 
+                is GameEffect.PlayerJoined, is GameEffect.PlayerLeft, GameEffect.OrderChanged -> {
+                    Unit
+                }
+
                 GameEffect.Edited -> {
                     haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    logMessage = context.getString(R.string.log_edited)
                 }
 
                 is GameEffect.EditRefused -> {
                     haptic.performHapticFeedback(HapticFeedbackType.Reject)
-                    logMessage =
-                        context.getString(
-                            if (effect.error == ScoringError.CORRECTION_INVALIDATES_LOG) {
-                                R.string.log_refused_invalidates
-                            } else {
-                                R.string.log_refused
-                            },
-                        )
                 }
 
                 is GameEffect.Twelve -> {
@@ -226,6 +228,9 @@ fun GameScreen(
                 onHome = onHome,
                 onCorrect = viewModel::correct,
                 onDelete = viewModel::delete,
+                onReorder = viewModel::reorder,
+                onAddPlayer = viewModel::addLatePlayer,
+                onRemovePlayer = viewModel::removePlayer,
             ),
         logMessage = logMessage,
         snackbar = snackbar,
@@ -238,6 +243,24 @@ fun GameScreen(
         onEliminationDone = { elimination = null },
     )
 }
+
+/** Retour affiché dans le déroulé ou la gestion des joueurs, pour les effets qui en ont un. */
+private fun sheetMessage(context: Context, effect: GameEffect): String? =
+    when (effect) {
+        is GameEffect.PlayerJoined -> context.getString(R.string.players_joined, effect.name)
+        is GameEffect.PlayerLeft -> context.getString(R.string.players_left, effect.name)
+        GameEffect.OrderChanged -> context.getString(R.string.players_order_saved)
+        GameEffect.Edited -> context.getString(R.string.log_edited)
+        is GameEffect.EditRefused -> context.getString(refusalMessage(effect.error))
+        else -> null
+    }
+
+private fun refusalMessage(error: ScoringError): Int =
+    when (error) {
+        ScoringError.CORRECTION_INVALIDATES_LOG -> R.string.log_refused_invalidates
+        ScoringError.NOT_BETWEEN_ROUNDS -> R.string.players_refused_round
+        else -> R.string.log_refused
+    }
 
 /** Écran maintenu allumé pendant une partie. */
 @Composable
@@ -263,15 +286,17 @@ fun GameContent(
     onEliminationDone: () -> Unit = {},
     scoreboardOpen: Boolean = false,
     logOpen: Boolean = false,
+    playersOpen: Boolean = false,
     logMessage: String? = null,
 ) {
     var showScoreboard by rememberSaveable { mutableStateOf(scoreboardOpen) }
     var showLog by rememberSaveable { mutableStateOf(logOpen) }
+    var showPlayers by rememberSaveable { mutableStateOf(playersOpen) }
     // Surface parente : fond et couleur de texte du thème (clair, sombre, Plein soleil).
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
-                GameTopBar(state, actions, onOpenLog = { showLog = true })
+                GameTopBar(state, actions, onOpenLog = { showLog = true }, onOpenPlayers = { showPlayers = true })
                 if (state.loading) return@Column
                 ScoresStrip(state, onOpen = { showScoreboard = true })
                 ActiveCard(state, shakeKey)
@@ -296,6 +321,7 @@ fun GameContent(
     }
     if (showScoreboard && !state.loading) ScoreboardSheet(state, onDismiss = { showScoreboard = false })
     if (showLog && !state.loading) LogSheet(state, actions, logMessage, onDismiss = { showLog = false })
+    if (showPlayers && !state.loading) PlayersSheet(state, actions, logMessage, onDismiss = { showPlayers = false })
 }
 
 /** Grille de quilles ou pavé rapide, selon le mode de saisie. */
@@ -327,7 +353,12 @@ private fun InputArea(state: GameUiState, actions: GameActions, modifier: Modifi
 }
 
 @Composable
-private fun GameTopBar(state: GameUiState, actions: GameActions, onOpenLog: () -> Unit) {
+private fun GameTopBar(
+    state: GameUiState,
+    actions: GameActions,
+    onOpenLog: () -> Unit,
+    onOpenPlayers: () -> Unit,
+) {
     var menu by remember { mutableStateOf(false) }
     var comingSoon by remember { mutableStateOf(false) }
     MBTopBar(stringResource(R.string.game_title), actions.onBack) {
@@ -343,7 +374,11 @@ private fun GameTopBar(state: GameUiState, actions: GameActions, onOpenLog: () -
                     menu = false
                     onOpenLog()
                 })
-                listOf(R.string.game_menu_players, R.string.game_menu_rules).forEach { label ->
+                DropdownMenuItem(text = { Text(stringResource(R.string.game_menu_players)) }, onClick = {
+                    menu = false
+                    onOpenPlayers()
+                })
+                listOf(R.string.game_menu_rules).forEach { label ->
                     DropdownMenuItem(text = { Text(stringResource(label)) }, onClick = {
                         menu = false
                         comingSoon = true

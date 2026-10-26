@@ -3,13 +3,18 @@ package com.yogistudio.molkkyboard.feature.game
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yogistudio.molkkyboard.core.data.GamePlayer
 import com.yogistudio.molkkyboard.core.data.GameRepository
 import com.yogistudio.molkkyboard.core.data.GameSnapshot
+import com.yogistudio.molkkyboard.core.data.GameTeam
 import com.yogistudio.molkkyboard.core.data.IdGenerator
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
+import com.yogistudio.molkkyboard.core.data.memberKey
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.MissPenalty
+import com.yogistudio.molkkyboard.core.model.PlayerId
+import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.UserSettings
 import com.yogistudio.molkkyboard.core.model.isExemptFromMissLimit
 import com.yogistudio.molkkyboard.core.model.targetFor
@@ -256,6 +261,57 @@ class GameViewModel
             if (winner != null && newWinner) effects.send(GameEffect.Won(snapshot.team(winner)?.name ?: winner.value))
         }
 
+        /** Nouvel ordre de passage, entre deux tours seulement (le moteur refuse sinon). */
+        fun reorder(order: List<TeamId>) {
+            viewModelScope.launch {
+                when (val outcome = games.append(gameId, Reorder(EventId(ids.newId()), order))) {
+                    is Outcome.Err -> effects.send(GameEffect.EditRefused(outcome.error))
+                    is Outcome.Ok -> effects.send(GameEffect.OrderChanged)
+                }
+            }
+        }
+
+        /** Un joueur en retard rejoint la partie : nouvelle équipe en fin d'ordre, à 0, première couleur libre. */
+        fun addLatePlayer(name: String) {
+            val trimmed = name.trim()
+            if (trimmed.isEmpty()) return
+            viewModelScope.launch {
+                val snapshot = games.observe(gameId).first() ?: return@launch
+                val player = PlayerId(ids.newId())
+                val team = TeamId(player.value)
+                val used = snapshot.teams.map { it.colorIndex }.toSet()
+                val color = (0 until PALETTE_SIZE).firstOrNull { it !in used } ?: (snapshot.teams.size % PALETTE_SIZE)
+                val outcome =
+                    games.addParticipant(
+                        gameId,
+                        AddPlayer(EventId(ids.newId()), player, team),
+                        GamePlayer(player, trimmed),
+                        GameTeam(team, trimmed, color, memberKey = memberKey(listOf(player))),
+                    )
+                when (outcome) {
+                    is Outcome.Err -> effects.send(GameEffect.EditRefused(outcome.error))
+                    is Outcome.Ok -> effects.send(GameEffect.PlayerJoined(trimmed))
+                }
+            }
+        }
+
+        /** Un joueur quitte la partie ; s'il ne reste qu'une équipe en lice, elle gagne la manche. */
+        fun removePlayer(player: PlayerId) {
+            viewModelScope.launch {
+                val snapshot = games.observe(gameId).first() ?: return@launch
+                when (val outcome = games.append(gameId, RemovePlayer(EventId(ids.newId()), player))) {
+                    is Outcome.Err -> {
+                        effects.send(GameEffect.EditRefused(outcome.error))
+                    }
+
+                    is Outcome.Ok -> {
+                        effects.send(GameEffect.PlayerLeft(snapshot.playerName(player)))
+                        reconcile(snapshot, outcome.value.state)
+                    }
+                }
+            }
+        }
+
         fun abandon() {
             viewModelScope.launch {
                 if (games.append(gameId, Abandon(EventId(ids.newId()))) is Outcome.Ok) games.close(gameId)
@@ -275,6 +331,7 @@ class GameViewModel
                 target = current?.let { config.targetFor(it.id) } ?: config.targetScore,
                 missLimit = config.missLimit,
                 round = setState.round,
+                betweenRounds = setState.betweenRounds,
                 missWarning =
                     current != null &&
                         config.missLimit > 1 &&
@@ -336,6 +393,7 @@ class GameViewModel
 
         companion object {
             private const val TWELVE = 12
+            private const val PALETTE_SIZE = 8
 
             /** Argument de navigation : identifiant de la partie. */
             const val GAME_ID = "gameId"
@@ -357,6 +415,7 @@ internal fun GameSnapshot.teamUi(team: TeamState, active: Boolean = false): Team
         eliminated = team.eliminated,
         remaining = (config.targetFor(team.id) - team.score).coerceAtLeast(0),
         members = team.players.map(::playerName),
+        memberIds = team.players,
     )
 }
 

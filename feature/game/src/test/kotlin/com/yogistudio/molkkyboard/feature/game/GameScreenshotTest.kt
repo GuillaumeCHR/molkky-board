@@ -11,6 +11,7 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.InputMode
+import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.scoring.EventId
 import com.yogistudio.molkkyboard.core.scoring.PointsKind
@@ -206,6 +207,32 @@ class GameScreenshotTest {
         }
         compose.waitForIdle()
         captureScreenRoboImage("src/test/screenshots/$name.png")
+    }
+
+    @Test
+    fun joueurs() {
+        compose.setContent {
+            MolkkyBoardTheme(reducedMotion = true) {
+                PlayersSheet(
+                    playing.copy(
+                        teams =
+                            (teams + eliminated).map {
+                                it.copy(
+                                    members = listOf(it.name),
+                                    memberIds = listOf(PlayerId(it.name)),
+                                )
+                            },
+                        betweenRounds = false,
+                        round = 3,
+                    ),
+                    GameActions(),
+                    null,
+                    {},
+                )
+            }
+        }
+        compose.waitForIdle()
+        captureScreenRoboImage("src/test/screenshots/joueurs.png")
     }
 
     @Test

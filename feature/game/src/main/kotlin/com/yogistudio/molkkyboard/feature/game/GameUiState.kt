@@ -2,6 +2,7 @@ package com.yogistudio.molkkyboard.feature.game
 
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.model.InputMode
+import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.scoring.EventId
 import com.yogistudio.molkkyboard.core.scoring.FaultKind
@@ -23,6 +24,8 @@ data class TeamUi(
     val remaining: Int = 0,
     /** Joueurs de l'équipe (vide ou un seul nom pour un joueur seul). */
     val members: List<String> = emptyList(),
+    /** Identifiants des joueurs, dans le même ordre que [members]. */
+    val memberIds: List<PlayerId> = emptyList(),
 )
 
 /** Nature d'une ligne du déroulé. */
@@ -91,6 +94,8 @@ data class GameUiState(
     val round: Int = 1,
     /** Le prochain raté de l'équipe au tour serait sanctionné (élimination ou retour en arrière). */
     val missWarning: Boolean = false,
+    /** Personne n'a encore lancé dans le tour : l'ordre de passage peut changer. */
+    val betweenRounds: Boolean = true,
     val inputMode: InputMode = InputMode.PINS,
     val quickMode: QuickPadMode = QuickPadMode.SinglePin,
     val selection: Selection = Selection.None,
@@ -144,6 +149,19 @@ sealed interface GameEffect {
 
     /** Correction ou suppression enregistrée : tout a été recalculé. */
     data object Edited : GameEffect
+
+    /** Un retardataire a rejoint la partie (il démarre à 0, en fin d'ordre). */
+    data class PlayerJoined(
+        val name: String,
+    ) : GameEffect
+
+    /** Un joueur a quitté la partie. */
+    data class PlayerLeft(
+        val name: String,
+    ) : GameEffect
+
+    /** Nouvel ordre de passage enregistré. */
+    data object OrderChanged : GameEffect
 
     /** Correction ou suppression refusée par le moteur (journal inchangé). */
     data class EditRefused(

@@ -492,6 +492,70 @@ class GameViewModelTest {
             assertEquals(gameId, games.observeOngoingGameId().first())
         }
 
+    @Test
+    fun `changer l'ordre entre deux tours, refuse en plein tour`() =
+        runTest {
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            assertTrue(vm.awaitState { true }.betweenRounds)
+            vm.effectFlow.test {
+                vm.reorder(listOf(TeamId("B"), TeamId("A")))
+                assertEquals(GameEffect.OrderChanged, awaitItem())
+                assertEquals("Bruno", vm.awaitState { it.currentTeam?.name == "Bruno" }.currentTeam?.name)
+                play(3)
+                assertEquals(false, vm.awaitState { it.currentTeam?.name == "Alice" }.betweenRounds)
+                vm.reorder(listOf(TeamId("A"), TeamId("B")))
+                assertEquals(GameEffect.EditRefused(ScoringError.NOT_BETWEEN_ROUNDS), awaitItem())
+            }
+        }
+
+    @Test
+    fun `un retardataire rejoint la partie a 0 en fin d'ordre`() =
+        runTest {
+            play(5)
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            vm.awaitState { it.currentTeam?.name == "Bruno" }
+            vm.effectFlow.test {
+                vm.addLatePlayer("  Chloé ")
+                assertEquals(GameEffect.PlayerJoined("Chloé"), awaitItem())
+            }
+            val state = vm.awaitState { it.teams.size == 3 && it.teams.last().name == "Chloé" }
+            assertEquals(listOf("Alice", "Bruno", "Chloé"), state.teams.map { it.name })
+            assertEquals(0, state.teams.last().score)
+            assertEquals(2, state.teams.last().colorIndex)
+            play(1)
+            assertEquals("Chloé", vm.awaitState { it.currentTeam?.name == "Chloé" }.currentTeam?.name)
+            assertEquals(1, vm.awaitState { true }.round)
+        }
+
+    @Test
+    fun `retirer un joueur, le dernier en lice gagne`() =
+        runTest {
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            val state = vm.awaitState { true }
+            vm.effectFlow.test {
+                vm.removePlayer(
+                    state.teams
+                        .last()
+                        .memberIds
+                        .single(),
+                )
+                assertEquals(GameEffect.PlayerLeft("Bruno"), awaitItem())
+                assertEquals(GameEffect.Won("Alice"), awaitItem())
+            }
+            assertEquals(listOf("Alice", "Bruno"), vm.awaitState { it.finished }.ranking.map { it.name })
+            assertNull(games.observeOngoingGameId().first { it == null })
+        }
+
+    @Test
+    fun `deplacer un element de la liste`() {
+        assertEquals(listOf("B", "A", "C"), listOf("A", "B", "C").moved(0, 1))
+        assertEquals(listOf("A", "C", "B"), listOf("A", "B", "C").moved(2, 1))
+        assertEquals(listOf("A", "B"), listOf("A", "B").moved(1, 2))
+    }
+
     private fun CoroutineScope.launchCollect(vm: GameViewModel) =
         launch(
             UnconfinedTestDispatcher(),

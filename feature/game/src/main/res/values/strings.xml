@@ -77,4 +77,26 @@
     <string name="log_edited">C\'est corrigé : scores, retours à 25, éliminations et vainqueur ont été recalculés.</string>
     <string name="log_refused_invalidates">Impossible : avec ce changement, la partie se serait terminée plus tôt et les lancers suivants n\'auraient pas eu lieu. Supprimez d\'abord les lancers qui suivent.</string>
     <string name="log_refused">Cette modification n\'est pas possible.</string>
+    <string name="players_title">Joueurs</string>
+    <string name="players_order">Ordre de passage</string>
+    <string name="players_order_hint">Personne n\'a encore lancé dans ce tour : vous pouvez changer l\'ordre.</string>
+    <string name="players_order_locked">L\'ordre se change entre deux tours : attendez la fin du tour %1$d.</string>
+    <string name="players_order_save">Valider le nouvel ordre</string>
+    <string name="players_order_confirm_title">Changer l\'ordre de passage ?</string>
+    <string name="players_order_confirm_text">À partir de ce tour, l\'ordre sera : %1$s.</string>
+    <string name="players_order_saved">Nouvel ordre de passage enregistré.</string>
+    <string name="players_confirm">Confirmer</string>
+    <string name="players_refused_round">Quelqu\'un a déjà lancé dans ce tour : l\'ordre se change entre deux tours.</string>
+    <string name="players_move_up">Faire passer %1$s plus tôt</string>
+    <string name="players_move_down">Faire passer %1$s plus tard</string>
+    <string name="players_remove">Retirer %1$s</string>
+    <string name="players_remove_title">Retirer %1$s de la partie ?</string>
+    <string name="players_remove_text">Ses lancers restent dans le déroulé et il est classé dernier, « parti ». S\'il ne reste qu\'un joueur en lice, celui-ci gagne la manche.</string>
+    <string name="players_remove_confirm">Retirer</string>
+    <string name="players_left">%1$s a quitté la partie.</string>
+    <string name="players_add">Joueur en retard</string>
+    <string name="players_add_name">Nom du joueur</string>
+    <string name="players_add_button">Ajouter</string>
+    <string name="players_add_hint">Il démarre à 0, se place en fin d\'ordre et lance à la fin du tour en cours.</string>
+    <string name="players_joined">%1$s rejoint la partie : départ à 0, il lance à la fin du tour.</string>
 </resources>
