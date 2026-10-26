@@ -3,6 +3,10 @@ package com.yogistudio.molkkyboard.feature.game
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.TeamId
+import com.yogistudio.molkkyboard.core.scoring.EventId
+import com.yogistudio.molkkyboard.core.scoring.FaultKind
+import com.yogistudio.molkkyboard.core.scoring.ScoringError
+import com.yogistudio.molkkyboard.core.scoring.ThrowResult
 
 /** Une équipe (ou un joueur seul) telle que l'écran l'affiche. */
 data class TeamUi(
@@ -19,6 +23,36 @@ data class TeamUi(
     val remaining: Int = 0,
     /** Joueurs de l'équipe (vide ou un seul nom pour un joueur seul). */
     val members: List<String> = emptyList(),
+)
+
+/** Nature d'une ligne du déroulé. */
+enum class LogKind { THROW, FAULT, WRONG_TEAM, JOINED, LEFT, REORDER, ABANDON }
+
+/**
+ * Une ligne du déroulé : un événement du journal effectif, attribué à son équipe et à son joueur (attribution
+ * par position), avec le score avant et après. Seuls les lancers se modifient ; lancers et fautes se suppriment.
+ */
+data class LogItemUi(
+    val id: EventId,
+    val round: Int,
+    val kind: LogKind,
+    val teamName: String? = null,
+    val colorIndex: Int = 0,
+    val playerName: String? = null,
+    val result: ThrowResult? = null,
+    val points: Int = 0,
+    val scoreBefore: Int? = null,
+    val scoreAfter: Int? = null,
+    val faultKind: FaultKind? = null,
+) {
+    val editable: Boolean get() = kind == LogKind.THROW
+    val deletable: Boolean get() = kind == LogKind.THROW || kind == LogKind.FAULT
+}
+
+/** Les lignes du déroulé d'un même tour. */
+data class LogRound(
+    val round: Int,
+    val items: List<LogItemUi>,
 )
 
 /** Sélection en cours, jamais enregistrée tant qu'on n'a pas validé. */
@@ -66,7 +100,12 @@ data class GameUiState(
     val abandoned: Boolean = false,
     val winnerName: String? = null,
     val ranking: List<TeamUi> = emptyList(),
+    /** Déroulé chronologique, groupé par tour. */
+    val log: List<LogRound> = emptyList(),
 ) {
+    /** Le déroulé se modifie tant que la partie n'est pas abandonnée (même terminée : la victoire peut changer). */
+    val canEditLog: Boolean get() = !abandoned
+
     val canValidate: Boolean get() = selection != Selection.None && !finished && !abandoned
 
     /** Tableau des scores : équipes en jeu par score décroissant (à égalité, ordre de passage), puis hors jeu. */
@@ -101,6 +140,14 @@ sealed interface GameEffect {
     /** Lancer de 12 points : la quille 12 seule, ou les 12 quilles d'un coup ([strike]). */
     data class Twelve(
         val strike: Boolean,
+    ) : GameEffect
+
+    /** Correction ou suppression enregistrée : tout a été recalculé. */
+    data object Edited : GameEffect
+
+    /** Correction ou suppression refusée par le moteur (journal inchangé). */
+    data class EditRefused(
+        val error: ScoringError,
     ) : GameEffect
 
     data class Won(

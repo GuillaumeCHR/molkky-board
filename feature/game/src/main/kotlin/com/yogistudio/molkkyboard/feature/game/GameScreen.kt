@@ -91,6 +91,9 @@ import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.InputMode
+import com.yogistudio.molkkyboard.core.scoring.EventId
+import com.yogistudio.molkkyboard.core.scoring.ScoringError
+import com.yogistudio.molkkyboard.core.scoring.ThrowResult
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -107,6 +110,8 @@ data class GameActions(
     val onAbandon: () -> Unit = {},
     val onNewGame: () -> Unit = {},
     val onHome: () -> Unit = {},
+    val onCorrect: (EventId, ThrowResult) -> Unit = { _, _ -> },
+    val onDelete: (EventId) -> Unit = {},
 )
 
 @Composable
@@ -126,6 +131,12 @@ fun GameScreen(
     var twelve by remember { mutableStateOf<TwelveShow?>(null) }
     var elimination by remember { mutableStateOf<EliminationShow?>(null) }
     var animationKey by remember { mutableIntStateOf(0) }
+    var logMessage by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(logMessage) {
+        if (logMessage == null) return@LaunchedEffect
+        delay(LOG_MESSAGE_MS)
+        logMessage = null
+    }
 
     KeepScreenOn()
     LaunchedEffect(viewModel) {
@@ -154,6 +165,23 @@ fun GameScreen(
                     haptic.performHapticFeedback(HapticFeedbackType.Reject)
                     overshoot = effect.resetTo
                     shakeKey++
+                }
+
+                GameEffect.Edited -> {
+                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                    logMessage = context.getString(R.string.log_edited)
+                }
+
+                is GameEffect.EditRefused -> {
+                    haptic.performHapticFeedback(HapticFeedbackType.Reject)
+                    logMessage =
+                        context.getString(
+                            if (effect.error == ScoringError.CORRECTION_INVALIDATES_LOG) {
+                                R.string.log_refused_invalidates
+                            } else {
+                                R.string.log_refused
+                            },
+                        )
                 }
 
                 is GameEffect.Twelve -> {
@@ -196,7 +224,10 @@ fun GameScreen(
                 onAbandon = viewModel::abandon,
                 onNewGame = onNewGame,
                 onHome = onHome,
+                onCorrect = viewModel::correct,
+                onDelete = viewModel::delete,
             ),
+        logMessage = logMessage,
         snackbar = snackbar,
         overshoot = overshoot,
         onOvershootShown = { overshoot = null },
@@ -231,13 +262,16 @@ fun GameContent(
     elimination: EliminationShow? = null,
     onEliminationDone: () -> Unit = {},
     scoreboardOpen: Boolean = false,
+    logOpen: Boolean = false,
+    logMessage: String? = null,
 ) {
     var showScoreboard by rememberSaveable { mutableStateOf(scoreboardOpen) }
+    var showLog by rememberSaveable { mutableStateOf(logOpen) }
     // Surface parente : fond et couleur de texte du thème (clair, sombre, Plein soleil).
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
-                GameTopBar(state, actions)
+                GameTopBar(state, actions, onOpenLog = { showLog = true })
                 if (state.loading) return@Column
                 ScoresStrip(state, onOpen = { showScoreboard = true })
                 ActiveCard(state, shakeKey)
@@ -254,11 +288,14 @@ fun GameContent(
             SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp))
             OvershootSticker(overshoot, onOvershootShown, Modifier.align(Alignment.Center))
             // Un 12 gagnant claque d'abord ; l'écran de fin suit.
-            if ((state.finished || state.abandoned) && twelve == null) FinishPanel(state, actions)
+            if ((state.finished || state.abandoned) && twelve == null) {
+                FinishPanel(state, actions, onOpenLog = { showLog = true })
+            }
             EliminationOverlay(elimination, onEliminationDone)
         }
     }
     if (showScoreboard && !state.loading) ScoreboardSheet(state, onDismiss = { showScoreboard = false })
+    if (showLog && !state.loading) LogSheet(state, actions, logMessage, onDismiss = { showLog = false })
 }
 
 /** Grille de quilles ou pavé rapide, selon le mode de saisie. */
@@ -290,7 +327,7 @@ private fun InputArea(state: GameUiState, actions: GameActions, modifier: Modifi
 }
 
 @Composable
-private fun GameTopBar(state: GameUiState, actions: GameActions) {
+private fun GameTopBar(state: GameUiState, actions: GameActions, onOpenLog: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
     var comingSoon by remember { mutableStateOf(false) }
     MBTopBar(stringResource(R.string.game_title), actions.onBack) {
@@ -302,7 +339,11 @@ private fun GameTopBar(state: GameUiState, actions: GameActions) {
                 Icon(MBIcons.More, contentDescription = stringResource(R.string.game_menu))
             }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                listOf(R.string.game_menu_log, R.string.game_menu_players, R.string.game_menu_rules).forEach { label ->
+                DropdownMenuItem(text = { Text(stringResource(R.string.game_menu_log)) }, onClick = {
+                    menu = false
+                    onOpenLog()
+                })
+                listOf(R.string.game_menu_players, R.string.game_menu_rules).forEach { label ->
                     DropdownMenuItem(text = { Text(stringResource(label)) }, onClick = {
                         menu = false
                         comingSoon = true
@@ -690,7 +731,7 @@ private fun OvershootSticker(resetTo: Int?, onShown: () -> Unit, modifier: Modif
 
 /** Fin de partie (version simple ; l'animation de victoire et le classement détaillé arrivent au J5). */
 @Composable
-private fun FinishPanel(state: GameUiState, actions: GameActions) {
+private fun FinishPanel(state: GameUiState, actions: GameActions, onOpenLog: () -> Unit) {
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background.copy(alpha = 0.97f)) {
         Column(
             Modifier
@@ -737,6 +778,7 @@ private fun FinishPanel(state: GameUiState, actions: GameActions) {
             if (state.finished) {
                 TextButton(onClick = actions.onUndo) { Text(stringResource(R.string.game_undo)) }
             }
+            TextButton(onClick = onOpenLog) { Text(stringResource(R.string.game_menu_log)) }
         }
     }
 }
@@ -748,3 +790,4 @@ private val OPEN_DRAG_THRESHOLD = 24.dp
 private const val TWELVE_PINS_ALPHA = 0.1f
 private const val STICKER_MS = 1_600L
 private const val COMING_SOON_MS = 2_000L
+private const val LOG_MESSAGE_MS = 4_000L

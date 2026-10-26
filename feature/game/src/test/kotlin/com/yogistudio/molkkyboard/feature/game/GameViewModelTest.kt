@@ -20,6 +20,7 @@ import com.yogistudio.molkkyboard.core.model.TeamLineup
 import com.yogistudio.molkkyboard.core.model.UserSettings
 import com.yogistudio.molkkyboard.core.scoring.EventId
 import com.yogistudio.molkkyboard.core.scoring.MatchConfig
+import com.yogistudio.molkkyboard.core.scoring.ScoringError
 import com.yogistudio.molkkyboard.core.scoring.Throw
 import com.yogistudio.molkkyboard.core.scoring.ThrowResult
 import kotlinx.coroutines.CoroutineScope
@@ -370,6 +371,125 @@ class GameViewModelTest {
             assertEquals(listOf("Bruno", "Alice"), state.scoreboard.map { it.name })
             assertEquals(41, state.scoreboard.first().remaining)
             assertEquals(listOf("Alice"), state.teams.first().members)
+        }
+
+    /** Joue un lancer et renvoie son identifiant (pour le corriger ou le supprimer ensuite). */
+    private suspend fun throwId(vararg pins: Int): EventId {
+        val id = EventId("p-${ids.incrementAndGet()}")
+        games.append(gameId, Throw(id, ThrowResult.Pins(pins.toList())))
+        return id
+    }
+
+    @Test
+    fun `deroule groupe par tour, avec attribution et depassement`() =
+        runTest {
+            listOf(12, 12, 12, 9).forEach {
+                play(it)
+                play(1)
+            }
+            play(9)
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            val log = vm.awaitState { it.round == 5 }.log
+            assertEquals(listOf(1, 2, 3, 4, 5), log.map { it.round })
+            assertEquals(listOf("Alice", "Bruno"), log.first().items.map { it.teamName })
+            val overshoot = log.last().items.single()
+            assertEquals(LogKind.THROW, overshoot.kind)
+            assertEquals(45, overshoot.scoreBefore)
+            assertEquals(25, overshoot.scoreAfter)
+            assertTrue(overshoot.editable)
+        }
+
+    @Test
+    fun `corriger un ancien lancer recalcule tout, une correction qui finirait la partie plus tot est refusee`() =
+        runTest {
+            val first = throwId(12)
+            play(1)
+            listOf(12, 12, 9).forEach {
+                play(it)
+                play(1)
+            }
+            val overshoot = throwId(9)
+            play(1)
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            assertEquals(
+                25,
+                vm
+                    .awaitState { it.round == 6 }
+                    .teams
+                    .first()
+                    .score,
+            )
+            vm.effectFlow.test {
+                // 45 + 5 = 50 : Alice aurait gagné, et le lancer de Bruno qui suit n'aurait pas eu lieu.
+                vm.correct(overshoot, ThrowResult.Pins(listOf(5)))
+                assertEquals(GameEffect.EditRefused(ScoringError.CORRECTION_INVALIDATES_LOG), awaitItem())
+                vm.correct(first, ThrowResult.Pins(listOf(2)))
+                assertEquals(GameEffect.Edited, awaitItem())
+            }
+            // 2 + 12 + 12 + 9 = 35, puis 9 : 44, le retour à 25 a disparu.
+            assertEquals(
+                44,
+                vm
+                    .awaitState { it.teams.first().score == 44 }
+                    .teams
+                    .first()
+                    .score,
+            )
+        }
+
+    @Test
+    fun `supprimer le lancer gagnant rouvre la partie`() =
+        runTest {
+            listOf(12, 12, 12, 9).forEach {
+                play(it)
+                play(1)
+            }
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            vm.togglePin(5, true)
+            vm.awaitState { it.selection != Selection.None }
+            vm.effectFlow.test {
+                vm.validate()
+                assertEquals(GameEffect.Validated("Alice", 5), awaitItem())
+                assertEquals(GameEffect.Won("Alice"), awaitItem())
+                val finished = vm.awaitState { it.finished }
+                // La partie est close juste après la victoire.
+                assertNull(games.observeOngoingGameId().first { it == null })
+                vm.delete(
+                    finished.log
+                        .last()
+                        .items
+                        .last()
+                        .id,
+                )
+                assertEquals(GameEffect.Edited, awaitItem())
+            }
+            assertEquals("Alice", vm.awaitState { !it.finished }.currentTeam?.name)
+            assertEquals(gameId, games.observeOngoingGameId().first())
+        }
+
+    @Test
+    fun `une correction qui annule une elimination la rejoue a l'envers et rouvre la partie`() =
+        runTest {
+            val firstMiss = throwId()
+            play(1)
+            play()
+            play(1)
+            play()
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            vm.awaitState { it.finished }
+            games.close(gameId)
+            vm.effectFlow.test {
+                vm.correct(firstMiss, ThrowResult.Pins(listOf(3)))
+                assertEquals("Alice", (awaitItem() as GameEffect.EliminationCancelled).team.name)
+                assertEquals(GameEffect.Edited, awaitItem())
+            }
+            val state = vm.awaitState { !it.finished }
+            assertEquals(3, state.teams.first { it.name == "Alice" }.score)
+            assertEquals(gameId, games.observeOngoingGameId().first())
         }
 
     private fun CoroutineScope.launchCollect(vm: GameViewModel) =

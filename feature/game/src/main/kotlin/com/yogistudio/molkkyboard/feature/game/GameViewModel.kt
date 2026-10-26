@@ -14,9 +14,17 @@ import com.yogistudio.molkkyboard.core.model.UserSettings
 import com.yogistudio.molkkyboard.core.model.isExemptFromMissLimit
 import com.yogistudio.molkkyboard.core.model.targetFor
 import com.yogistudio.molkkyboard.core.scoring.Abandon
+import com.yogistudio.molkkyboard.core.scoring.AddPlayer
+import com.yogistudio.molkkyboard.core.scoring.Correct
+import com.yogistudio.molkkyboard.core.scoring.Delete
 import com.yogistudio.molkkyboard.core.scoring.EventId
+import com.yogistudio.molkkyboard.core.scoring.Fault
+import com.yogistudio.molkkyboard.core.scoring.LogEntry
 import com.yogistudio.molkkyboard.core.scoring.Outcome
 import com.yogistudio.molkkyboard.core.scoring.PointsKind
+import com.yogistudio.molkkyboard.core.scoring.RemovePlayer
+import com.yogistudio.molkkyboard.core.scoring.Reorder
+import com.yogistudio.molkkyboard.core.scoring.SetEvent
 import com.yogistudio.molkkyboard.core.scoring.SetState
 import com.yogistudio.molkkyboard.core.scoring.SetStatus
 import com.yogistudio.molkkyboard.core.scoring.StandardRules
@@ -24,7 +32,11 @@ import com.yogistudio.molkkyboard.core.scoring.TeamState
 import com.yogistudio.molkkyboard.core.scoring.Throw
 import com.yogistudio.molkkyboard.core.scoring.ThrowResult
 import com.yogistudio.molkkyboard.core.scoring.Undo
+import com.yogistudio.molkkyboard.core.scoring.WrongTeam
+import com.yogistudio.molkkyboard.core.scoring.describe
+import com.yogistudio.molkkyboard.core.scoring.getOrNull
 import com.yogistudio.molkkyboard.core.scoring.points
+import com.yogistudio.molkkyboard.core.scoring.start
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -196,22 +208,52 @@ class GameViewModel
                 val last =
                     snapshot.currentSet.replay.effectiveLog
                         .lastOrNull() ?: return@launch
-                val wasClosed = snapshot.closedAt != null
-                val before = snapshot.currentSet.replay.state
                 val outcome = games.append(gameId, Undo(EventId(ids.newId()), last.id))
-                if (outcome is Outcome.Ok) {
-                    if (wasClosed) games.reopen(gameId)
-                    // Une élimination défaite par l'annulation se rejoue à l'envers, en version courte.
-                    outcome.value.state.teams
-                        .filter { !it.eliminated && before.team(it.id)?.eliminated == true }
-                        .forEach {
-                            effects.send(
-                                GameEffect.EliminationCancelled(snapshot.teamUi(it), before.config.missLimit),
-                            )
-                        }
-                }
+                if (outcome is Outcome.Ok) reconcile(snapshot, outcome.value.state)
                 selection.value = Selection.None
             }
+        }
+
+        /** Corrige un lancer passé du déroulé : tout est recalculé (scores, retours à 25, éliminations, vainqueur). */
+        fun correct(target: EventId, result: ThrowResult) =
+            edit(Correct(EventId(ids.newId()), target, Throw(EventId(ids.newId()), result)))
+
+        /** Supprime un lancer ou une faute du déroulé ; les lancers suivants sont réattribués par position. */
+        fun delete(target: EventId) = edit(Delete(EventId(ids.newId()), target))
+
+        private fun edit(event: SetEvent) {
+            viewModelScope.launch {
+                val snapshot = games.observe(gameId).first() ?: return@launch
+                when (val outcome = games.append(gameId, event)) {
+                    is Outcome.Err -> {
+                        effects.send(GameEffect.EditRefused(outcome.error))
+                    }
+
+                    is Outcome.Ok -> {
+                        reconcile(snapshot, outcome.value.state)
+                        effects.send(GameEffect.Edited)
+                    }
+                }
+            }
+        }
+
+        /**
+         * Après une annulation ou une correction : la partie se rouvre si la victoire a disparu (l'écran de fin se
+         * referme) ou se clôt si elle apparaît ; une élimination défaite se rejoue à l'envers, une nouvelle victoire
+         * est célébrée.
+         */
+        private suspend fun reconcile(snapshot: GameSnapshot, after: SetState) {
+            val before = snapshot.currentSet.replay.state
+            val finished = after.status == SetStatus.FINISHED
+            if (finished && snapshot.closedAt == null) games.close(gameId)
+            if (!finished && snapshot.closedAt != null) games.reopen(gameId)
+            after.teams
+                .filter { !it.eliminated && before.team(it.id)?.eliminated == true }
+                .forEach { effects.send(GameEffect.EliminationCancelled(snapshot.teamUi(it), before.config.missLimit)) }
+            // Victoire nouvelle, ou vainqueur changé par la correction.
+            val winner = after.winner.takeIf { finished }
+            val newWinner = before.status != SetStatus.FINISHED || before.winner != winner
+            if (winner != null && newWinner) effects.send(GameEffect.Won(snapshot.team(winner)?.name ?: winner.value))
         }
 
         fun abandon() {
@@ -248,6 +290,7 @@ class GameViewModel
                 abandoned = setState.status == SetStatus.ABANDONED,
                 winnerName = setState.winner?.let { team(it)?.name ?: it.value },
                 ranking = setState.ranking.mapNotNull { id -> teamsUi.firstOrNull { it.id == id } },
+                log = logRounds(),
             )
         }
 
@@ -315,4 +358,38 @@ internal fun GameSnapshot.teamUi(team: TeamState, active: Boolean = false): Team
         remaining = (config.targetFor(team.id) - team.score).coerceAtLeast(0),
         members = team.players.map(::playerName),
     )
+}
+
+/** Déroulé de la manche en cours : le journal effectif rejoué et attribué, groupé par tour. */
+internal fun GameSnapshot.logRounds(): List<LogRound> {
+    val initial = start(config, currentSet.lineup).getOrNull() ?: return emptyList()
+    return describe(initial, currentSet.replay.effectiveLog)
+        .map { logItem(it) }
+        .groupBy { it.round }
+        .map { (round, items) -> LogRound(round, items) }
+}
+
+private fun GameSnapshot.logItem(entry: LogEntry): LogItemUi {
+    val event = entry.event
+    val team = entry.team?.let(::team)
+    val base =
+        LogItemUi(
+            id = event.id,
+            round = entry.round,
+            kind = LogKind.ABANDON,
+            teamName = team?.name ?: entry.team?.value,
+            colorIndex = team?.colorIndex ?: 0,
+            playerName = entry.player?.let(::playerName),
+            scoreBefore = entry.scoreBefore,
+            scoreAfter = entry.scoreAfter,
+        )
+    return when (event) {
+        is Throw -> base.copy(kind = LogKind.THROW, result = event.result, points = event.result.points)
+        is Fault -> base.copy(kind = LogKind.FAULT, faultKind = event.kind)
+        is WrongTeam -> base.copy(kind = LogKind.WRONG_TEAM, result = event.result, points = event.result.points)
+        is AddPlayer -> base.copy(kind = LogKind.JOINED, playerName = playerName(event.player))
+        is RemovePlayer -> base.copy(kind = LogKind.LEFT, playerName = playerName(event.player))
+        is Reorder -> base.copy(kind = LogKind.REORDER)
+        is Abandon -> base
+    }
 }

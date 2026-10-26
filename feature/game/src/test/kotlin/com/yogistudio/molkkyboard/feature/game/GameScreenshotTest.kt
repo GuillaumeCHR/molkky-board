@@ -12,9 +12,14 @@ import com.github.takahirom.roborazzi.captureScreenRoboImage
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.TeamId
+import com.yogistudio.molkkyboard.core.scoring.EventId
+import com.yogistudio.molkkyboard.core.scoring.PointsKind
+import com.yogistudio.molkkyboard.core.scoring.ThrowResult
+import com.yogistudio.molkkyboard.core.scoring.points
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
@@ -149,6 +154,68 @@ class GameScreenshotTest {
                 )
             },
         )
+
+    private fun item(n: Int, round: Int, team: TeamUi, result: ThrowResult, before: Int, after: Int) =
+        LogItemUi(
+            id = EventId("e$n"),
+            round = round,
+            kind = LogKind.THROW,
+            teamName = team.name,
+            colorIndex = team.colorIndex,
+            playerName = team.name,
+            result = result,
+            points = result.points,
+            scoreBefore = before,
+            scoreAfter = after,
+        )
+
+    private val log =
+        listOf(
+            LogRound(
+                1,
+                listOf(
+                    item(1, 1, teams[0], ThrowResult.Pins(listOf(12)), 0, 12),
+                    item(2, 1, teams[1], ThrowResult.Pins(listOf(3, 5, 9)), 0, 3),
+                    item(3, 1, teams[2], ThrowResult.Pins(emptyList()), 0, 0),
+                ),
+            ),
+            LogRound(
+                2,
+                listOf(
+                    item(4, 2, teams[0], ThrowResult.Points(7, PointsKind.PIN_COUNT), 12, 19),
+                    item(5, 2, teams[1], ThrowResult.Pins(listOf(11)), 3, 14),
+                    LogItemUi(EventId("e6"), 2, LogKind.JOINED, playerName = "Denis"),
+                    item(7, 2, teams[2], ThrowResult.Pins(listOf(10)), 45, 25),
+                ),
+            ),
+        )
+
+    private fun captureLog(name: String, editing: LogItemUi?, fontScale: Float = 1f) {
+        // La feuille vit dans sa propre fenêtre : la taille de police se règle au niveau du système simulé.
+        RuntimeEnvironment.setFontScale(fontScale)
+        compose.setContent {
+            MolkkyBoardTheme(reducedMotion = true) {
+                LogSheet(
+                    playing.copy(log = log),
+                    GameActions(),
+                    message = null,
+                    onDismiss = {},
+                    initialEditing = editing,
+                )
+            }
+        }
+        compose.waitForIdle()
+        captureScreenRoboImage("src/test/screenshots/$name.png")
+    }
+
+    @Test
+    fun deroule() = captureLog("deroule", editing = null)
+
+    @Test
+    fun deroulePolice200() = captureLog("deroule_police_200", editing = null, fontScale = 2f)
+
+    @Test
+    fun derouleEditeur() = captureLog("deroule_editeur", editing = log[1].items[3])
 
     @Test
     fun finDePartie() = capture("fin_de_partie", playing.copy(finished = true, winnerName = "Alice", ranking = teams))
