@@ -4,7 +4,7 @@
 > fonctionnelle pour le moteur de score ; la spécification testable est dans
 > [`SCORING_SPEC.md`](SCORING_SPEC.md).
 >
-> Vocabulaire : **lancer** = un jet du Mölkky ; **tour** = chaque équipe a lancé une fois ;
+> Vocabulaire : **lancer** = un jet du Mölkky ; **tour** = chaque équipe encore en jeu a lancé une fois (§ 6.1) ;
 > **manche** (*set* en anglais) = une partie jusqu'à 50 ; **match** (*game* en anglais IMO) =
 > une série de manches (ex. 2 manches gagnantes). Un joueur seul compte comme une équipe d'un joueur.
 
@@ -101,6 +101,27 @@ saisie par l'organisateur (hors v1).
   en début de manche. L'ordre (et la composition) peut changer entre deux manches, pas pendant.
 - Les équipes éliminées sont sautées.
 - Taille d'équipe libre en jeu amateur ; en tournoi IMO : 2, 3 ou 4 joueurs (+ remplaçants).
+
+### 6.1 Le tour (ajout du 2026-10-26)
+
+Les règlements parlent de « tour » sans le numéroter ; l'app l'affiche (« Tour 3 ») et le reprend dans le
+déroulé, les annonces, la notification et le partage. Définition retenue :
+
+- Un **tour** est terminé quand **chaque équipe encore en jeu** (ni éliminée, ni classée, ni partie) a eu
+  son lancer. Le tour suivant commence alors, toujours par la première équipe de l'ordre de passage.
+- Une faute ou un lancer perdu (§ 5) **consomme** le lancer de l'équipe dans le tour, comme un raté.
+  Un lancer « mauvaise équipe » n'en consomme pas : il est hors tour.
+- Une équipe **éliminée** ou **partie** en cours de tour ne compte plus : le tour se termine quand les
+  autres ont lancé. Le tour pendant lequel elle a été éliminée garde son lancer.
+- **Ajout en retard** (choix de l'app, les règlements n'en parlent pas) : la nouvelle équipe se place en fin
+  d'ordre et **rejoint le tour en cours** ; elle lance donc à la fin de ce tour. Un joueur ajouté à une
+  équipe existante ne change rien au tour.
+- L'ordre de passage ne peut être modifié **qu'entre deux tours** (avant que quiconque ait lancé dans le
+  nouveau tour).
+- Le numéro du tour n'est **jamais saisi ni stocké** : il se déduit du journal. Une correction ou une
+  suppression de lancer passé le recalcule (on peut revenir au tour précédent).
+- La manche se termine au tour de l'événement décisif (« victoire au tour 6 »).
+- Le **Mölkkout** (§ 7) a son propre décompte de tours, distinct de celui de la manche.
 
 ## 7. Fin de manche et déroulé d'un match
 

@@ -359,3 +359,56 @@ dernier, ordre relatif conservé), `DecisiveByPoints` (inchangé).
 | N3 | [B, C, A] | `LoserFirst` | A, B, C (A est dernier) |
 | N4 | [B, C, A] | `WinnerLast` | C, A, B |
 | N5 | 2 équipes, A gagne | `WinnerLast` | B, A |
+
+## 16. Tour courant (`W`, spécification du 2026-10-26)
+
+Définition : `RULES.md` § 6.1. Le numéro du tour est **dérivé** : il n'est ni saisi ni stocké dans le journal,
+et sort du rejeu comme le reste de l'état.
+
+```
+SetState.round: Int            // tour en cours, à partir de 1
+LogEntry.round: Int            // tour pendant lequel l'événement a eu lieu (déroulé groupé par tour)
+
+après chaque événement accepté :
+  si la manche est encore IN_PROGRESS : round = 1 + min(turns des équipes en lice)
+  sinon (l'événement a terminé la manche) : round inchangé (= tour de l'événement décisif)
+LogEntry.round = SetState.round juste avant l'événement
+```
+
+`turns` compte déjà les lancers, fautes et lancers perdus, mais pas `WrongTeam` (§ 15.1). Une équipe en lice
+n'est ni éliminée, ni classée (« jouer les places »), ni partie. Conséquence : `betweenRounds` ⇔ toutes les
+équipes en lice ont `turns = round − 1` (personne n'a encore lancé dans le tour).
+
+Notation : `A✓` = A a lancé dans le tour en cours. Ordre A, B, C, préréglage Classique, sauf mention.
+
+| ID | État | Événement | Résultat |
+|---|---|---|---|
+| W1 | début de manche | — | `round = 1`, tour de A |
+| W2 | tour 1, A✓ B✓ | C lance | `round = 2`, tour de A |
+| W3 | tour 3, A✓ ; B à 2 ratés | B rate (✗B) | `round = 3`, tour de C ; après C, `round = 4` avec A et C seulement |
+| W4 | tour 3, A✓ B✓ ; C à 2 ratés | C rate (✗C) | `round = 4` tout de suite, tour de A |
+| W5 | tour 2, A✓ | `Fault(B, TRESPASS)` | le lancer de B est consommé ; tour de C, `round = 2` |
+| W6 | tour 2, A✓ | `WrongTeam(C, {4})` | `round = 2`, toujours tour de B ; le lancer perdu de C sera consommé à son passage, dans ce tour |
+| W7 | tour 3, A✓ | `AddPlayer(Dana, D)` (nouvelle équipe) | D a `turns = 2` : `round = 3`, D lance après C ; puis `round = 4` |
+| W8 | tour 3 terminé (`round = 4`, personne n'a lancé) | `AddPlayer(Dana, D)` | D a `turns = 3` : `round = 4`, D lance en dernier dans ce tour |
+| W9 | A = [Alice, Arthur], tour 2, A✓ | `AddPlayer(Anna, A)` | `round` inchangé (2) |
+| W10 | tour 2, A✓ B✓, tour de C | `RemovePlayer(C…)` (C part) | `round = 3`, tour de A |
+| W11 | tour 2, A✓ | `RemovePlayer(A…)` | `round = 2` ; le tour se termine après B et C |
+| W12 | 3 lancers t1 (A), t2 (B), t3 (C) : `round = 2` | `Delete(t3)` | `round = 1`, tour de C (on revient au tour précédent) |
+| W13 | tour 3 : ✗B, puis C lance ; tour 4, A✓ | `Correct(3e raté de B → {5})` | B n'est plus éliminé ; par position, le lancer suivant reste celui de C, puis A au tour 4 : `round = 4`, tour de **B** |
+| W14 | C éliminé au tour 3 (son 3e raté) ; A et B ont lancé au tour 4 : `round = 5`, tour de A | `Correct(3e raté de C → {5})` | C revient avec 3 tours joués : `round = 4`, tour de C (on revient au tour 4) |
+| W15 | tour 6, A à 45 | A `{5}` (victoire) | `FINISHED`, `round = 6` (« victoire au tour 6 ») |
+| W16 | 2 équipes, ordre B, A ; tour 3 ; B à 2 ratés | B rate (✗B, A gagne) | `FINISHED`, `round = 3` |
+| W17 | 2 équipes, tour 2 terminé : `round = 3`, personne n'a lancé | `RemovePlayer(B…)` (A gagne) | `FINISHED`, `round = 3` (valeur d'avant l'événement) |
+| W18 | `PlayForPlaces`, tour 5, A atteint 50 (1re place) | — | A n'est plus en lice : le tour 5 se termine après B et C, puis `round = 6` sans A |
+| W19 | tour 4 | `Abandon` | `ABANDONED`, `round = 4` |
+| W20 | `Reorder` | — | accepté seulement si `betweenRounds` (L6, L7) ; ne change pas `round` |
+| W21 | déroulé de W2 puis A lance | `describe` | entrées A, B, C : `round = 1` ; entrée A suivante : `round = 2` |
+| W22 | Mölkkout | — | sans effet sur `round` de la manche ; le Mölkkout garde son compteur (`MolkkoutState.round`, affiché « Mölkkout — tour N+1 ») |
+| W23 | journal quelconque | rejeu | `round` est le même après `replay` qu'après une suite de `reduce` (propriété testée) |
+
+Choix à valider (⚠) :
+1. **Fin de manche** : `round` est le tour de l'événement décisif, même si cet événement est un départ
+   survenu entre deux tours (W17 : on affiche le tour qui allait commencer).
+2. **Ajout en retard** : la nouvelle équipe rejoint le tour en cours (W7) plutôt que d'attendre le suivant.
+3. **Mölkkout** : décompte séparé, la manche reste figée à son dernier tour (W22).
