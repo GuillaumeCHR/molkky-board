@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yogistudio.molkkyboard.R
@@ -48,7 +49,11 @@ internal fun HomeScreen(
                 .padding(MBDimens.ScreenPadding),
         verticalArrangement = Arrangement.spacedBy(MBDimens.Gap),
     ) {
-        MolkkyBoardLogotype(Modifier.padding(top = 8.dp, bottom = 24.dp).then(logotypeModifier))
+        // Logotype compact, à la hauteur d'un titre de barre d'application : il ne domine pas l'écran.
+        MolkkyBoardLogotype(
+            Modifier.padding(top = 4.dp, bottom = 12.dp).then(logotypeModifier),
+            fontSize = HOME_LOGOTYPE_SIZE,
+        )
         BigActionButton(
             text = stringResource(R.string.home_new_game),
             onClick = onNewGame,
@@ -117,3 +122,5 @@ private fun NoGameCard() {
         }
     }
 }
+
+private val HOME_LOGOTYPE_SIZE = 22.sp

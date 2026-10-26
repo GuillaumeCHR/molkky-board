@@ -9,7 +9,9 @@ import com.yogistudio.molkkyboard.core.data.IdGenerator
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.model.InputMode
+import com.yogistudio.molkkyboard.core.model.MissPenalty
 import com.yogistudio.molkkyboard.core.model.UserSettings
+import com.yogistudio.molkkyboard.core.model.isExemptFromMissLimit
 import com.yogistudio.molkkyboard.core.model.targetFor
 import com.yogistudio.molkkyboard.core.scoring.Abandon
 import com.yogistudio.molkkyboard.core.scoring.EventId
@@ -148,26 +150,45 @@ class GameViewModel
                 val after = outcome.value.state
                 val points = result.points
                 effects.send(GameEffect.Validated(name, points))
-                emitConsequences(before, after, team, points, name)
+                emitConsequences(before, after, team, result)
             }
         }
 
-        private suspend fun emitConsequences(
-            before: SetState,
-            after: SetState,
-            team: TeamState,
-            points: Int,
-            name: String,
-        ) {
+        /**
+         * Animations d'un lancer validé, par priorité : la victoire passe avant tout ; un 12 qui fait dépasser la
+         * cible ne se célèbre pas (seul le retour en arrière est mis en scène) ; une élimination qui désigne un
+         * vainqueur s'enchaîne avec la victoire.
+         */
+        private suspend fun emitConsequences(before: SetState, after: SetState, team: TeamState, result: ThrowResult) {
             val updated = after.team(team.id) ?: return
-            val target = before.config.targetFor(team.id)
+            val points = result.points
+            val overshoot = points > 0 && team.score + points > before.config.targetFor(team.id)
+            val snapshot = games.observe(gameId).first() ?: return
+            if (points == TWELVE && !overshoot) effects.send(GameEffect.Twelve(strike = result.isStrike))
             when {
-                after.status == SetStatus.FINISHED && after.winner == team.id -> effects.send(GameEffect.Won(name))
-                points > 0 && team.score + points > target -> effects.send(GameEffect.Overshoot(updated.score))
-                updated.eliminated && !team.eliminated -> effects.send(GameEffect.Eliminated(name))
+                overshoot -> {
+                    effects.send(GameEffect.Overshoot(updated.score))
+                }
+
+                updated.eliminated && !team.eliminated -> {
+                    effects.send(
+                        GameEffect.Eliminated(snapshot.teamUi(updated), after.config.missLimit),
+                    )
+                }
+            }
+            val winner = after.winner
+            if (after.status == SetStatus.FINISHED && winner != null) {
+                effects.send(GameEffect.Won(snapshot.team(winner)?.name ?: winner.value))
             }
             if (after.status == SetStatus.FINISHED) games.close(gameId)
         }
+
+        private val ThrowResult.isStrike: Boolean
+            get() =
+                when (this) {
+                    is ThrowResult.Pins -> pins.size == TWELVE
+                    is ThrowResult.Points -> kind == PointsKind.PIN_COUNT
+                }
 
         fun undo() {
             viewModelScope.launch {
@@ -176,10 +197,18 @@ class GameViewModel
                     snapshot.currentSet.replay.effectiveLog
                         .lastOrNull() ?: return@launch
                 val wasClosed = snapshot.closedAt != null
-                if (games.append(gameId, Undo(EventId(ids.newId()), last.id)) is Outcome.Ok &&
-                    wasClosed
-                ) {
-                    games.reopen(gameId)
+                val before = snapshot.currentSet.replay.state
+                val outcome = games.append(gameId, Undo(EventId(ids.newId()), last.id))
+                if (outcome is Outcome.Ok) {
+                    if (wasClosed) games.reopen(gameId)
+                    // Une élimination défaite par l'annulation se rejoue à l'envers, en version courte.
+                    outcome.value.state.teams
+                        .filter { !it.eliminated && before.team(it.id)?.eliminated == true }
+                        .forEach {
+                            effects.send(
+                                GameEffect.EliminationCancelled(snapshot.teamUi(it), before.config.missLimit),
+                            )
+                        }
                 }
                 selection.value = Selection.None
             }
@@ -194,19 +223,7 @@ class GameViewModel
         private fun GameSnapshot.toUiState(prefs: UserSettings, sel: Selection, mode: QuickPadMode): GameUiState {
             val replay = currentSet.replay
             val setState = replay.state
-            val teamsUi =
-                setState.teams.map { team ->
-                    val info = team(team.id)
-                    TeamUi(
-                        id = team.id,
-                        name = info?.name ?: team.id.value,
-                        colorIndex = info?.colorIndex ?: 0,
-                        score = team.score,
-                        misses = team.misses,
-                        active = team.id == setState.turn,
-                        out = team.eliminated || team.left,
-                    )
-                }
+            val teamsUi = setState.teams.map { teamUi(it, active = it.id == setState.turn) }
             val current = setState.currentTeam
             return GameUiState(
                 loading = false,
@@ -215,6 +232,13 @@ class GameViewModel
                 currentPlayerName = current?.nextPlayer?.let(::playerName),
                 target = current?.let { config.targetFor(it.id) } ?: config.targetScore,
                 missLimit = config.missLimit,
+                round = setState.round,
+                missWarning =
+                    current != null &&
+                        config.missLimit > 1 &&
+                        current.misses == config.missLimit - 1 &&
+                        config.onMissLimit != MissPenalty.Nothing &&
+                        !config.isExemptFromMissLimit(current.id),
                 inputMode = prefs.inputMode,
                 quickMode = mode,
                 selection = sel,
@@ -249,7 +273,11 @@ class GameViewModel
                 }
             if (points == 0) {
                 val misses = team.misses + 1
-                val eliminates = misses >= state.config.missLimit
+                // En mode Ludique sans élimination (ou pour un joueur exempté), le 3e raté n'élimine pas.
+                val eliminates =
+                    misses >= state.config.missLimit &&
+                        state.config.onMissLimit == MissPenalty.Eliminate &&
+                        !state.config.isExemptFromMissLimit(team.id)
                 return Preview(if (eliminates) PreviewKind.ELIMINATION else PreviewKind.MISS, misses = misses)
             }
             val target = state.config.targetFor(team.id)
@@ -264,8 +292,27 @@ class GameViewModel
         }
 
         companion object {
+            private const val TWELVE = 12
+
             /** Argument de navigation : identifiant de la partie. */
             const val GAME_ID = "gameId"
             private const val STOP_TIMEOUT_MS = 5_000L
         }
     }
+
+/** Une équipe telle que l'écran l'affiche. */
+internal fun GameSnapshot.teamUi(team: TeamState, active: Boolean = false): TeamUi {
+    val info = team(team.id)
+    return TeamUi(
+        id = team.id,
+        name = info?.name ?: team.id.value,
+        colorIndex = info?.colorIndex ?: 0,
+        score = team.score,
+        misses = team.misses,
+        active = active,
+        out = team.eliminated || team.left,
+        eliminated = team.eliminated,
+        remaining = (config.targetFor(team.id) - team.score).coerceAtLeast(0),
+        members = team.players.map(::playerName),
+    )
+}

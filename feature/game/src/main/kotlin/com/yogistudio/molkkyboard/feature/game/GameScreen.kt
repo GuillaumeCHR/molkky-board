@@ -3,14 +3,19 @@ package com.yogistudio.molkkyboard.feature.game
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,12 +27,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -35,6 +44,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -43,17 +53,23 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -68,7 +84,9 @@ import com.yogistudio.molkkyboard.core.designsystem.component.PinGrid
 import com.yogistudio.molkkyboard.core.designsystem.component.PlayerChip
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPad
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
+import com.yogistudio.molkkyboard.core.designsystem.component.RoundBadge
 import com.yogistudio.molkkyboard.core.designsystem.component.ScoreRing
+import com.yogistudio.molkkyboard.core.designsystem.component.ScoreboardRow
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
@@ -105,6 +123,9 @@ fun GameScreen(
     val scope = rememberCoroutineScope()
     var overshoot by remember { mutableStateOf<Int?>(null) }
     var shakeKey by remember { mutableIntStateOf(0) }
+    var twelve by remember { mutableStateOf<TwelveShow?>(null) }
+    var elimination by remember { mutableStateOf<EliminationShow?>(null) }
+    var animationKey by remember { mutableIntStateOf(0) }
 
     KeepScreenOn()
     LaunchedEffect(viewModel) {
@@ -135,7 +156,17 @@ fun GameScreen(
                     shakeKey++
                 }
 
+                is GameEffect.Twelve -> {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    twelve = TwelveShow(effect.strike, ++animationKey)
+                }
+
+                is GameEffect.EliminationCancelled -> {
+                    elimination = EliminationShow(effect.team, effect.missLimit, reverse = true, key = ++animationKey)
+                }
+
                 is GameEffect.Eliminated -> {
+                    elimination = EliminationShow(effect.team, effect.missLimit, reverse = false, key = ++animationKey)
                     scope.launch {
                         // Double vibration à l'élimination.
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -170,6 +201,10 @@ fun GameScreen(
         overshoot = overshoot,
         onOvershootShown = { overshoot = null },
         shakeKey = shakeKey,
+        twelve = twelve,
+        onTwelveDone = { twelve = null },
+        elimination = elimination,
+        onEliminationDone = { elimination = null },
     )
 }
 
@@ -191,50 +226,65 @@ fun GameContent(
     overshoot: Int? = null,
     onOvershootShown: () -> Unit = {},
     shakeKey: Int = 0,
+    twelve: TwelveShow? = null,
+    onTwelveDone: () -> Unit = {},
+    elimination: EliminationShow? = null,
+    onEliminationDone: () -> Unit = {},
+    scoreboardOpen: Boolean = false,
 ) {
+    var showScoreboard by rememberSaveable { mutableStateOf(scoreboardOpen) }
     // Surface parente : fond et couleur de texte du thème (clair, sombre, Plein soleil).
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
                 GameTopBar(state, actions)
                 if (state.loading) return@Column
-                OpponentsStrip(state)
+                ScoresStrip(state, onOpen = { showScoreboard = true })
                 ActiveCard(state, shakeKey)
                 PreviewLine(state, actions)
-                Box(
-                    Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = MBDimens.ScreenPadding),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    when (state.inputMode) {
-                        InputMode.PINS -> {
-                            PinGrid(
-                                knocked = (state.selection as? Selection.Pins)?.pins.orEmpty(),
-                                onToggle = actions.onTogglePin,
-                                enabled = !state.finished,
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
-
-                        InputMode.QUICK -> {
-                            FitToScreen(Modifier.fillMaxSize()) {
-                                QuickPad(
-                                    selected = (state.selection as? Selection.Quick)?.value,
-                                    onSelect = actions.onQuick,
-                                    mode = state.quickMode,
-                                    onModeChange = actions.onQuickMode,
-                                )
-                            }
-                        }
-                    }
+                // Pendant « 12 ! », les quilles de la grille s'effacent (elles s'envolent) puis reviennent en fondu.
+                val pinsAlpha by animateFloatAsState(if (twelve != null) TWELVE_PINS_ALPHA else 1f, label = "pins")
+                Box(Modifier.weight(1f).fillMaxWidth()) {
+                    InputArea(state, actions, Modifier.fillMaxSize().alpha(pinsAlpha))
+                    // Les quilles s'envolent depuis la grille ; la bulle claque au centre de la zone de saisie.
+                    TwelveOverlay(twelve, onTwelveDone)
                 }
                 ActionButtons(state, actions)
             }
             SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp))
             OvershootSticker(overshoot, onOvershootShown, Modifier.align(Alignment.Center))
-            if (state.finished || state.abandoned) FinishPanel(state, actions)
+            // Un 12 gagnant claque d'abord ; l'écran de fin suit.
+            if ((state.finished || state.abandoned) && twelve == null) FinishPanel(state, actions)
+            EliminationOverlay(elimination, onEliminationDone)
+        }
+    }
+    if (showScoreboard && !state.loading) ScoreboardSheet(state, onDismiss = { showScoreboard = false })
+}
+
+/** Grille de quilles ou pavé rapide, selon le mode de saisie. */
+@Composable
+private fun InputArea(state: GameUiState, actions: GameActions, modifier: Modifier) {
+    Box(modifier.padding(horizontal = MBDimens.ScreenPadding), contentAlignment = Alignment.Center) {
+        when (state.inputMode) {
+            InputMode.PINS -> {
+                PinGrid(
+                    knocked = (state.selection as? Selection.Pins)?.pins.orEmpty(),
+                    onToggle = actions.onTogglePin,
+                    enabled = !state.finished,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+
+            InputMode.QUICK -> {
+                FitToScreen(Modifier.fillMaxSize()) {
+                    QuickPad(
+                        selected = (state.selection as? Selection.Quick)?.value,
+                        onSelect = actions.onQuick,
+                        mode = state.quickMode,
+                        onModeChange = actions.onQuickMode,
+                    )
+                }
+            }
         }
     }
 }
@@ -287,26 +337,119 @@ private fun GameTopBar(state: GameUiState, actions: GameActions) {
     }
 }
 
-/** Bandeau des autres joueurs et de leur score (les scores ne sont jamais tronqués). */
+/**
+ * Bandeau des autres joueurs et de leur score (jamais tronqués), avec une poignée qui invite à le tirer vers
+ * le haut : on ouvre ainsi le tableau des scores, ou d'un simple tap (et par l'action TalkBack équivalente).
+ * Les équipes hors jeu glissent en fin de bandeau.
+ */
 @Composable
-private fun OpponentsStrip(state: GameUiState) {
+private fun ScoresStrip(state: GameUiState, onOpen: () -> Unit) {
     val colors = MolkkyBoardTheme.colors.teams
-    Row(
+    val openLabel = stringResource(R.string.game_scoreboard_open)
+    val threshold = with(LocalDensity.current) { OPEN_DRAG_THRESHOLD.toPx() }
+    Column(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = MBDimens.ScreenPadding, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
+                .pointerInput(Unit) {
+                    var dragged = 0f
+                    detectVerticalDragGestures(
+                        onDragStart = { dragged = 0f },
+                        onVerticalDrag = { change, amount ->
+                            change.consume()
+                            dragged += amount
+                            if (dragged < -threshold) {
+                                dragged = Float.NEGATIVE_INFINITY
+                                onOpen()
+                            }
+                        },
+                    )
+                }.clickable(onClickLabel = openLabel, onClick = onOpen),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        state.teams.filterNot { it.active }.forEach { team ->
-            PlayerChip(
-                name = team.name,
-                color = colors[team.colorIndex % colors.size],
-                score = team.score,
-                // Largeur bornée : dans un bandeau qui défile, le nom s'abrège au lieu de disparaître.
-                modifier = Modifier.widthIn(max = CHIP_MAX_WIDTH).alpha(if (team.out) OUT_ALPHA else 1f),
-            )
+        Box(
+            Modifier
+                .padding(top = 2.dp, bottom = 4.dp)
+                .size(width = 40.dp, height = 5.dp)
+                .background(MaterialTheme.colorScheme.outline, CircleShape),
+        )
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = MBDimens.ScreenPadding, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
+        ) {
+            val others = state.teams.filterNot { it.active }
+            (others.filterNot { it.out } + others.filter { it.out }).forEach { team ->
+                PlayerChip(
+                    name = team.name,
+                    color = colors[team.colorIndex % colors.size],
+                    score = team.score,
+                    onClick = onOpen,
+                    // Largeur bornée : dans un bandeau qui défile, le nom s'abrège au lieu de disparaître.
+                    modifier = Modifier.widthIn(max = CHIP_MAX_WIDTH).alpha(if (team.out) OUT_ALPHA else 1f),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Tableau des scores en temps réel : une feuille qui couvre l'écran de saisie, sans la perdre. Classement par
+ * score, joueur actif surligné, équipes hors jeu grisées en bas. On la referme en glissant vers le bas, en
+ * touchant à l'extérieur ou avec le bouton retour.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ScoreboardSheet(state: GameUiState, onDismiss: () -> Unit) {
+    val colors = MolkkyBoardTheme.colors.teams
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    ) {
+        Column(
+            Modifier
+                .verticalScroll(rememberScrollState())
+                .navigationBarsPadding()
+                .padding(horizontal = MBDimens.ScreenPadding)
+                .padding(bottom = MBDimens.ScreenPadding),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.game_scoreboard_title),
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.weight(1f).semantics { heading() },
+                )
+                RoundBadge(state.round)
+            }
+            Spacer(Modifier.size(8.dp))
+            var rank = 0
+            var previous: Int? = null
+            state.scoreboard.forEachIndexed { index, team ->
+                // Égalité : même rang (1, 2, 2, 4).
+                if (!team.out && team.score != previous) rank = index + 1
+                previous = team.score
+                ScoreboardRow(
+                    rank = if (team.out) null else rank,
+                    name = team.name,
+                    color = colors[team.colorIndex % colors.size],
+                    score = team.score,
+                    remaining = team.remaining,
+                    misses = team.misses,
+                    missLimit = state.missLimit,
+                    active = team.active,
+                    status =
+                        when {
+                            !team.out -> null
+                            team.eliminated -> stringResource(R.string.game_eliminated_stamp)
+                            else -> stringResource(R.string.game_left)
+                        },
+                    members = team.members,
+                )
+            }
         }
     }
 }
@@ -346,7 +489,20 @@ private fun ActiveCard(state: GameUiState, shakeKey: Int) {
             }
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(team.name, style = MaterialTheme.typography.headlineMedium, maxLines = 2)
+                // La pastille passe sous le nom quand la place manque (grandes polices) : le nom n'est jamais coupé.
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    itemVerticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        team.name,
+                        style = MaterialTheme.typography.headlineMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    RoundBadge(state.round)
+                }
                 val player = state.currentPlayerName
                 if (player != null && player != team.name) {
                     Text(
@@ -355,7 +511,11 @@ private fun ActiveCard(state: GameUiState, shakeKey: Int) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                MissIndicator(team.misses.coerceAtMost(state.missLimit), limit = state.missLimit)
+                MissIndicator(
+                    team.misses.coerceAtMost(state.missLimit),
+                    limit = state.missLimit,
+                    warning = state.missWarning,
+                )
             }
         }
     }
@@ -584,5 +744,7 @@ private fun FinishPanel(state: GameUiState, actions: GameActions) {
 private const val DOUBLE_VIBRATION_GAP_MS = 180L
 private const val OUT_ALPHA = 0.45f
 private val CHIP_MAX_WIDTH = 200.dp
+private val OPEN_DRAG_THRESHOLD = 24.dp
+private const val TWELVE_PINS_ALPHA = 0.1f
 private const val STICKER_MS = 1_600L
 private const val COMING_SOON_MS = 2_000L

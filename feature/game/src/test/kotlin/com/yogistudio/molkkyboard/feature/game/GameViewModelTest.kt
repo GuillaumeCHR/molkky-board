@@ -233,6 +233,145 @@ class GameViewModelTest {
             assertNull(games.observeOngoingGameId().first())
         }
 
+    @Test
+    fun `tour courant et avertissement au deuxieme rate`() =
+        runTest {
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            assertEquals(1, vm.awaitState { true }.round)
+            play()
+            play(1)
+            play()
+            val second = vm.awaitState { it.round == 2 && it.currentTeam?.name == "Bruno" }
+            assertEquals(false, second.missWarning)
+            play(1)
+            val warned = vm.awaitState { it.round == 3 }
+            assertEquals("Alice", warned.currentTeam?.name)
+            assertTrue(warned.missWarning)
+        }
+
+    @Test
+    fun `douze avec la quille 12 seule puis strike des 12 quilles`() =
+        runTest {
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            vm.effectFlow.test {
+                vm.togglePin(12, true)
+                vm.awaitState { it.selection != Selection.None }
+                vm.validate()
+                assertEquals(GameEffect.Validated("Alice", 12), awaitItem())
+                assertEquals(GameEffect.Twelve(strike = false), awaitItem())
+                vm.awaitState { it.currentTeam?.name == "Bruno" }
+                (1..12).forEach { vm.togglePin(it, true) }
+                vm.awaitState { (it.selection as? Selection.Pins)?.pins?.size == 12 }
+                vm.validate()
+                assertEquals(GameEffect.Validated("Bruno", 12), awaitItem())
+                assertEquals(GameEffect.Twelve(strike = true), awaitItem())
+            }
+        }
+
+    @Test
+    fun `un douze gagnant claque avant la victoire, un douze qui depasse ne se celebre pas`() =
+        runTest {
+            listOf(12, 12, 12).forEach {
+                play(it)
+                play(1)
+            }
+            play(1, 2)
+            play(1)
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            vm.effectFlow.test {
+                vm.togglePin(12, true)
+                vm.awaitState { it.selection != Selection.None }
+                vm.validate()
+                assertEquals(GameEffect.Validated("Alice", 12), awaitItem())
+                assertEquals(GameEffect.Twelve(strike = false), awaitItem())
+                assertEquals(GameEffect.Won("Alice"), awaitItem())
+                vm.undo()
+                vm.awaitState { !it.finished }
+                play(1, 2, 3, 4, 5, 6, 7)
+                play(1)
+                vm.awaitState { it.currentTeam?.name == "Alice" && it.teams.first().score == 45 }
+                vm.togglePin(12, true)
+                vm.awaitState { it.selection != Selection.None }
+                vm.validate()
+                assertEquals(GameEffect.Validated("Alice", 12), awaitItem())
+                assertEquals(GameEffect.Overshoot(25), awaitItem())
+                expectNoEvents()
+            }
+        }
+
+    @Test
+    fun `elimination au troisieme rate puis annulation qui la defait`() =
+        runTest {
+            play()
+            play(1)
+            play()
+            play(1)
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            vm.effectFlow.test {
+                vm.toggleMiss()
+                assertEquals(PreviewKind.ELIMINATION, vm.awaitState { it.selection == Selection.Miss }.preview.kind)
+                vm.validate()
+                assertEquals(GameEffect.Validated("Alice", 0), awaitItem())
+                val eliminated = awaitItem() as GameEffect.Eliminated
+                assertEquals("Alice", eliminated.team.name)
+                assertEquals(3, eliminated.missLimit)
+                // Il ne reste que Bruno : l'élimination s'enchaîne avec sa victoire.
+                assertEquals(GameEffect.Won("Bruno"), awaitItem())
+                vm.awaitState { it.finished }
+                vm.undo()
+                val cancelled = awaitItem() as GameEffect.EliminationCancelled
+                assertEquals("Alice", cancelled.team.name)
+            }
+            val back = vm.awaitState { !it.finished }
+            assertEquals(false, back.teams.first { it.name == "Alice" }.out)
+        }
+
+    @Test
+    fun `en mode Ludique sans elimination l'apercu du troisieme rate n'elimine pas`() =
+        runTest {
+            gameId =
+                games.create(
+                    NewGame(
+                        config = GameConfig.Playful,
+                        matchConfig = MatchConfig(setsToWin = 1),
+                        lineup = listOf(TeamLineup(TeamId("A"), listOf(alice)), TeamLineup(TeamId("B"), listOf(bruno))),
+                        teams =
+                            listOf(
+                                GameTeam(TeamId("A"), "Alice", 0, memberKey = memberKey(listOf(alice))),
+                                GameTeam(TeamId("B"), "Bruno", 1, memberKey = memberKey(listOf(bruno))),
+                            ),
+                        players = listOf(GamePlayer(alice, "Alice"), GamePlayer(bruno, "Bruno")),
+                    ),
+                )
+            play()
+            play(1)
+            play()
+            play(1)
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            assertEquals(false, vm.awaitState { it.currentTeam?.name == "Alice" }.missWarning)
+            vm.toggleMiss()
+            val preview = vm.awaitState { it.selection == Selection.Miss }.preview
+            assertEquals(Preview(PreviewKind.MISS, misses = 3), preview)
+        }
+
+    @Test
+    fun `tableau des scores classe par score, hors jeu en bas`() =
+        runTest {
+            play(5)
+            play(9)
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            val state = vm.awaitState { it.round == 2 }
+            assertEquals(listOf("Bruno", "Alice"), state.scoreboard.map { it.name })
+            assertEquals(41, state.scoreboard.first().remaining)
+            assertEquals(listOf("Alice"), state.teams.first().members)
+        }
+
     private fun CoroutineScope.launchCollect(vm: GameViewModel) =
         launch(
             UnconfinedTestDispatcher(),

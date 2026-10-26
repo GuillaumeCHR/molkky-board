@@ -13,6 +13,12 @@ data class TeamUi(
     val misses: Int,
     val active: Boolean,
     val out: Boolean,
+    /** Hors jeu par élimination (sinon, l'équipe est partie). */
+    val eliminated: Boolean = false,
+    /** Points qu'il reste à marquer pour atteindre la cible. */
+    val remaining: Int = 0,
+    /** Joueurs de l'équipe (vide ou un seul nom pour un joueur seul). */
+    val members: List<String> = emptyList(),
 )
 
 /** Sélection en cours, jamais enregistrée tant qu'on n'a pas validé. */
@@ -47,6 +53,10 @@ data class GameUiState(
     val currentPlayerName: String? = null,
     val target: Int = 50,
     val missLimit: Int = 3,
+    /** Tour en cours, dérivé du journal (`SCORING_SPEC.md` § 16). */
+    val round: Int = 1,
+    /** Le prochain raté de l'équipe au tour serait sanctionné (élimination ou retour en arrière). */
+    val missWarning: Boolean = false,
     val inputMode: InputMode = InputMode.PINS,
     val quickMode: QuickPadMode = QuickPadMode.SinglePin,
     val selection: Selection = Selection.None,
@@ -58,6 +68,11 @@ data class GameUiState(
     val ranking: List<TeamUi> = emptyList(),
 ) {
     val canValidate: Boolean get() = selection != Selection.None && !finished && !abandoned
+
+    /** Tableau des scores : équipes en jeu par score décroissant (à égalité, ordre de passage), puis hors jeu. */
+    val scoreboard: List<TeamUi> get() =
+        teams.filterNot { it.out }.sortedByDescending { it.score } +
+            teams.filter { it.out }
 }
 
 /** Effets ponctuels d'une validation (animations, vibrations, snackbar). */
@@ -73,7 +88,19 @@ sealed interface GameEffect {
     ) : GameEffect
 
     data class Eliminated(
-        val name: String,
+        val team: TeamUi,
+        val missLimit: Int,
+    ) : GameEffect
+
+    /** Une annulation ou une correction a défait une élimination : la séquence se rejoue à l'envers. */
+    data class EliminationCancelled(
+        val team: TeamUi,
+        val missLimit: Int,
+    ) : GameEffect
+
+    /** Lancer de 12 points : la quille 12 seule, ou les 12 quilles d'un coup ([strike]). */
+    data class Twelve(
+        val strike: Boolean,
     ) : GameEffect
 
     data class Won(

@@ -15,4 +15,8 @@
     <string name="ds_quickpad_value_miss">Aucune quille</string>
     <string name="ds_player_score">%1$s : %2$d points</string>
     <string name="ds_back">Retour</string>
+    <string name="ds_round">Tour %1$d</string>
+    <string name="ds_rank">Rang %1$d</string>
+    <string name="ds_remaining">reste %1$d</string>
+    <string name="ds_misses_warning">Ratés consécutifs : %1$d sur %2$d, attention au prochain</string>
 </resources>

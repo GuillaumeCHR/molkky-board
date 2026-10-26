@@ -23,7 +23,7 @@
     <string name="game_validated_miss">raté</string>
     <string name="game_validated_points">+%1$d</string>
     <string name="game_undo_action">Annuler</string>
-    <string name="game_eliminated">%1$s est éliminé</string>
+    <string name="game_eliminated">%1$s sort de la manche</string>
     <string name="game_overshoot_title">Aïe !</string>
     <string name="game_overshoot_subtitle">Retour à %1$d</string>
     <string name="game_winner">Victoire de %1$s !</string>
@@ -31,4 +31,14 @@
     <string name="game_new_game">Nouvelle partie</string>
     <string name="game_home">Accueil</string>
     <string name="game_abandoned">Partie abandonnée</string>
+    <string name="game_scoreboard_open">Afficher le tableau des scores</string>
+    <string name="game_scoreboard_title">Tableau des scores</string>
+    <string name="game_left">Parti</string>
+    <string name="game_twelve">12 !</string>
+    <string name="game_strike">Strike !</string>
+    <string name="game_eliminated_stamp">Éliminé</string>
+    <string name="game_eliminated_why">Pourquoi ?</string>
+    <string name="game_eliminated_rule">%1$d lancers de suite sans faire tomber de quille : l\'équipe est éliminée de la manche. Un lancer qui fait tomber au moins une quille remet le compteur à zéro.</string>
+    <string name="game_elimination_cancelled">%1$s revient en jeu</string>
+    <string name="game_ok">Compris</string>
 </resources>

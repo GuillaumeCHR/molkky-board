@@ -1088,5 +1088,11 @@ et tiens-la à jour jusqu'à la publication.
 - 2026-10-26 — Changements du 26 validés et intégrés à J4 avant le test sur téléphone : pastille « Tour N », tableau des scores, « 12 ! », élimination, logotype compact. Intro « strike » et mise à jour d'`ARCHITECTURE.md` (zxing-cpp, souveraineté) juste après le test.
 - 2026-10-26 — **Deux modes de règles** (`RULES.md` § 8.1, `SCORING_SPEC.md` § 17) : **Officiel** par défaut (verrouillé, interrupteur « Règlement de tournoi IMO ») et **Ludique** (exceptions ; par défaut sans élimination et mordu ignoré ; mode famille rangé ici). Réglages › « Règles du mode Ludique » pour les valeurs par défaut, modifiables pour une seule partie. Mode déduit de `GameConfig` (non stocké) ; records « purs » = mode Officiel uniquement. Remplace les préréglages « Classique » / « Tournoi IMO » de l'écran de création.
 
+### Jouer (J4, 2e livraison — 2026-10-26)
+- Fait : pastille « Tour N » (`RoundBadge`, bascule en ressort), bandeau des scores à poignée (tirer vers le haut ou toucher, action TalkBack) qui ouvre le **tableau des scores** (`ScoreboardRow`, classement par score, égalités au même rang, hors jeu grisés en bas, membres dépliables), animation **« 12 ! »** (`ImpactBurst` réutilisable par l'intro ; quille 12 seule ou strike, ≈ 1 s, la grille s'efface puis revient, un 12 gagnant claque avant l'écran de fin, pas de célébration si le 12 dépasse la cible), **animation d'élimination** (tampon `EliminatedStamp`, avatar qui tombe, « Pourquoi ? », jouée à l'envers si une annulation la défait), ratés qui pulsent quand le prochain serait sanctionné, logotype compact (22 sp) en haut à gauche de l'accueil.
+- Corrigé : en mode Ludique sans élimination, l'aperçu n'annonce plus « éliminé » au 3e raté.
+- Restent au J4 : déroulé (groupé par tour, modification et suppression de lancers), gestion des joueurs en cours de partie, équipes nommées, profils et avatars, mode famille, glisser-déposer, coach, prise en main, écran « Règles ».
+- Machine : émulateur + Gradle en parallèle saturent les 7,6 Go ; arrêter l'émulateur pendant les builds lourds.
+
 ### Conventions de code
 - Documentation et UI en français ; identifiants de code en anglais.
