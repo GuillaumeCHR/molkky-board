@@ -20,7 +20,10 @@ object DatabaseModule {
     fun database(
         @ApplicationContext context: Context,
     ): MolkkyBoardDatabase =
-        Room.databaseBuilder(context, MolkkyBoardDatabase::class.java, MolkkyBoardDatabase.NAME).build()
+        Room
+            .databaseBuilder(context, MolkkyBoardDatabase::class.java, MolkkyBoardDatabase.NAME)
+            .addMigrations(*MolkkyBoardDatabase.MIGRATIONS)
+            .build()
 
     @Provides
     fun gameDao(database: MolkkyBoardDatabase): GameDao = database.gameDao()

@@ -6,6 +6,10 @@ plugins {
 
 android {
     namespace = "com.yogistudio.molkkyboard.core.database"
+    // Les schémas exportés servent aux tests de migration.
+    sourceSets {
+        getByName("test") { assets.directories.add("$projectDir/schemas") }
+    }
 }
 
 room {
@@ -20,6 +24,7 @@ dependencies {
 
     testImplementation(libs.junit4)
     testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.room.testing)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)

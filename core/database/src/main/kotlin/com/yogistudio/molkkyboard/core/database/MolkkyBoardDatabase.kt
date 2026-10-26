@@ -22,7 +22,7 @@ import com.yogistudio.molkkyboard.core.database.entity.TeamEntity
         GamePlayerEntity::class,
         GameEventEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class MolkkyBoardDatabase : RoomDatabase() {
@@ -32,5 +32,8 @@ abstract class MolkkyBoardDatabase : RoomDatabase() {
 
     companion object {
         const val NAME = "molkkyboard.db"
+
+        /** Toutes les migrations, dans l'ordre : toute modification du schéma impose une version et une migration. */
+        val MIGRATIONS = arrayOf(MIGRATION_1_2)
     }
 }
