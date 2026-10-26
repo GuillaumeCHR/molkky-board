@@ -1102,3 +1102,8 @@ et tiens-la à jour jusqu'à la publication.
 ### Conventions de code
 - **Base de données** : toute modification du schéma Room impose d'augmenter la version, d'écrire la migration (`Migrations.kt`) et un test de migration (`MigrationTest`, schémas exportés dans `core/database/schemas`). Origine : plantage au lancement sur téléphone (2026-10-26, table `game_player` ajoutée au J4 sans migration).
 - Documentation et UI en français ; identifiants de code en anglais.
+
+### Reprise (2026-10-26 au soir)
+- Test sur téléphone de fin de J4 en cours : résultats dans `docs/tests/J4-resultats.md` (sections 1 à 6 faites, 7 corrections livrées et vérifiées). **À reprendre** : sections 7 à 11 du plan (`docs/tests/J4-plan-de-test.md`) ; le glissement du bandeau des scores ne marche toujours pas (le bouton « Scores » suffit : retirer ou revoir le geste).
+- Ensuite : fin du J4 (coach de fin de partie, première partie guidée), tests de performance demandés, avatars sur l'écran de jeu.
+

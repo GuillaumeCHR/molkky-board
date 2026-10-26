@@ -38,3 +38,11 @@ Questions : `J4-plan-de-test.md`. Réponses recueillies au fil du test.
 | Q6b Règles du jeu | Texte clair | **Mise en forme pas assez structurée** : manque d'intertitres pour aérer et structurer (à faire : regrouper en parties « Préparer / Jouer / Gagner / Variantes / FAQ », intertitres visibles, cartes par section, plus d'espace, points clés en gras ou en listes). |
 | Q6.1 Changer l'ordre | Problème | **Flèches inactives, l'ordre ne se change pas** (message affiché non précisé : blocage « entre deux tours » incompris ou défaut). À investiguer et rendre explicite. |
 | Global | — | **Une partie complète se joue de bout en bout.** |
+
+## Vérification des corrections (même soir)
+| Question | Réponse | Commentaire |
+|---|---|---|
+| C1 Ajout dans chaque équipe | Clair maintenant | |
+| C2 Tableau des scores | Bouton OK, geste non | Le glissement du bandeau ne marche toujours pas : retirer le geste ou le revoir ; le bouton suffit. |
+| C3 Ordre en plein tour | Oui, clair | |
+| C4 Déroulé et règles | Les deux sont bien | |
