@@ -1,7 +1,7 @@
 # Plan de test sur téléphone — fin du J4 (2026-10-26)
 
 Objectif : valider sur ton Fairphone tout ce qui a été livré depuis le dernier test, avant de terminer le J4
-(coach, écran « Règles », première partie guidée viendront ensuite).
+(coach et première partie guidée viendront ensuite).
 
 **Comment répondre** : fais les étapes de chaque section, note au fil de l'eau la lettre qui correspond à ton
 ressenti pour chaque question (A, B, C…). En revenant dans Claude Code, dis « retour du test » : je te poserai
@@ -104,6 +104,18 @@ Retire un joueur.
   A. Oui · B. Il lance au mauvais moment · C. Bug
 - **Q6.3** Retirer un joueur (et victoire si un seul reste) :
   A. Oui · B. Comportement surprenant (préciser) · C. Bug
+
+## 6 bis. Règles du jeu
+
+Étapes : en pleine partie, ⋮ › Règles (feuille, la partie reste ouverte) ; puis Réglages › Règles du jeu.
+Idéalement, fais lire l'écran à quelqu'un qui n'a jamais joué et demande-lui d'installer les quilles.
+
+- **Q6b.1** Une personne qui découvre le jeu peut-elle installer les quilles et jouer avec cet écran seul ?
+  A. Oui, sans aide · B. Avec un peu d'aide · C. Non (préciser ce qui manque) · D. Pas testé avec un débutant
+- **Q6b.2** Le schéma de la formation de départ :
+  A. Clair · B. Trop pâle ou trop petit · C. Pas compris
+- **Q6b.3** Longueur et ton des textes :
+  A. Bien · B. Trop long · C. Trop technique · D. Il manque des cas dans la FAQ (préciser)
 
 ## 7. Fin de partie
 

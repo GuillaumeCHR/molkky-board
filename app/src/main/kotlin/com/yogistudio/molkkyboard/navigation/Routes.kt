@@ -23,6 +23,10 @@ data object SettingsRoute
 @Serializable
 data object AboutRoute
 
+/** Réglages › Règles du jeu. */
+@Serializable
+data object RulesRoute
+
 /** Réglages › Règles du mode Ludique. */
 @Serializable
 data object PlayfulRulesRoute

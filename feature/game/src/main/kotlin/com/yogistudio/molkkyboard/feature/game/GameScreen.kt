@@ -292,11 +292,17 @@ fun GameContent(
     var showScoreboard by rememberSaveable { mutableStateOf(scoreboardOpen) }
     var showLog by rememberSaveable { mutableStateOf(logOpen) }
     var showPlayers by rememberSaveable { mutableStateOf(playersOpen) }
+    var showRules by rememberSaveable { mutableStateOf(false) }
     // Surface parente : fond et couleur de texte du thème (clair, sombre, Plein soleil).
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
-                GameTopBar(state, actions, onOpenLog = { showLog = true }, onOpenPlayers = { showPlayers = true })
+                GameTopBar(state, actions, onOpenLog = {
+                    showLog = true
+                }, onOpenPlayers = { showPlayers = true }, onOpenRules = {
+                    showRules =
+                        true
+                })
                 if (state.loading) return@Column
                 ScoresStrip(state, onOpen = { showScoreboard = true })
                 ActiveCard(state, shakeKey)
@@ -322,6 +328,7 @@ fun GameContent(
     if (showScoreboard && !state.loading) ScoreboardSheet(state, onDismiss = { showScoreboard = false })
     if (showLog && !state.loading) LogSheet(state, actions, logMessage, onDismiss = { showLog = false })
     if (showPlayers && !state.loading) PlayersSheet(state, actions, logMessage, onDismiss = { showPlayers = false })
+    if (showRules) RulesSheet(onDismiss = { showRules = false })
 }
 
 /** Grille de quilles ou pavé rapide, selon le mode de saisie. */
@@ -358,9 +365,9 @@ private fun GameTopBar(
     actions: GameActions,
     onOpenLog: () -> Unit,
     onOpenPlayers: () -> Unit,
+    onOpenRules: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
-    var comingSoon by remember { mutableStateOf(false) }
     MBTopBar(stringResource(R.string.game_title), actions.onBack) {
         IconButton(onClick = actions.onUndo, enabled = state.canUndo, modifier = Modifier.size(MBDimens.MinTouch)) {
             Icon(MBIcons.Undo, contentDescription = stringResource(R.string.game_undo))
@@ -378,12 +385,10 @@ private fun GameTopBar(
                     menu = false
                     onOpenPlayers()
                 })
-                listOf(R.string.game_menu_rules).forEach { label ->
-                    DropdownMenuItem(text = { Text(stringResource(label)) }, onClick = {
-                        menu = false
-                        comingSoon = true
-                    })
-                }
+                DropdownMenuItem(text = { Text(stringResource(R.string.game_menu_rules)) }, onClick = {
+                    menu = false
+                    onOpenRules()
+                })
                 DropdownMenuItem(
                     text = {
                         Text(
@@ -398,18 +403,6 @@ private fun GameTopBar(
                 )
             }
         }
-    }
-    if (comingSoon) {
-        LaunchedEffect(Unit) {
-            delay(COMING_SOON_MS)
-            comingSoon = false
-        }
-        Text(
-            stringResource(R.string.game_coming_soon),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = MBDimens.ScreenPadding),
-        )
     }
 }
 
@@ -824,5 +817,4 @@ private val CHIP_MAX_WIDTH = 200.dp
 private val OPEN_DRAG_THRESHOLD = 24.dp
 private const val TWELVE_PINS_ALPHA = 0.1f
 private const val STICKER_MS = 1_600L
-private const val COMING_SOON_MS = 2_000L
 private const val LOG_MESSAGE_MS = 4_000L

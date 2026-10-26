@@ -52,6 +52,8 @@
     <string name="settings_showcase">Vitrine du design system</string>
     <string name="settings_showcase_hint">Build de développement uniquement</string>
     <string name="settings_about">À propos</string>
+    <string name="settings_rules">Règles du jeu</string>
+    <string name="settings_rules_hint">Installation des quilles, points, 50 exactement, ratés, questions fréquentes.</string>
     <string name="settings_playful_rules">Règles du mode Ludique</string>
     <string name="settings_playful_rules_hint">Choisir les exceptions aux règles officielles : élimination, dépassement, cible…</string>
 

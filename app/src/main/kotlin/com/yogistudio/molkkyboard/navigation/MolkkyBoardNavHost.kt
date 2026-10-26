@@ -31,6 +31,7 @@ import com.yogistudio.molkkyboard.core.designsystem.component.MolkkyBoardLogotyp
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.feature.game.GameScreen
+import com.yogistudio.molkkyboard.feature.game.RulesScreen
 import com.yogistudio.molkkyboard.feature.intro.IntroScreen
 import com.yogistudio.molkkyboard.feature.setup.PlayfulRulesScreen
 import com.yogistudio.molkkyboard.feature.setup.SetupScreen
@@ -64,7 +65,7 @@ fun MolkkyBoardNavHost(startup: StartupState) {
     val showBar =
         destination?.let { d ->
             TopLevel.entries.any { d.hasRoute(it.routeClass) } || d.hasRoute(AboutRoute::class) ||
-                d.hasRoute(PlayfulRulesRoute::class)
+                d.hasRoute(PlayfulRulesRoute::class) || d.hasRoute(RulesRoute::class)
         }
             ?: true
 
@@ -129,11 +130,13 @@ fun MolkkyBoardNavHost(startup: StartupState) {
                     SettingsScreen(
                         onAbout = { navController.navigate(AboutRoute) },
                         onPlayfulRules = { navController.navigate(PlayfulRulesRoute) },
+                        onRules = { navController.navigate(RulesRoute) },
                         onShowcase = { navController.navigate(ShowcaseRoute) },
                     )
                 }
                 composable<AboutRoute> { AboutScreen(onBack = navController::navigateUp) }
                 composable<PlayfulRulesRoute> { PlayfulRulesScreen(onBack = navController::navigateUp) }
+                composable<RulesRoute> { RulesScreen(onBack = navController::navigateUp) }
                 composable<JoinRoute> {
                     EmptyStateScreen(R.string.join_title, R.string.join_empty, onBack = navController::navigateUp)
                 }

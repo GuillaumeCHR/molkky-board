@@ -236,6 +236,13 @@ class GameScreenshotTest {
     }
 
     @Test
+    @Config(qualifiers = "w411dp-h2600dp-xxhdpi")
+    fun regles() {
+        compose.setContent { MolkkyBoardTheme(reducedMotion = true) { RulesScreen(onBack = {}) } }
+        compose.onRoot().captureRoboImage("src/test/screenshots/regles.png")
+    }
+
+    @Test
     fun deroule() = captureLog("deroule", editing = null)
 
     @Test
