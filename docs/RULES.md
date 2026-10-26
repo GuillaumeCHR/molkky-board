@@ -167,9 +167,24 @@ déroulé, les annonces, la notification et le partage. Définition retenue :
 | Départage | Mölkkout | aucun (somme des points) |
 | Score de fin par élimination | IMO : gagnant 50 / éliminé 0 | scores réels conservés |
 
-Deux préréglages en découlent : **« Classique »** (consensus des fédérations, sans règle des 37,
-scores réels conservés) et **« Tournoi IMO »** (règle des 37, fautes détaillées, 50/0 en cas
-d'élimination).
+### 8.1 Deux modes de jeu (décision du 2026-10-26)
+
+L'app propose deux modes, au choix à la création de chaque partie :
+
+- **Officiel** (par défaut) : la colonne « Valeur officielle » ci-dessus, **verrouillée** (consensus des
+  fédérations, sans règle des 37, scores réels conservés). Un interrupteur **« Règlement de tournoi IMO »**
+  ajoute la règle des 37, les fautes détaillées et le 50/0 en cas d'élimination (ancien préréglage
+  « Tournoi IMO »). Seules les parties en mode Officiel comptent pour les records « purs ».
+- **Ludique** : le mode Officiel plus des **exceptions** choisies parmi toutes les variantes de ce tableau,
+  et le mode famille (score de départ, cible réduite et exemption d'élimination par joueur, distance de
+  lancer réduite). Exceptions activées par défaut : **pas d'élimination** (les ratés sont comptés sans
+  sanction) et **mordu ignoré**. Les autres valeurs par défaut sont celles du mode Officiel. Les futures
+  variantes de jeu (« Killer », mort subite) seront rangées dans ce mode.
+- Les exceptions par défaut du mode Ludique se règlent dans **Réglages › Règles du mode Ludique** ; on peut
+  les modifier pour une seule partie depuis l'écran de création, sans toucher aux réglages.
+- Une partie Ludique compte dans les victoires et l'historique (étiquette « Ludique »), pas dans les records
+  « purs ». Une partie Ludique sans aucune exception active est une partie Officielle.
+- Les règles sont fixées pour une manche ; elles peuvent changer entre deux manches.
 
 ## 9. Sources et divergences
 

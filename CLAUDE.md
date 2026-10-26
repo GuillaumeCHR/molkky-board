@@ -1083,5 +1083,10 @@ et tiens-la à jour jusqu'à la publication.
 - 2026-10-26 — `CLAUDE.md` reprend `01-specifications-molkky-board.md` (le `prompt-molkky.md` du 25 n'avait pas été recopié en entier : sécurité et vie privée, Play Store, guide des règles, zxing-cpp au lieu de ML Kit, souveraineté… sont désormais présents).
 - Changements du 26 (intro « strike » manga, pastille « Tour N », logotype compact, tableau des scores, undo en bouton, animations « 12 ! » et d'élimination) : analyse d'impact présentée, **en attente de validation** avant toute modification.
 
+### Tour courant et modes de règles (2026-10-26)
+- 2026-10-26 — Tour courant validé (`RULES.md` § 6.1, `SCORING_SPEC.md` § 16) : dérivé du journal, figé sur le tour de l'événement décisif, un retardataire rejoint le tour en cours, Mölkkout à part. Fait (commit 4d63fe5).
+- 2026-10-26 — Changements du 26 validés et intégrés à J4 avant le test sur téléphone : pastille « Tour N », tableau des scores, « 12 ! », élimination, logotype compact. Intro « strike » et mise à jour d'`ARCHITECTURE.md` (zxing-cpp, souveraineté) juste après le test.
+- 2026-10-26 — **Deux modes de règles** (`RULES.md` § 8.1, `SCORING_SPEC.md` § 17) : **Officiel** par défaut (verrouillé, interrupteur « Règlement de tournoi IMO ») et **Ludique** (exceptions ; par défaut sans élimination et mordu ignoré ; mode famille rangé ici). Réglages › « Règles du mode Ludique » pour les valeurs par défaut, modifiables pour une seule partie. Mode déduit de `GameConfig` (non stocké) ; records « purs » = mode Officiel uniquement. Remplace les préréglages « Classique » / « Tournoi IMO » de l'écran de création.
+
 ### Conventions de code
 - Documentation et UI en français ; identifiants de code en anglais.

@@ -412,3 +412,35 @@ Choix à valider (⚠) :
    survenu entre deux tours (W17 : on affiche le tour qui allait commencer).
 2. **Ajout en retard** : la nouvelle équipe rejoint le tour en cours (W7) plutôt que d'attendre le suivant.
 3. **Mölkkout** : décompte séparé, la manche reste figée à son dernier tour (W22).
+
+## 17. Modes Officiel et Ludique (`G`, décision du 2026-10-26)
+
+Définition : `RULES.md` § 8.1. Le mode n'est **pas stocké** : il se déduit de `GameConfig`, ce qui évite
+toute incohérence entre le mode affiché et les règles appliquées.
+
+```
+GameConfig.Classic        // Officiel (par défaut)
+GameConfig.ImoTournament  // Officiel + « Règlement de tournoi IMO »
+GameConfig.Playful        // Ludique par défaut : Classic + onMissLimit = Nothing + faultsCountAsMiss = false
+
+GameConfig.mode = OFFICIAL  si config ∈ { Classic, ImoTournament } (surcharges par équipe comprises : aucune)
+                = PLAYFUL   sinon
+GameConfig.isStandard ⇔ mode == OFFICIAL      // records « purs » (remplace « cible 50 et retour à 25 »)
+```
+
+| ID | Configuration | `mode` | `isStandard` |
+|---|---|---|---|
+| G1 | `Classic` | OFFICIAL | oui |
+| G2 | `ImoTournament` | OFFICIAL | oui |
+| G3 | `Playful` | PLAYFUL | non |
+| G4 | `Classic` + `onMissLimit = Nothing` | PLAYFUL | non (était « standard » avant le § 17) |
+| G5 | `Classic` + surcharge d'une équipe (mode famille) | PLAYFUL | non |
+| G6 | `Classic` + `targetScore = 40` | PLAYFUL | non |
+| G7 | `Classic` + `rule37 = true` seul (sans le 50/0) | PLAYFUL | non : l'IMO est un tout |
+| G8 | `Playful` dont on désactive toutes les exceptions | OFFICIAL | oui |
+
+| ID | Configuration et état | Événement | Résultat |
+|---|---|---|---|
+| G9 | `Playful`, A à 2 ratés | A rate | A 3 ratés, **pas** éliminée, `misses = 3` (le compteur continue pour les stats) |
+| G10 | `Playful`, A 30/0 | `Fault(A, TRESPASS)` | A 30/**0**, lancer perdu (F9) |
+
