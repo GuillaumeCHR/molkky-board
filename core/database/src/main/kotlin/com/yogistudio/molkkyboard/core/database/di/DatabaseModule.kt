@@ -22,7 +22,7 @@ object DatabaseModule {
     ): MolkkyBoardDatabase =
         Room
             .databaseBuilder(context, MolkkyBoardDatabase::class.java, MolkkyBoardDatabase.NAME)
-            .addMigrations(*MolkkyBoardDatabase.MIGRATIONS)
+            .apply { MolkkyBoardDatabase.MIGRATIONS.forEach { addMigrations(it) } }
             .build()
 
     @Provides
