@@ -91,6 +91,49 @@ class SetupViewModel
             viewModelScope.launch { profiles.saveProfile(profile) }
         }
 
+        /** Ajoute directement un nouveau joueur à une équipe (et crée son profil). */
+        fun addPlayerToTeam(team: TeamId, name: String) {
+            val trimmed = name.trim().take(SetupUiState.MAX_NAME)
+            if (trimmed.isEmpty()) return
+            val state = mutableState.value
+            val profile =
+                PlayerProfile(
+                    id = ids.newId(),
+                    name = trimmed,
+                    colorIndex =
+                        firstFree(
+                            (0 until SetupUiState.PALETTE_SIZE).toList(),
+                            state.players.map {
+                                it.colorIndex
+                            },
+                            state.players.size,
+                        ),
+                    avatar = firstFree(PLAYER_AVATARS, state.players.map { it.avatar }, state.players.size),
+                )
+            addProfileToTeam(team, profile)
+            viewModelScope.launch { profiles.saveProfile(profile) }
+        }
+
+        /** Ajoute un joueur habituel à une équipe précise. */
+        fun addProfileToTeam(team: TeamId, profile: PlayerProfile) {
+            mutableState.update { state ->
+                if (state.player(PlayerId(profile.id)) != null) return@update state
+                val player =
+                    SetupPlayer(
+                        PlayerId(profile.id),
+                        profile.name,
+                        profile.colorIndex,
+                        profile.avatar ?: PLAYER_AVATARS.first(),
+                        profile.photoUri,
+                    )
+                state.copy(
+                    players = state.players + player,
+                    teams = state.teams.map { if (it.id == team) it.copy(members = it.members + player.id) else it },
+                )
+            }
+            refreshKnownTeams()
+        }
+
         /** Ajoute un joueur habituel ; en équipes, il rejoint l'équipe la moins nombreuse. */
         fun addProfile(profile: PlayerProfile, teamNames: List<String> = emptyList()) {
             mutableState.update { state ->

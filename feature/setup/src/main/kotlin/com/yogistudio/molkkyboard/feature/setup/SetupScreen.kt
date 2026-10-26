@@ -93,6 +93,8 @@ data class SetupActions(
     val onMoveTeam: (Int, Int) -> Unit = { _, _ -> },
     val onMoveMember: (TeamId, Int, Int) -> Unit = { _, _, _ -> },
     val onSwitchTeam: (PlayerId) -> Unit = {},
+    val onAddToTeam: (TeamId, String) -> Unit = { _, _ -> },
+    val onAddProfileToTeam: (TeamId, PlayerProfile) -> Unit = { _, _ -> },
     val onAcceptKnown: (TeamId) -> Unit = {},
     val onDismissKnown: (TeamId) -> Unit = {},
     val onMode: (RulesMode) -> Unit = {},
@@ -136,6 +138,8 @@ fun SetupScreen(
                 onMoveTeam = viewModel::moveTeam,
                 onMoveMember = viewModel::moveMember,
                 onSwitchTeam = viewModel::switchTeam,
+                onAddToTeam = viewModel::addPlayerToTeam,
+                onAddProfileToTeam = viewModel::addProfileToTeam,
                 onAcceptKnown = viewModel::acceptKnownTeam,
                 onDismissKnown = viewModel::dismissKnownTeam,
                 onMode = viewModel::setMode,
@@ -164,8 +168,13 @@ fun SetupContent(state: SetupUiState, actions: SetupActions) {
         ) {
             Label(R.string.setup_players)
             PlayModeSelector(state.playMode, actions.onPlayMode)
-            AddPlayerRow(state, actions)
-            if (state.profiles.isNotEmpty()) KnownProfiles(state.profiles, actions.onAddProfile)
+            // En équipes, on ajoute les joueurs directement dans chaque équipe (retour du test sur téléphone).
+            if (state.playMode == PlayMode.SOLO) {
+                AddPlayerRow(state, actions)
+                if (state.profiles.isNotEmpty()) KnownProfiles(state.profiles, actions.onAddProfile)
+            } else {
+                Hint(R.string.setup_teams_hint)
+            }
             when (state.playMode) {
                 PlayMode.SOLO -> SoloOrder(state, actions, onAvatar = { avatarFor = it })
                 PlayMode.TEAMS -> TeamsOrder(state, actions, onAvatar = { avatarFor = it })
@@ -491,17 +500,22 @@ private fun TeamCard(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
                 ) {
                     Column(Modifier.padding(12.dp)) {
+                        val names = team.members.mapNotNull { state.player(it)?.name }
                         Text(
-                            stringResource(R.string.setup_known_team, emblemSymbol(known.emblem), known.name),
+                            stringResource(
+                                R.string.setup_known_team,
+                                namesList(names),
+                                "${emblemSymbol(known.emblem)} ${known.name}",
+                            ),
                             style = MaterialTheme.typography.bodyLarge,
                         )
                         Row {
                             TextButton(
                                 onClick = { actions.onAcceptKnown(team.id) },
-                            ) { Text(stringResource(R.string.setup_known_accept)) }
+                            ) { Text(stringResource(R.string.setup_known_accept, known.name)) }
                             TextButton(
                                 onClick = { actions.onDismissKnown(team.id) },
-                            ) { Text(stringResource(R.string.setup_known_dismiss)) }
+                            ) { Text(stringResource(R.string.setup_known_dismiss, team.name)) }
                         }
                     }
                 }
@@ -535,12 +549,95 @@ private fun TeamCard(
                     }
                 }
             }
+            TeamAddRow(team, state, actions)
             if (canRemove) {
                 TextButton(
                     onClick = { actions.onRemoveTeam(team.id) },
                     modifier = Modifier.padding(horizontal = 8.dp),
                 ) {
                     Text(stringResource(R.string.setup_remove_team), color = MolkkyBoardTheme.colors.coralText)
+                }
+            }
+        }
+    }
+}
+
+/** « Alice, Bruno et Chloé ». */
+@Composable
+private fun namesList(names: List<String>): String =
+    if (names.size <
+        2
+    ) {
+        names.joinToString()
+    } else {
+        names.dropLast(1).joinToString(", ") + stringResource(R.string.setup_and) +
+            names.last()
+    }
+
+/** Ajout d'un joueur directement dans cette équipe : nouveau nom, ou joueur habituel en un tap. */
+@Composable
+private fun TeamAddRow(team: SetupTeam, state: SetupUiState, actions: SetupActions) {
+    var name by rememberSaveable(team.id.value) { mutableStateOf("") }
+    val add = {
+        actions.onAddToTeam(team.id, name)
+        name = ""
+    }
+    Row(
+        Modifier.padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
+    ) {
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it.take(SetupUiState.MAX_NAME) },
+            label = { Text(stringResource(R.string.setup_team_add_player)) },
+            singleLine = true,
+            keyboardOptions =
+                KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Done,
+                ),
+            keyboardActions = KeyboardActions(onDone = { add() }),
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = add, enabled = name.isNotBlank(), modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+            Text(stringResource(R.string.setup_add))
+        }
+    }
+    if (state.profiles.isNotEmpty()) {
+        val colors = MolkkyBoardTheme.colors.teams
+        FlowRow(
+            Modifier.padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            state.profiles.forEach { profile ->
+                val label = stringResource(R.string.setup_add_known_to_team, profile.name, team.name)
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    modifier =
+                        Modifier.clickable(
+                            onClickLabel = label,
+                        ) { actions.onAddProfileToTeam(team.id, profile) },
+                ) {
+                    Row(
+                        Modifier.heightIn(min = 44.dp).padding(start = 4.dp, end = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Avatar(
+                            profile.avatar ?: PLAYER_AVATARS.first(),
+                            profile.photoUri,
+                            colors[
+                                profile.colorIndex %
+                                    colors.size,
+                            ].fill,
+                            32.dp,
+                        )
+                        Text("+ ${profile.name}", style = MaterialTheme.typography.titleSmall)
+                    }
                 }
             }
         }

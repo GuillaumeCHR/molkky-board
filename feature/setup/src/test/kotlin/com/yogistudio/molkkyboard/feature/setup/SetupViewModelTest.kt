@@ -14,6 +14,7 @@ import com.yogistudio.molkkyboard.core.data.memberKey
 import com.yogistudio.molkkyboard.core.database.MolkkyBoardDatabase
 import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.InputMode
+import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.RulesMode
 import com.yogistudio.molkkyboard.core.model.TeamOverride
 import com.yogistudio.molkkyboard.core.model.UserSettings
@@ -256,6 +257,32 @@ class SetupViewModelTest {
             assertEquals(5, accepted.colorIndex)
             assertEquals("leaf", accepted.emblem)
         }
+
+    @Test
+    fun `ajouter un joueur directement dans une equipe`() {
+        vm.setPlayMode(PlayMode.TEAMS, names)
+        val (first, second) = vm.state.value.teams
+        vm.addPlayerToTeam(second.id, "  Emma ")
+        vm.addPlayerToTeam(second.id, "Félix")
+        vm.addPlayerToTeam(first.id, "")
+        val teams = vm.state.value.teams
+        assertTrue(teams.first().members.isEmpty())
+        assertEquals(
+            listOf("Emma", "Félix"),
+            teams.last().members.map {
+                vm.state.value
+                    .player(it)!!
+                    .name
+            },
+        )
+        vm.addProfileToTeam(first.id, PlayerProfile("z", "Zoé", 3, "🐧"))
+        assertEquals(
+            listOf(PlayerId("z")),
+            vm.state.value.teams
+                .first()
+                .members,
+        )
+    }
 
     @Test
     fun `le mode famille ne s'applique qu'en Ludique`() {
