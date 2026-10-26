@@ -32,6 +32,7 @@ import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.feature.game.GameScreen
 import com.yogistudio.molkkyboard.feature.intro.IntroScreen
+import com.yogistudio.molkkyboard.feature.setup.PlayfulRulesScreen
 import com.yogistudio.molkkyboard.feature.setup.SetupScreen
 import com.yogistudio.molkkyboard.startup.StartupState
 import com.yogistudio.molkkyboard.ui.AboutScreen
@@ -61,7 +62,10 @@ fun MolkkyBoardNavHost(startup: StartupState) {
     val destination = backStack?.destination
     // L'écran de jeu et la vitrine sont en plein écran : pas de barre du bas.
     val showBar =
-        destination?.let { d -> TopLevel.entries.any { d.hasRoute(it.routeClass) } || d.hasRoute(AboutRoute::class) }
+        destination?.let { d ->
+            TopLevel.entries.any { d.hasRoute(it.routeClass) } || d.hasRoute(AboutRoute::class) ||
+                d.hasRoute(PlayfulRulesRoute::class)
+        }
             ?: true
 
     Scaffold(
@@ -124,10 +128,12 @@ fun MolkkyBoardNavHost(startup: StartupState) {
                 composable<SettingsRoute> {
                     SettingsScreen(
                         onAbout = { navController.navigate(AboutRoute) },
+                        onPlayfulRules = { navController.navigate(PlayfulRulesRoute) },
                         onShowcase = { navController.navigate(ShowcaseRoute) },
                     )
                 }
                 composable<AboutRoute> { AboutScreen(onBack = navController::navigateUp) }
+                composable<PlayfulRulesRoute> { PlayfulRulesScreen(onBack = navController::navigateUp) }
                 composable<JoinRoute> {
                     EmptyStateScreen(R.string.join_title, R.string.join_empty, onBack = navController::navigateUp)
                 }

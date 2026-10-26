@@ -6,10 +6,13 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.UserSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -36,6 +39,10 @@ class SettingsDataSource
 
         suspend fun setOnboardingDone(done: Boolean) = dataStore.edit { it[Keys.ONBOARDING_DONE] = done }
 
+        /** Les surcharges par équipe dépendent d'une partie : elles ne font pas partie des valeurs par défaut. */
+        suspend fun setPlayfulRules(config: GameConfig) =
+            dataStore.edit { it[Keys.PLAYFUL_RULES] = json.encodeToString(config.copy(teamOverrides = emptyMap())) }
+
         /** Compte un lancement de l'application et renvoie les réglages à jour. */
         suspend fun recordLaunch(): UserSettings =
             dataStore.edit { it[Keys.LAUNCH_COUNT] = (it[Keys.LAUNCH_COUNT] ?: 0) + 1 }.toSettings()
@@ -52,7 +59,20 @@ class SettingsDataSource
                 shortIntro = this[Keys.SHORT_INTRO] ?: false,
                 launchCount = this[Keys.LAUNCH_COUNT] ?: 0,
                 onboardingDone = this[Keys.ONBOARDING_DONE] ?: false,
+                playfulRules = this[Keys.PLAYFUL_RULES]?.let(::decodeRules) ?: GameConfig.Playful,
             )
+
+        /** Une valeur illisible (version future, fichier abîmé) redonne les exceptions par défaut. */
+        private fun decodeRules(encoded: String): GameConfig? =
+            try {
+                json.decodeFromString<GameConfig>(encoded)
+            } catch (_: SerializationException) {
+                null
+            } catch (_: IllegalArgumentException) {
+                null
+            }
+
+        private val json = Json { ignoreUnknownKeys = true }
 
         private object Keys {
             val INPUT_MODE = stringPreferencesKey("input_mode")
@@ -63,5 +83,6 @@ class SettingsDataSource
             val SHORT_INTRO = booleanPreferencesKey("short_intro")
             val LAUNCH_COUNT = intPreferencesKey("launch_count")
             val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
+            val PLAYFUL_RULES = stringPreferencesKey("playful_rules")
         }
     }

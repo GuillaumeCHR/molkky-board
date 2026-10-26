@@ -13,7 +13,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -22,6 +24,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -36,6 +41,8 @@ import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 import com.yogistudio.molkkyboard.core.designsystem.component.PlayerChip
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
+import com.yogistudio.molkkyboard.core.model.GameConfig
+import com.yogistudio.molkkyboard.core.model.RulesMode
 
 /** Création de partie : joueurs, ordre de passage, préréglage de règles. */
 @Composable
@@ -52,11 +59,14 @@ fun SetupScreen(
         onAdd = viewModel::addPlayer,
         onRemove = { viewModel.removePlayer(it.id) },
         onShuffle = viewModel::shuffle,
-        onPreset = viewModel::setPreset,
+        onMode = viewModel::setMode,
+        onImo = viewModel::setImo,
+        onPlayful = viewModel::setPlayful,
         onStart = { viewModel.start(onGameCreated) },
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SetupContent(
     state: SetupUiState,
@@ -65,9 +75,12 @@ internal fun SetupContent(
     onAdd: () -> Unit,
     onRemove: (SetupPlayer) -> Unit,
     onShuffle: () -> Unit,
-    onPreset: (RulesPreset) -> Unit,
+    onMode: (RulesMode) -> Unit,
+    onImo: (Boolean) -> Unit,
+    onPlayful: (GameConfig) -> Unit,
     onStart: () -> Unit,
 ) {
+    var editingPlayful by rememberSaveable { mutableStateOf(false) }
     val colors = MolkkyBoardTheme.colors.teams
     Column(Modifier.fillMaxSize().imePadding()) {
         MBTopBar(stringResource(R.string.setup_title), onBack)
@@ -137,41 +150,46 @@ internal fun SetupContent(
             }
             Label(R.string.setup_rules)
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                RulesPreset.entries.forEachIndexed { index, preset ->
+                RulesMode.entries.forEachIndexed { index, mode ->
                     SegmentedButton(
-                        selected = state.preset == preset,
-                        onClick = { onPreset(preset) },
-                        shape = SegmentedButtonDefaults.itemShape(index, RulesPreset.entries.size),
+                        selected = state.mode == mode,
+                        onClick = { onMode(mode) },
+                        shape = SegmentedButtonDefaults.itemShape(index, RulesMode.entries.size),
                         modifier = Modifier.heightIn(min = MBDimens.MinTouch),
                         icon = {},
                     ) {
                         Text(
                             stringResource(
-                                if (preset ==
-                                    RulesPreset.Classic
+                                if (mode ==
+                                    RulesMode.OFFICIAL
                                 ) {
-                                    R.string.setup_rules_classic
+                                    R.string.setup_rules_official
                                 } else {
-                                    R.string.setup_rules_tournament
+                                    R.string.setup_rules_playful
                                 },
                             ),
                         )
                     }
                 }
             }
-            Text(
-                stringResource(
-                    if (state.preset ==
-                        RulesPreset.Classic
-                    ) {
-                        R.string.setup_rules_classic_hint
-                    } else {
-                        R.string.setup_rules_tournament_hint
-                    },
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (state.mode == RulesMode.OFFICIAL) {
+                Hint(R.string.setup_rules_official_hint)
+                SwitchCard(
+                    title = stringResource(R.string.setup_rules_imo),
+                    hint = stringResource(R.string.setup_rules_imo_hint),
+                    checked = state.imo,
+                    onChange = onImo,
+                )
+            } else {
+                Hint(R.string.setup_rules_playful_hint)
+                Text(playfulSummary(state.playful), style = MaterialTheme.typography.titleSmall)
+                TextButton(
+                    onClick = { editingPlayful = true },
+                    modifier = Modifier.heightIn(min = MBDimens.MinTouch),
+                ) {
+                    Text(stringResource(R.string.setup_rules_playful_edit))
+                }
+            }
         }
         // Le bouton de lancement reste visible en bas et devient évident dès deux joueurs.
         Column(
@@ -198,6 +216,32 @@ internal fun SetupContent(
             )
         }
     }
+    if (editingPlayful) {
+        ModalBottomSheet(onDismissRequest = { editingPlayful = false }) {
+            Column(
+                modifier =
+                    Modifier
+                        .verticalScroll(rememberScrollState())
+                        .navigationBarsPadding()
+                        .padding(horizontal = MBDimens.ScreenPadding)
+                        .padding(bottom = MBDimens.ScreenPadding),
+                verticalArrangement = Arrangement.spacedBy(MBDimens.Gap),
+            ) {
+                Text(stringResource(R.string.setup_rules_playful_sheet), style = MaterialTheme.typography.titleLarge)
+                Text(playfulSummary(state.playful), style = MaterialTheme.typography.titleSmall)
+                PlayfulRulesEditor(state.playful, onPlayful)
+            }
+        }
+    }
+}
+
+@Composable
+private fun Hint(text: Int) {
+    Text(
+        stringResource(text),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 @Composable

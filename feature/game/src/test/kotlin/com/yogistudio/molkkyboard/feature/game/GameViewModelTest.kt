@@ -255,6 +255,11 @@ class GameViewModelTest {
 
         override suspend fun setOnboardingDone(done: Boolean) = Unit
 
+        override suspend fun setPlayfulRules(config: GameConfig) =
+            settings.emit(
+                settings.value.copy(playfulRules = config),
+            )
+
         override suspend fun recordLaunch() = settings.value
     }
 }

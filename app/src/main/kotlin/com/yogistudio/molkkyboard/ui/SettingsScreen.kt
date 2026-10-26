@@ -55,6 +55,7 @@ private enum class AppLanguage(
 @Composable
 internal fun SettingsScreen(
     onAbout: () -> Unit,
+    onPlayfulRules: () -> Unit,
     onShowcase: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -108,6 +109,7 @@ internal fun SettingsScreen(
                     Hint(R.string.settings_input_hint)
                 }
             }
+            SettingsLink(R.string.settings_playful_rules, R.string.settings_playful_rules_hint, onPlayfulRules)
             SettingsSwitch(
                 R.string.settings_coach,
                 R.string.settings_coach_hint,

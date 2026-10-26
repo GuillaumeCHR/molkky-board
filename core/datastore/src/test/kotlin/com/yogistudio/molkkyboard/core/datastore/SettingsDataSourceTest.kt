@@ -1,8 +1,13 @@
 package com.yogistudio.molkkyboard.core.datastore
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import app.cash.turbine.test
+import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.InputMode
+import com.yogistudio.molkkyboard.core.model.TeamId
+import com.yogistudio.molkkyboard.core.model.TeamOverride
 import com.yogistudio.molkkyboard.core.model.UserSettings
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -53,6 +58,32 @@ class SettingsDataSourceTest {
                 source.setOnboardingDone(true)
                 assertTrue(awaitItem().onboardingDone)
             }
+        }
+
+    @Test
+    fun `regles du mode Ludique persistees sans surcharge par equipe`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val source = source()
+            val rules =
+                GameConfig.Playful.copy(
+                    targetScore = 40,
+                    teamOverrides = mapOf(TeamId("A") to TeamOverride(startScore = 10)),
+                )
+            source.setPlayfulRules(rules)
+            assertEquals(rules.copy(teamOverrides = emptyMap()), source.settings.first().playfulRules)
+        }
+
+    @Test
+    fun `regles du mode Ludique illisibles remplacees par les valeurs par defaut`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val store =
+                PreferenceDataStoreFactory.create(
+                    scope = backgroundScope,
+                ) { folder.newFile("bad.preferences_pb") }
+            store.edit { it[stringPreferencesKey("playful_rules")] = "{pas du json" }
+            assertEquals(GameConfig.Playful, SettingsDataSource(store).settings.first().playfulRules)
+            store.edit { it[stringPreferencesKey("playful_rules")] = "{\"targetScore\":\"cinquante\"}" }
+            assertEquals(GameConfig.Playful, SettingsDataSource(store).settings.first().playfulRules)
         }
 
     @Test

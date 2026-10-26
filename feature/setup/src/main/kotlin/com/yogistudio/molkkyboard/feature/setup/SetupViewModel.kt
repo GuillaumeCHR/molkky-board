@@ -7,9 +7,11 @@ import com.yogistudio.molkkyboard.core.data.GameRepository
 import com.yogistudio.molkkyboard.core.data.GameTeam
 import com.yogistudio.molkkyboard.core.data.IdGenerator
 import com.yogistudio.molkkyboard.core.data.NewGame
+import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.data.memberKey
 import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.PlayerId
+import com.yogistudio.molkkyboard.core.model.RulesMode
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.TeamLineup
 import com.yogistudio.molkkyboard.core.scoring.MatchConfig
@@ -17,17 +19,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-/** Préréglage de règles proposé à la création (les règles avancées arrivent avec la 2e livraison du J4). */
-enum class RulesPreset(
-    val config: GameConfig,
-) {
-    Classic(GameConfig.Classic),
-    Tournament(GameConfig.ImoTournament),
-}
 
 data class SetupPlayer(
     val id: PlayerId,
@@ -38,9 +33,24 @@ data class SetupPlayer(
 data class SetupUiState(
     val players: List<SetupPlayer> = emptyList(),
     val draftName: String = "",
-    val preset: RulesPreset = RulesPreset.Classic,
+    /** Mode choisi pour cette partie ; Officiel par défaut (`RULES.md` § 8.1). */
+    val mode: RulesMode = RulesMode.OFFICIAL,
+    /** Mode Officiel : règlement de tournoi IMO. */
+    val imo: Boolean = false,
+    /** Mode Ludique : exceptions de cette partie (au départ, celles des Réglages). */
+    val playful: GameConfig = GameConfig.Playful,
+    /** Les exceptions ont été modifiées pour cette partie : les Réglages ne les écrasent plus. */
+    val playfulEdited: Boolean = false,
     val creating: Boolean = false,
 ) {
+    val config: GameConfig
+        get() =
+            when {
+                mode == RulesMode.PLAYFUL -> playful
+                imo -> GameConfig.ImoTournament
+                else -> GameConfig.Classic
+            }
+
     val canStart: Boolean get() = players.size >= MIN_PLAYERS && !creating
     val canAdd: Boolean get() = draftName.isNotBlank()
 
@@ -56,10 +66,18 @@ class SetupViewModel
     @Inject
     constructor(
         private val games: GameRepository,
+        settings: SettingsRepository,
         private val ids: IdGenerator,
     ) : ViewModel() {
         private val mutableState = MutableStateFlow(SetupUiState())
         val state: StateFlow<SetupUiState> = mutableState.asStateFlow()
+
+        init {
+            viewModelScope.launch {
+                val defaults = settings.settings.first().playfulRules
+                mutableState.update { if (it.playfulEdited) it else it.copy(playful = defaults) }
+            }
+        }
 
         fun onNameChange(name: String) = mutableState.update { it.copy(draftName = name.take(SetupUiState.MAX_NAME)) }
 
@@ -88,7 +106,12 @@ class SetupViewModel
 
         fun shuffle() = mutableState.update { it.copy(players = it.players.shuffled()) }
 
-        fun setPreset(preset: RulesPreset) = mutableState.update { it.copy(preset = preset) }
+        fun setMode(mode: RulesMode) = mutableState.update { it.copy(mode = mode) }
+
+        fun setImo(enabled: Boolean) = mutableState.update { it.copy(imo = enabled) }
+
+        /** Exceptions modifiées pour cette partie seulement (les Réglages ne changent pas). */
+        fun setPlayful(config: GameConfig) = mutableState.update { it.copy(playful = config, playfulEdited = true) }
 
         /** Crée la partie (une manche) et renvoie son identifiant à [onCreated]. */
         fun start(onCreated: (String) -> Unit) {
@@ -103,7 +126,7 @@ class SetupViewModel
 
         private fun SetupUiState.toNewGame() =
             NewGame(
-                config = preset.config,
+                config = config,
                 matchConfig = MatchConfig(setsToWin = 1),
                 lineup = players.map { TeamLineup(TeamId(it.id.value), listOf(it.id)) },
                 teams =

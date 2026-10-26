@@ -20,6 +20,8 @@ data class UserSettings(
     val shortIntro: Boolean = false,
     val launchCount: Int = 0,
     val onboardingDone: Boolean = false,
+    /** Exceptions par défaut des nouvelles parties en mode Ludique (`RULES.md` § 8.1), sans surcharge par équipe. */
+    val playfulRules: GameConfig = GameConfig.Playful,
 ) {
     /** La version courte de l'intro n'est proposée qu'à partir du deuxième lancement. */
     val canChooseShortIntro: Boolean get() = launchCount >= 2

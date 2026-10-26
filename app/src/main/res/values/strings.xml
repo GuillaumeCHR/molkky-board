@@ -52,6 +52,8 @@
     <string name="settings_showcase">Vitrine du design system</string>
     <string name="settings_showcase_hint">Build de développement uniquement</string>
     <string name="settings_about">À propos</string>
+    <string name="settings_playful_rules">Règles du mode Ludique</string>
+    <string name="settings_playful_rules_hint">Choisir les exceptions aux règles officielles : élimination, dépassement, cible…</string>
 
     <!-- À propos -->
     <string name="about_version">Version %1$s</string>

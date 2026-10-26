@@ -48,7 +48,12 @@ interface GameRepository {
      * Un joueur rejoint la partie en cours : l'événement `AddPlayer` est validé et écrit, puis son nom (et son
      * équipe si elle est nouvelle) sont enregistrés.
      */
-    suspend fun addParticipant(gameId: String, event: AddPlayer, player: GamePlayer, team: GameTeam): Outcome<ReplayResult>
+    suspend fun addParticipant(
+        gameId: String,
+        event: AddPlayer,
+        player: GamePlayer,
+        team: GameTeam,
+    ): Outcome<ReplayResult>
 
     /** Identifiant de la partie en cours la plus récente, à proposer en reprise. */
     fun observeOngoingGameId(): Flow<String?>
@@ -176,20 +181,22 @@ class RoomGameRepository
         }
 
         override suspend fun addParticipant(
-        gameId: String,
-        event: AddPlayer,
-        player: GamePlayer,
-        team: GameTeam,
-    ): Outcome<ReplayResult> {
-        val outcome = append(gameId, event)
-        if (outcome is Outcome.Ok) {
-            dao.insertTeamIfAbsent(GameTeamEntity(gameId, team.id.value, team.name, team.colorIndex, team.emblem, team.memberKey))
-            dao.upsertPlayer(GamePlayerEntity(gameId, player.id.value, player.name, player.profileId))
+            gameId: String,
+            event: AddPlayer,
+            player: GamePlayer,
+            team: GameTeam,
+        ): Outcome<ReplayResult> {
+            val outcome = append(gameId, event)
+            if (outcome is Outcome.Ok) {
+                dao.insertTeamIfAbsent(
+                    GameTeamEntity(gameId, team.id.value, team.name, team.colorIndex, team.emblem, team.memberKey),
+                )
+                dao.upsertPlayer(GamePlayerEntity(gameId, player.id.value, player.name, player.profileId))
+            }
+            return outcome
         }
-        return outcome
-    }
 
-    override fun observeOngoingGameId(): Flow<String?> = dao.observeOngoing().map { it?.id }
+        override fun observeOngoingGameId(): Flow<String?> = dao.observeOngoing().map { it?.id }
 
         override suspend fun close(gameId: String) = dao.close(gameId, time.now())
 

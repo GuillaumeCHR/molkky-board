@@ -1,6 +1,7 @@
 package com.yogistudio.molkkyboard.core.data
 
 import com.yogistudio.molkkyboard.core.datastore.SettingsDataSource
+import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.UserSettings
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +24,8 @@ interface SettingsRepository {
     suspend fun setShortIntro(enabled: Boolean)
 
     suspend fun setOnboardingDone(done: Boolean)
+
+    suspend fun setPlayfulRules(config: GameConfig)
 
     suspend fun recordLaunch(): UserSettings
 }
@@ -61,6 +64,10 @@ class DataStoreSettingsRepository
 
         override suspend fun setOnboardingDone(done: Boolean) {
             source.setOnboardingDone(done)
+        }
+
+        override suspend fun setPlayfulRules(config: GameConfig) {
+            source.setPlayfulRules(config)
         }
 
         override suspend fun recordLaunch(): UserSettings = source.recordLaunch()
