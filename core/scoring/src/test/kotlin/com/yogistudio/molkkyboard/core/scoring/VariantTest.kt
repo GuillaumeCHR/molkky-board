@@ -4,15 +4,17 @@ import com.yogistudio.molkkyboard.core.model.EndCondition
 import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.MissPenalty
 import com.yogistudio.molkkyboard.core.model.Overshoot
+import com.yogistudio.molkkyboard.core.model.RulesMode
 import com.yogistudio.molkkyboard.core.model.TeamOverride
 import com.yogistudio.molkkyboard.core.model.handicap
 import com.yogistudio.molkkyboard.core.model.isStandard
+import com.yogistudio.molkkyboard.core.model.mode
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-/** `SCORING_SPEC.md` § 9, plus les surcharges par équipe du mode handicap. */
+/** `SCORING_SPEC.md` § 9 et § 17 (modes), plus les surcharges par équipe du mode handicap. */
 class VariantTest {
     @Test
     fun `V1 depassement retour a 0`() =
@@ -170,10 +172,36 @@ class VariantTest {
     }
 
     @Test
-    fun `regles standard`() {
+    fun `G1 a G8 mode deduit de la configuration`() {
+        assertEquals(RulesMode.OFFICIAL, GameConfig.Classic.mode)
+        assertEquals(RulesMode.OFFICIAL, GameConfig.ImoTournament.mode)
+        assertEquals(RulesMode.PLAYFUL, GameConfig.Playful.mode)
+        assertEquals(RulesMode.PLAYFUL, GameConfig(onMissLimit = MissPenalty.Nothing).mode)
+        assertEquals(RulesMode.PLAYFUL, GameConfig(teamOverrides = mapOf(A to TeamOverride(startScore = 10))).mode)
+        assertEquals(RulesMode.PLAYFUL, GameConfig(targetScore = 40).mode)
+        assertEquals(RulesMode.PLAYFUL, GameConfig(rule37 = true).mode)
+        assertEquals(
+            RulesMode.OFFICIAL,
+            GameConfig.Playful.copy(onMissLimit = MissPenalty.Eliminate, faultsCountAsMiss = true).mode,
+        )
         assertTrue(GameConfig.Classic.isStandard)
         assertTrue(GameConfig.ImoTournament.isStandard)
-        assertFalse(GameConfig(targetScore = 40).isStandard)
+        assertFalse(GameConfig.Playful.isStandard)
         assertFalse(GameConfig(overshoot = Overshoot.ResetTo(0)).isStandard)
+    }
+
+    @Test
+    fun `G9 en Ludique trois rates ne font pas eliminer`() {
+        val a = newSet(GameConfig.Playful).given(A, misses = 2).play().team(A)!!
+        assertFalse(a.eliminated)
+        assertEquals(3, a.misses)
+    }
+
+    @Test
+    fun `G10 en Ludique le mordu est ignore`() {
+        val s = newSet(GameConfig.Playful).given(A, score = 30).fault(FaultKind.TRESPASS)
+        assertEquals(30, s.score(A))
+        assertEquals(0, s.misses(A))
+        assertEquals(B, s.turn)
     }
 }

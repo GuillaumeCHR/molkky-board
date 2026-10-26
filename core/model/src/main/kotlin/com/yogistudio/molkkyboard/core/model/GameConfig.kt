@@ -34,7 +34,23 @@ data class GameConfig(
                 rule37 = true,
                 eliminationSetScore = EliminationSetScore.WinnerTargetLoserZero,
             )
+
+        /** Mode Ludique par défaut : pas d'élimination (les ratés sont comptés) et mordu ignoré. */
+        val Playful =
+            GameConfig(
+                onMissLimit = MissPenalty.Nothing,
+                faultsCountAsMiss = false,
+            )
     }
+}
+
+/** Mode de règles (`RULES.md` § 8.1), déduit de la configuration et jamais stocké. */
+enum class RulesMode {
+    /** Règles officielles verrouillées, éventuellement avec le règlement de tournoi IMO. */
+    OFFICIAL,
+
+    /** Règles officielles assorties d'exceptions (variantes, mode famille). */
+    PLAYFUL,
 }
 
 @Serializable

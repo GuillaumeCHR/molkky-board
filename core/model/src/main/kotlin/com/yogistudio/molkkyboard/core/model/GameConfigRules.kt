@@ -6,12 +6,19 @@ package com.yogistudio.molkkyboard.core.model
 /** Une partie avec handicap compte dans les victoires mais pas dans les records « purs ». */
 val GameConfig.handicap: Boolean get() = teamOverrides.isNotEmpty()
 
-/** Règles standard : cible 50 et retour à 25 (condition du record de victoire la plus rapide). */
-val GameConfig.isStandard: Boolean
+/** Officiel s'il s'agit exactement des règles officielles, avec ou sans le règlement IMO ; Ludique sinon. */
+val GameConfig.mode: RulesMode
     get() =
-        targetScore == GameConfig.STANDARD_TARGET &&
-            overshoot == Overshoot.ResetTo(GameConfig.STANDARD_RESET) &&
-            !handicap
+        if (this == GameConfig.Classic ||
+            this == GameConfig.ImoTournament
+        ) {
+            RulesMode.OFFICIAL
+        } else {
+            RulesMode.PLAYFUL
+        }
+
+/** Règles « pures » (records, victoire la plus rapide) : seulement en mode Officiel (`SCORING_SPEC.md` § 17). */
+val GameConfig.isStandard: Boolean get() = mode == RulesMode.OFFICIAL
 
 fun GameConfig.targetFor(team: TeamId): Int = teamOverrides[team]?.targetScore ?: targetScore
 
