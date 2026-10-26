@@ -56,6 +56,8 @@ data class LogItemUi(
 data class LogRound(
     val round: Int,
     val items: List<LogItemUi>,
+    /** Scores de chaque joueur ou équipe à la fin du tour (ou au moment présent pour le tour en cours). */
+    val standings: List<Pair<String, Int>> = emptyList(),
 )
 
 /** Sélection en cours, jamais enregistrée tant qu'on n'a pas validé. */
@@ -96,6 +98,8 @@ data class GameUiState(
     val missWarning: Boolean = false,
     /** Personne n'a encore lancé dans le tour : l'ordre de passage peut changer. */
     val betweenRounds: Boolean = true,
+    /** Nouvel ordre demandé en plein tour, appliqué au début du tour suivant. */
+    val pendingOrder: List<TeamId>? = null,
     val inputMode: InputMode = InputMode.PINS,
     val quickMode: QuickPadMode = QuickPadMode.SinglePin,
     val selection: Selection = Selection.None,
@@ -162,6 +166,11 @@ sealed interface GameEffect {
 
     /** Nouvel ordre de passage enregistré. */
     data object OrderChanged : GameEffect
+
+    /** Nouvel ordre demandé en plein tour : il s'appliquera au début du tour [round]. */
+    data class OrderScheduled(
+        val round: Int,
+    ) : GameEffect
 
     /** Correction ou suppression refusée par le moteur (journal inchangé). */
     data class EditRefused(

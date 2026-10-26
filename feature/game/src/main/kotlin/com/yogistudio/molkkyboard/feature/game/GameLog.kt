@@ -158,6 +158,9 @@ private fun LogList(state: GameUiState, message: String?, onEdit: (LogItemUi) ->
                 items(round.items, key = { it.id.value }) { item ->
                     LogRow(item, onClick = if (item.deletable && state.canEditLog) ({ onEdit(item) }) else null)
                 }
+                if (round.standings.isNotEmpty()) {
+                    item(key = "standings-${round.round}") { Standings(round) }
+                }
             }
         }
     }
@@ -220,13 +223,38 @@ private fun LogRow(item: LogItemUi, onClick: (() -> Unit)?) {
         }
         val after = item.scoreAfter
         if (after != null && item.kind != LogKind.WRONG_TEAM) {
+            val before = item.scoreBefore
             Text(
-                stringResource(R.string.log_score_after, after),
+                if (before != null && item.kind == LogKind.THROW) {
+                    stringResource(R.string.log_score_change, before, after)
+                } else {
+                    stringResource(R.string.log_score_after, after)
+                },
                 style = MolkkyBoardTheme.typography.scoreSmall,
                 softWrap = false,
             )
         }
         if (onClick != null) Icon(MBIcons.ChevronRight, contentDescription = null)
+    }
+}
+
+/** Récapitulatif des scores à la fin d'un tour, façon feuille de match. */
+@Composable
+private fun Standings(round: LogRound) {
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = STANDINGS_ALPHA),
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+    ) {
+        Text(
+            stringResource(
+                R.string.log_standings,
+                round.round,
+                round.standings.joinToString(" · ") { (name, score) -> "$name $score" },
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+        )
     }
 }
 
@@ -492,4 +520,5 @@ private fun EditorInput(draft: ThrowDraft, onChange: (ThrowDraft) -> Unit) {
 }
 
 private const val MESSAGE_ALPHA = 0.3f
+private const val STANDINGS_ALPHA = 0.6f
 private val EDITOR_INPUT_HEIGHT = 340.dp

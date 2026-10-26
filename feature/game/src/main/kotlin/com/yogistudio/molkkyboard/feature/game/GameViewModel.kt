@@ -57,6 +57,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// Une fonction par action de l'écran de jeu : les regrouper rendrait l'interface moins lisible.
+@Suppress("TooManyFunctions")
 @HiltViewModel
 class GameViewModel
     @Inject
@@ -69,6 +71,9 @@ class GameViewModel
         private val gameId: String = checkNotNull(savedStateHandle[GAME_ID])
         private val selection = MutableStateFlow<Selection>(Selection.None)
         private val quickMode = MutableStateFlow(QuickPadMode.SinglePin)
+
+        /** Nouvel ordre demandé en plein tour : il s'appliquera au début du tour suivant. */
+        private val pendingOrder = MutableStateFlow<List<TeamId>?>(null)
         private val effects = Channel<GameEffect>(Channel.BUFFERED)
         val effectFlow: Flow<GameEffect> = effects.receiveAsFlow()
 
@@ -78,8 +83,9 @@ class GameViewModel
                 settings.settings,
                 selection,
                 quickMode,
-            ) { snapshot, prefs, sel, mode ->
-                snapshot.toUiState(prefs, sel, mode)
+                pendingOrder,
+            ) { snapshot, prefs, sel, mode, pending ->
+                snapshot.toUiState(prefs, sel, mode).copy(pendingOrder = pending)
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), GameUiState())
 
         fun togglePin(pin: Int, knocked: Boolean) =
@@ -168,6 +174,7 @@ class GameViewModel
                 val points = result.points
                 effects.send(GameEffect.Validated(name, points))
                 emitConsequences(before, after, team, result)
+                applyPendingOrder(after)
             }
         }
 
@@ -264,10 +271,45 @@ class GameViewModel
         /** Nouvel ordre de passage, entre deux tours seulement (le moteur refuse sinon). */
         fun reorder(order: List<TeamId>) {
             viewModelScope.launch {
+                val state =
+                    games
+                        .observe(gameId)
+                        .first()
+                        ?.currentSet
+                        ?.replay
+                        ?.state ?: return@launch
+                if (!state.betweenRounds) {
+                    // Les règles n'autorisent un nouvel ordre qu'entre deux tours : on le garde pour le tour suivant.
+                    pendingOrder.value = order
+                    effects.send(GameEffect.OrderScheduled(state.round + 1))
+                    return@launch
+                }
                 when (val outcome = games.append(gameId, Reorder(EventId(ids.newId()), order))) {
                     is Outcome.Err -> effects.send(GameEffect.EditRefused(outcome.error))
                     is Outcome.Ok -> effects.send(GameEffect.OrderChanged)
                 }
+            }
+        }
+
+        fun cancelPendingOrder() {
+            pendingOrder.value = null
+        }
+
+        /** Applique l'ordre en attente dès que le tour est terminé. */
+        private suspend fun applyPendingOrder(after: SetState) {
+            val order = pendingOrder.value ?: return
+            if (after.status != SetStatus.IN_PROGRESS || !after.betweenRounds) return
+            pendingOrder.value = null
+            // Les équipes arrivées depuis la demande se placent en fin d'ordre.
+            val full =
+                order.filter { id -> after.teams.any { it.id == id } } +
+                    after.teams.map { it.id }.filterNot { it in order }
+            if (games.append(
+                    gameId,
+                    Reorder(EventId(ids.newId()), full),
+                ) is Outcome.Ok
+            ) {
+                effects.send(GameEffect.OrderChanged)
             }
         }
 
@@ -422,10 +464,21 @@ internal fun GameSnapshot.teamUi(team: TeamState, active: Boolean = false): Team
 /** Déroulé de la manche en cours : le journal effectif rejoué et attribué, groupé par tour. */
 internal fun GameSnapshot.logRounds(): List<LogRound> {
     val initial = start(config, currentSet.lineup).getOrNull() ?: return emptyList()
+    // Score courant de chaque équipe, mis à jour lancer après lancer : donne le récapitulatif de fin de tour.
+    val scores = linkedMapOf<TeamId, Int>().apply { initial.teams.forEach { put(it.id, it.score) } }
     return describe(initial, currentSet.replay.effectiveLog)
-        .map { logItem(it) }
         .groupBy { it.round }
-        .map { (round, items) -> LogRound(round, items) }
+        .map { (round, entries) ->
+            entries.forEach { entry ->
+                val team = entry.team ?: (entry.event as? AddPlayer)?.team
+                if (team != null) scores[team] = entry.scoreAfter ?: scores[team] ?: 0
+            }
+            LogRound(
+                round = round,
+                items = entries.map { logItem(it) },
+                standings = scores.map { (id, score) -> (team(id)?.name ?: id.value) to score },
+            )
+        }
 }
 
 private fun GameSnapshot.logItem(entry: LogEntry): LogItemUi {

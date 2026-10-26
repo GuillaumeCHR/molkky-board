@@ -11,7 +11,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +23,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -50,10 +53,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -61,7 +66,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -99,6 +103,7 @@ import com.yogistudio.molkkyboard.core.scoring.ScoringError
 import com.yogistudio.molkkyboard.core.scoring.ThrowResult
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 /** Actions de l'écran de jeu (l'écran lui-même reste sans état, pour les aperçus et les captures). */
 data class GameActions(
@@ -118,6 +123,7 @@ data class GameActions(
     val onReorder: (List<TeamId>) -> Unit = {},
     val onAddPlayer: (String) -> Unit = {},
     val onRemovePlayer: (PlayerId) -> Unit = {},
+    val onCancelPendingOrder: () -> Unit = {},
 )
 
 @Composable
@@ -174,7 +180,11 @@ fun GameScreen(
                     shakeKey++
                 }
 
-                is GameEffect.PlayerJoined, is GameEffect.PlayerLeft, GameEffect.OrderChanged -> {
+                is GameEffect.PlayerJoined,
+                is GameEffect.PlayerLeft,
+                GameEffect.OrderChanged,
+                is GameEffect.OrderScheduled,
+                -> {
                     Unit
                 }
 
@@ -231,6 +241,7 @@ fun GameScreen(
                 onReorder = viewModel::reorder,
                 onAddPlayer = viewModel::addLatePlayer,
                 onRemovePlayer = viewModel::removePlayer,
+                onCancelPendingOrder = viewModel::cancelPendingOrder,
             ),
         logMessage = logMessage,
         snackbar = snackbar,
@@ -250,6 +261,7 @@ private fun sheetMessage(context: Context, effect: GameEffect): String? =
         is GameEffect.PlayerJoined -> context.getString(R.string.players_joined, effect.name)
         is GameEffect.PlayerLeft -> context.getString(R.string.players_left, effect.name)
         GameEffect.OrderChanged -> context.getString(R.string.players_order_saved)
+        is GameEffect.OrderScheduled -> context.getString(R.string.players_order_scheduled, effect.round)
         GameEffect.Edited -> context.getString(R.string.log_edited)
         is GameEffect.EditRefused -> context.getString(refusalMessage(effect.error))
         else -> null
@@ -297,7 +309,7 @@ fun GameContent(
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
-                GameTopBar(state, actions, onOpenLog = {
+                GameTopBar(state, actions, onOpenScores = { showScoreboard = true }, onOpenLog = {
                     showLog = true
                 }, onOpenPlayers = { showPlayers = true }, onOpenRules = {
                     showRules =
@@ -363,12 +375,17 @@ private fun InputArea(state: GameUiState, actions: GameActions, modifier: Modifi
 private fun GameTopBar(
     state: GameUiState,
     actions: GameActions,
+    onOpenScores: () -> Unit,
     onOpenLog: () -> Unit,
     onOpenPlayers: () -> Unit,
     onOpenRules: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
     MBTopBar(stringResource(R.string.game_title), actions.onBack) {
+        // Accès visible au tableau des scores, sans dépendre d'un geste.
+        TextButton(onClick = onOpenScores, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+            Text(stringResource(R.string.game_scores_button), style = MaterialTheme.typography.titleMedium)
+        }
         IconButton(onClick = actions.onUndo, enabled = state.canUndo, modifier = Modifier.size(MBDimens.MinTouch)) {
             Icon(MBIcons.Undo, contentDescription = stringResource(R.string.game_undo))
         }
@@ -416,24 +433,20 @@ private fun ScoresStrip(state: GameUiState, onOpen: () -> Unit) {
     val colors = MolkkyBoardTheme.colors.teams
     val openLabel = stringResource(R.string.game_scoreboard_open)
     val threshold = with(LocalDensity.current) { OPEN_DRAG_THRESHOLD.toPx() }
+    var dragged by remember { mutableFloatStateOf(0f) }
+    val currentOpen by rememberUpdatedState(onOpen)
     Column(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .pointerInput(Unit) {
-                    var dragged = 0f
-                    detectVerticalDragGestures(
-                        onDragStart = { dragged = 0f },
-                        onVerticalDrag = { change, amount ->
-                            change.consume()
-                            dragged += amount
-                            if (dragged < -threshold) {
-                                dragged = Float.NEGATIVE_INFINITY
-                                onOpen()
-                            }
-                        },
-                    )
-                }.clickable(onClickLabel = openLabel, onClick = onOpen),
+                // Glissement vertical dans les deux sens : le bandeau est en haut de l'écran, le « tirer vers le
+                // haut » seul n'était pas naturel (retour du test sur téléphone).
+                .draggable(
+                    state = rememberDraggableState { delta -> dragged += delta },
+                    orientation = Orientation.Vertical,
+                    onDragStarted = { dragged = 0f },
+                    onDragStopped = { if (abs(dragged) > threshold) currentOpen() },
+                ).clickable(onClickLabel = openLabel, onClick = onOpen),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(

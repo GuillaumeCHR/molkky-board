@@ -393,6 +393,8 @@ class GameViewModelTest {
             val log = vm.awaitState { it.round == 5 }.log
             assertEquals(listOf(1, 2, 3, 4, 5), log.map { it.round })
             assertEquals(listOf("Alice", "Bruno"), log.first().items.map { it.teamName })
+            assertEquals(listOf("Alice" to 12, "Bruno" to 1), log.first().standings)
+            assertEquals(listOf("Alice" to 25, "Bruno" to 4), log.last().standings)
             val overshoot = log.last().items.single()
             assertEquals(LogKind.THROW, overshoot.kind)
             assertEquals(45, overshoot.scoreBefore)
@@ -493,7 +495,7 @@ class GameViewModelTest {
         }
 
     @Test
-    fun `changer l'ordre entre deux tours, refuse en plein tour`() =
+    fun `changer l'ordre entre deux tours, ou au tour suivant si on est en plein tour`() =
         runTest {
             val vm = viewModel()
             backgroundScope.launchCollect(vm)
@@ -504,9 +506,18 @@ class GameViewModelTest {
                 assertEquals("Bruno", vm.awaitState { it.currentTeam?.name == "Bruno" }.currentTeam?.name)
                 play(3)
                 assertEquals(false, vm.awaitState { it.currentTeam?.name == "Alice" }.betweenRounds)
+                // En plein tour : le nouvel ordre est prévu, puis appliqué dès la fin du tour.
                 vm.reorder(listOf(TeamId("A"), TeamId("B")))
-                assertEquals(GameEffect.EditRefused(ScoringError.NOT_BETWEEN_ROUNDS), awaitItem())
+                assertEquals(GameEffect.OrderScheduled(2), awaitItem())
+                assertEquals(listOf(TeamId("A"), TeamId("B")), vm.awaitState { it.pendingOrder != null }.pendingOrder)
+                vm.togglePin(4, true)
+                vm.awaitState { it.selection != Selection.None }
+                vm.validate()
+                assertEquals(GameEffect.Validated("Alice", 4), awaitItem())
+                assertEquals(GameEffect.OrderChanged, awaitItem())
             }
+            val state = vm.awaitState { it.round == 2 && it.pendingOrder == null && it.currentTeam?.name == "Alice" }
+            assertEquals(listOf("Alice", "Bruno"), state.teams.map { it.name })
         }
 
     @Test

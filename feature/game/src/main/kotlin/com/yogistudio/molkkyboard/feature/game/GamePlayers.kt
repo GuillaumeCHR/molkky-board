@@ -63,7 +63,7 @@ internal fun PlayersSheet(
     message: String?,
     onDismiss: () -> Unit,
 ) {
-    val original = state.teams.map { it.id }
+    val original = state.pendingOrder ?: state.teams.map { it.id }
     var order by remember(original) { mutableStateOf(original) }
     var confirmOrder by remember { mutableStateOf(false) }
     var removing by remember { mutableStateOf<Pair<PlayerId, String>?>(null) }
@@ -92,17 +92,23 @@ internal fun PlayersSheet(
                 if (state.betweenRounds) {
                     stringResource(R.string.players_order_hint)
                 } else {
-                    stringResource(R.string.players_order_locked, state.round)
+                    stringResource(R.string.players_order_locked, state.round + 1)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (state.pendingOrder != null) {
+                MessageBanner(stringResource(R.string.players_order_pending))
+                TextButton(
+                    onClick = actions.onCancelPendingOrder,
+                ) { Text(stringResource(R.string.players_order_cancel_pending)) }
+            }
             order.forEachIndexed { index, id ->
                 val team = state.teams.firstOrNull { it.id == id } ?: return@forEachIndexed
                 OrderRow(
                     index = index,
                     team = team,
-                    canMove = editable && state.betweenRounds,
+                    canMove = editable,
                     isLast = index == order.lastIndex,
                     onMove = { delta -> order = order.moved(index, index + delta) },
                     onRemove = { player, name -> removing = player to name },
