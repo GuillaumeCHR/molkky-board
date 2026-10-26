@@ -5,7 +5,7 @@
     <string name="setup_player_name">Nom du joueur</string>
     <string name="setup_add">Ajouter</string>
     <string name="setup_shuffle">Ordre au hasard</string>
-    <string name="setup_order_hint">Les joueurs lancent dans cet ordre ; le premier commence.</string>
+    <string name="setup_order_hint">Glissez la poignée ≡ pour changer l\'ordre de passage ; le premier commence.</string>
     <string name="setup_rules">Règles</string>
     <string name="setup_rules_official">Officiel</string>
     <string name="setup_rules_playful">Ludique</string>
@@ -56,4 +56,87 @@
     <string name="setup_start">Lancer la partie</string>
     <string name="setup_need_two">Ajoutez au moins deux joueurs</string>
     <string name="setup_position">%1$d.</string>
+    <string name="setup_solo">Chacun pour soi</string>
+    <string name="setup_teams">En équipes</string>
+    <string name="setup_need_two_teams">Il faut au moins deux équipes avec des joueurs</string>
+    <string name="setup_known_players">Joueurs habituels : touchez pour les ajouter</string>
+    <string name="setup_add_known">Ajouter %1$s</string>
+    <string name="setup_remove">Retirer %1$s</string>
+    <string name="setup_change_avatar">Changer l\'avatar de %1$s</string>
+    <string name="setup_move_up">Monter</string>
+    <string name="setup_move_down">Descendre</string>
+    <string name="setup_add_team">+ Ajouter une équipe</string>
+    <string name="setup_remove_team">Supprimer cette équipe</string>
+    <string name="setup_team_name">Nom de l\'équipe</string>
+    <string name="setup_random_name">Nom d\'équipe au hasard</string>
+    <string name="setup_change_emblem">Changer l\'emblème de %1$s</string>
+    <string name="setup_color">Couleur %1$d</string>
+    <string name="setup_team_empty">Ajoutez des joueurs : chacun rejoint l\'équipe la moins nombreuse.</string>
+    <string name="setup_switch_team">Faire passer %1$s dans l\'équipe suivante</string>
+    <string name="setup_known_team">Ces joueurs ont déjà joué ensemble : %1$s %2$s. Reprendre ce nom, pour que son palmarès continue ?</string>
+    <string name="setup_known_accept">Reprendre</string>
+    <string name="setup_known_dismiss">Garder le nouveau nom</string>
+    <string name="setup_family">Mode famille</string>
+    <string name="setup_family_hint">Score de départ, objectif réduit ou pas d\'élimination pour certains joueurs.</string>
+    <string name="setup_family_distance">Distance de lancer conseillée : 3 à 4 m ; pour les enfants, rapprochez la ligne (environ 2 m).</string>
+    <string name="setup_family_start">Score de départ</string>
+    <string name="setup_family_target">Objectif</string>
+    <string name="setup_family_exempt">Jamais éliminé</string>
+    <string name="setup_avatar_title">Avatar de %1$s</string>
+    <string name="setup_photo_hint">Ou une photo, qui reste sur ce téléphone (elle n\'apparaît jamais dans un partage sans votre accord).</string>
+    <string name="setup_photo_camera">Prendre une photo</string>
+    <string name="setup_photo_gallery">Choisir dans la galerie</string>
+    <string name="setup_photo_remove">Retirer la photo</string>
+    <string-array name="team_names">
+        <item>Les Bouleaux</item>
+        <item>Les Sapins Hardis</item>
+        <item>Les Quilles en Folie</item>
+        <item>Les Rois du 50</item>
+        <item>Les Bûcherons</item>
+        <item>Les Écorces</item>
+        <item>Les Copeaux</item>
+        <item>Les Pives</item>
+        <item>Les Lanceurs d\'Élite</item>
+        <item>Les Retours à 25</item>
+        <item>Les Douze Quilles</item>
+        <item>Les Strikeurs</item>
+        <item>Les Nordiques</item>
+        <item>Les Rennes Agiles</item>
+        <item>Les Élans</item>
+        <item>Les Saunas</item>
+        <item>Les Aurores Boréales</item>
+        <item>Les Lapons Volants</item>
+        <item>Les Korrigans</item>
+        <item>Les Menhirs</item>
+        <item>Les Galettes Saucisses</item>
+        <item>Les Crêpes Volantes</item>
+        <item>Les Goélands</item>
+        <item>Les Embruns</item>
+        <item>Les Phares</item>
+        <item>Les Marins d\'Eau Douce</item>
+        <item>Les Bigoudènes</item>
+        <item>Les Druides</item>
+        <item>Les Farfadets</item>
+        <item>Les Chênes Têtus</item>
+        <item>Les Hêtres Heureux</item>
+        <item>Les Pommes de Pin</item>
+        <item>Les Écureuils</item>
+        <item>Les Hiboux</item>
+        <item>Les Castors</item>
+        <item>Les Lynx</item>
+        <item>Les Ours Bruns</item>
+        <item>Les Rondins</item>
+        <item>Les Planches</item>
+        <item>Les Brindilles</item>
+        <item>Les Glands</item>
+        <item>Les Champions du Dimanche</item>
+        <item>Les Fines Gâchettes</item>
+        <item>Les Bras Cassés</item>
+        <item>Les Mains d\'Or</item>
+        <item>Les Tireurs du Bocage</item>
+        <item>Les Cinquante Pile</item>
+        <item>Les Zéro Raté</item>
+        <item>Les Mölkky Boys</item>
+        <item>Les Mölkky Girls</item>
+    </string-array>
 </resources>

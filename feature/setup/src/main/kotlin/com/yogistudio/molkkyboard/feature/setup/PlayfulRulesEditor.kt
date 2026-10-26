@@ -213,7 +213,7 @@ private fun ChoiceRow(
 }
 
 @Composable
-private fun Stepper(
+internal fun Stepper(
     @StringRes label: Int,
     value: Int,
     canDecrease: Boolean,

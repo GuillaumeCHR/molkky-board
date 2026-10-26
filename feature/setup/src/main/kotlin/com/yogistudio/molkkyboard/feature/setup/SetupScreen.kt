@@ -1,7 +1,17 @@
 package com.yogistudio.molkkyboard.feature.setup
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,42 +19,90 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import com.yogistudio.molkkyboard.core.data.PlayerProfile
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionButton
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionKind
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
-import com.yogistudio.molkkyboard.core.designsystem.component.PlayerChip
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.GameConfig
+import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.RulesMode
+import com.yogistudio.molkkyboard.core.model.TeamId
+import com.yogistudio.molkkyboard.core.model.TeamOverride
 
-/** Création de partie : joueurs, ordre de passage, préréglage de règles. */
+/** Actions de l'écran de création (l'écran reste sans état, pour les aperçus et les captures). */
+data class SetupActions(
+    val onBack: () -> Unit = {},
+    val onNameChange: (String) -> Unit = {},
+    val onAdd: () -> Unit = {},
+    val onAddProfile: (PlayerProfile) -> Unit = {},
+    val onRemove: (PlayerId) -> Unit = {},
+    val onMovePlayer: (Int, Int) -> Unit = { _, _ -> },
+    val onAvatar: (PlayerId, String) -> Unit = { _, _ -> },
+    val onPhoto: (PlayerId, Uri) -> Unit = { _, _ -> },
+    val onRemovePhoto: (PlayerId) -> Unit = {},
+    val captureUri: () -> Uri? = { null },
+    val onShuffle: () -> Unit = {},
+    val onPlayMode: (PlayMode) -> Unit = {},
+    val onAddTeam: () -> Unit = {},
+    val onRemoveTeam: (TeamId) -> Unit = {},
+    val onRenameTeam: (TeamId, String) -> Unit = { _, _ -> },
+    val onRandomName: (TeamId) -> Unit = {},
+    val onTeamColor: (TeamId, Int) -> Unit = { _, _ -> },
+    val onTeamEmblem: (TeamId, String) -> Unit = { _, _ -> },
+    val onMoveTeam: (Int, Int) -> Unit = { _, _ -> },
+    val onMoveMember: (TeamId, Int, Int) -> Unit = { _, _, _ -> },
+    val onSwitchTeam: (PlayerId) -> Unit = {},
+    val onAcceptKnown: (TeamId) -> Unit = {},
+    val onDismissKnown: (TeamId) -> Unit = {},
+    val onMode: (RulesMode) -> Unit = {},
+    val onImo: (Boolean) -> Unit = {},
+    val onPlayful: (GameConfig) -> Unit = {},
+    val onFamily: (TeamId, TeamOverride) -> Unit = { _, _ -> },
+    val onStart: () -> Unit = {},
+)
+
+/** Création de partie : joueurs ou équipes, ordre de passage par glisser-déposer, règles. */
 @Composable
 fun SetupScreen(
     onBack: () -> Unit,
@@ -52,38 +110,50 @@ fun SetupScreen(
     viewModel: SetupViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val names = stringArrayResource(R.array.team_names).toList()
     SetupContent(
         state = state,
-        onBack = onBack,
-        onNameChange = viewModel::onNameChange,
-        onAdd = viewModel::addPlayer,
-        onRemove = { viewModel.removePlayer(it.id) },
-        onShuffle = viewModel::shuffle,
-        onMode = viewModel::setMode,
-        onImo = viewModel::setImo,
-        onPlayful = viewModel::setPlayful,
-        onStart = { viewModel.start(onGameCreated) },
+        actions =
+            SetupActions(
+                onBack = onBack,
+                onNameChange = viewModel::onNameChange,
+                onAdd = { viewModel.addPlayer(names) },
+                onAddProfile = { viewModel.addProfile(it, names) },
+                onRemove = viewModel::removePlayer,
+                onMovePlayer = viewModel::movePlayer,
+                onAvatar = viewModel::setAvatar,
+                onPhoto = viewModel::setPhoto,
+                onRemovePhoto = viewModel::removePhoto,
+                captureUri = viewModel::captureUri,
+                onShuffle = viewModel::shuffle,
+                onPlayMode = { viewModel.setPlayMode(it, names) },
+                onAddTeam = { viewModel.addTeam(names) },
+                onRemoveTeam = viewModel::removeTeam,
+                onRenameTeam = viewModel::renameTeam,
+                onRandomName = { viewModel.randomTeamName(it, names) },
+                onTeamColor = viewModel::setTeamColor,
+                onTeamEmblem = viewModel::setTeamEmblem,
+                onMoveTeam = viewModel::moveTeam,
+                onMoveMember = viewModel::moveMember,
+                onSwitchTeam = viewModel::switchTeam,
+                onAcceptKnown = viewModel::acceptKnownTeam,
+                onDismissKnown = viewModel::dismissKnownTeam,
+                onMode = viewModel::setMode,
+                onImo = viewModel::setImo,
+                onPlayful = viewModel::setPlayful,
+                onFamily = viewModel::setFamily,
+                onStart = { viewModel.start(onGameCreated) },
+            ),
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun SetupContent(
-    state: SetupUiState,
-    onBack: () -> Unit,
-    onNameChange: (String) -> Unit,
-    onAdd: () -> Unit,
-    onRemove: (SetupPlayer) -> Unit,
-    onShuffle: () -> Unit,
-    onMode: (RulesMode) -> Unit,
-    onImo: (Boolean) -> Unit,
-    onPlayful: (GameConfig) -> Unit,
-    onStart: () -> Unit,
-) {
+fun SetupContent(state: SetupUiState, actions: SetupActions) {
     var editingPlayful by rememberSaveable { mutableStateOf(false) }
-    val colors = MolkkyBoardTheme.colors.teams
+    var avatarFor by remember { mutableStateOf<PlayerId?>(null) }
     Column(Modifier.fillMaxSize().imePadding()) {
-        MBTopBar(stringResource(R.string.setup_title), onBack)
+        MBTopBar(stringResource(R.string.setup_title), actions.onBack)
         Column(
             modifier =
                 Modifier
@@ -93,123 +163,43 @@ internal fun SetupContent(
             verticalArrangement = Arrangement.spacedBy(MBDimens.Gap),
         ) {
             Label(R.string.setup_players)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
-            ) {
-                OutlinedTextField(
-                    value = state.draftName,
-                    onValueChange = onNameChange,
-                    label = { Text(stringResource(R.string.setup_player_name)) },
-                    singleLine = true,
-                    keyboardOptions =
-                        KeyboardOptions(
-                            capitalization = KeyboardCapitalization.Words,
-                            imeAction = ImeAction.Done,
-                        ),
-                    keyboardActions = KeyboardActions(onDone = { onAdd() }),
-                    modifier = Modifier.weight(1f),
-                )
-                TextButton(
-                    onClick = onAdd,
-                    enabled = state.canAdd,
-                    modifier = Modifier.heightIn(min = MBDimens.MinTouch),
-                ) {
-                    Text(stringResource(R.string.setup_add))
-                }
+            PlayModeSelector(state.playMode, actions.onPlayMode)
+            AddPlayerRow(state, actions)
+            if (state.profiles.isNotEmpty()) KnownProfiles(state.profiles, actions.onAddProfile)
+            when (state.playMode) {
+                PlayMode.SOLO -> SoloOrder(state, actions, onAvatar = { avatarFor = it })
+                PlayMode.TEAMS -> TeamsOrder(state, actions, onAvatar = { avatarFor = it })
             }
-            state.players.forEachIndexed { index, player ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
-                ) {
-                    Text(
-                        stringResource(R.string.setup_position, index + 1),
-                        style = MolkkyBoardTheme.typography.scoreSmall,
-                    )
-                    PlayerChip(
-                        name = player.name,
-                        color = colors[player.colorIndex % colors.size],
-                        active = index == 0,
-                        onRemove = { onRemove(player) },
-                    )
-                }
-            }
-            if (state.players.size >= 2) {
+            if (state.units.size >= 2) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        stringResource(R.string.setup_order_hint),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.weight(1f),
-                    )
-                    TextButton(onClick = onShuffle, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+                    Hint(R.string.setup_order_hint, Modifier.weight(1f))
+                    TextButton(onClick = actions.onShuffle, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
                         Text(stringResource(R.string.setup_shuffle))
                     }
                 }
             }
-            Label(R.string.setup_rules)
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                RulesMode.entries.forEachIndexed { index, mode ->
-                    SegmentedButton(
-                        selected = state.mode == mode,
-                        onClick = { onMode(mode) },
-                        shape = SegmentedButtonDefaults.itemShape(index, RulesMode.entries.size),
-                        modifier = Modifier.heightIn(min = MBDimens.MinTouch),
-                        icon = {},
-                    ) {
-                        Text(
-                            stringResource(
-                                if (mode ==
-                                    RulesMode.OFFICIAL
-                                ) {
-                                    R.string.setup_rules_official
-                                } else {
-                                    R.string.setup_rules_playful
-                                },
-                            ),
-                        )
-                    }
-                }
-            }
-            if (state.mode == RulesMode.OFFICIAL) {
-                Hint(R.string.setup_rules_official_hint)
-                SwitchCard(
-                    title = stringResource(R.string.setup_rules_imo),
-                    hint = stringResource(R.string.setup_rules_imo_hint),
-                    checked = state.imo,
-                    onChange = onImo,
-                )
-            } else {
-                Hint(R.string.setup_rules_playful_hint)
-                Text(playfulSummary(state.playful), style = MaterialTheme.typography.titleSmall)
-                TextButton(
-                    onClick = { editingPlayful = true },
-                    modifier = Modifier.heightIn(min = MBDimens.MinTouch),
-                ) {
-                    Text(stringResource(R.string.setup_rules_playful_edit))
-                }
-            }
+            RulesSection(state, actions, onEditPlayful = { editingPlayful = true })
         }
         // Le bouton de lancement reste visible en bas et devient évident dès deux joueurs.
         Column(
-            modifier =
-                Modifier
-                    .navigationBarsPadding()
-                    .padding(MBDimens.ScreenPadding),
+            modifier = Modifier.navigationBarsPadding().padding(MBDimens.ScreenPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             if (!state.canStart) {
-                Text(
-                    stringResource(R.string.setup_need_two),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                Hint(
+                    if (state.playMode ==
+                        PlayMode.SOLO
+                    ) {
+                        R.string.setup_need_two
+                    } else {
+                        R.string.setup_need_two_teams
+                    },
                 )
             }
             BigActionButton(
                 text = stringResource(R.string.setup_start),
-                onClick = onStart,
+                onClick = actions.onStart,
                 kind = BigActionKind.Primary,
                 enabled = state.canStart,
                 modifier = Modifier.fillMaxWidth(),
@@ -229,18 +219,551 @@ internal fun SetupContent(
             ) {
                 Text(stringResource(R.string.setup_rules_playful_sheet), style = MaterialTheme.typography.titleLarge)
                 Text(playfulSummary(state.playful), style = MaterialTheme.typography.titleSmall)
-                PlayfulRulesEditor(state.playful, onPlayful)
+                PlayfulRulesEditor(state.playful, actions.onPlayful)
+            }
+        }
+    }
+    avatarFor?.let { id -> state.player(id)?.let { AvatarSheet(it, actions, onDismiss = { avatarFor = null }) } }
+}
+
+@Composable
+private fun PlayModeSelector(mode: PlayMode, onChange: (PlayMode) -> Unit) {
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+        PlayMode.entries.forEachIndexed { index, entry ->
+            SegmentedButton(
+                selected = mode == entry,
+                onClick = { onChange(entry) },
+                shape = SegmentedButtonDefaults.itemShape(index, PlayMode.entries.size),
+                modifier = Modifier.heightIn(min = MBDimens.MinTouch),
+                icon = {},
+            ) {
+                Text(stringResource(if (entry == PlayMode.SOLO) R.string.setup_solo else R.string.setup_teams))
             }
         }
     }
 }
 
 @Composable
-private fun Hint(text: Int) {
+private fun AddPlayerRow(state: SetupUiState, actions: SetupActions) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
+    ) {
+        OutlinedTextField(
+            value = state.draftName,
+            onValueChange = actions.onNameChange,
+            label = { Text(stringResource(R.string.setup_player_name)) },
+            singleLine = true,
+            keyboardOptions =
+                KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Done,
+                ),
+            keyboardActions = KeyboardActions(onDone = { actions.onAdd() }),
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(
+            onClick = actions.onAdd,
+            enabled = state.canAdd,
+            modifier = Modifier.heightIn(min = MBDimens.MinTouch),
+        ) {
+            Text(stringResource(R.string.setup_add))
+        }
+    }
+}
+
+/** Joueurs habituels (profils locaux), ajoutés d'un tap. */
+@Composable
+private fun KnownProfiles(profiles: List<PlayerProfile>, onAdd: (PlayerProfile) -> Unit) {
+    Hint(R.string.setup_known_players)
+    val colors = MolkkyBoardTheme.colors.teams
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
+        verticalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
+    ) {
+        profiles.forEach { profile ->
+            val label = stringResource(R.string.setup_add_known, profile.name)
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                modifier = Modifier.clickable(onClickLabel = label) { onAdd(profile) },
+            ) {
+                Row(
+                    Modifier.heightIn(min = 48.dp).padding(start = 6.dp, end = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Avatar(
+                        profile.avatar ?: PLAYER_AVATARS.first(),
+                        profile.photoUri,
+                        colors[
+                            profile.colorIndex %
+                                colors.size,
+                        ].fill,
+                        36.dp,
+                    )
+                    Text("+ ${profile.name}", style = MaterialTheme.typography.titleSmall)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SoloOrder(state: SetupUiState, actions: SetupActions, onAvatar: (PlayerId) -> Unit) {
+    ReorderableColumn(
+        items = state.players,
+        key = { it.id.value },
+        label = { it.name },
+        onMove = actions.onMovePlayer,
+    ) { index, player, handle ->
+        PlayerRow(
+            player = player,
+            position = index + 1,
+            handle = handle,
+            onAvatar = { onAvatar(player.id) },
+            onRemove = { actions.onRemove(player.id) },
+        )
+    }
+}
+
+@Composable
+private fun PlayerRow(
+    player: SetupPlayer,
+    position: Int?,
+    handle: Modifier,
+    onAvatar: () -> Unit,
+    onRemove: () -> Unit,
+    extra: @Composable () -> Unit = {},
+) {
+    val colors = MolkkyBoardTheme.colors.teams
+    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface) {
+        Row(Modifier.padding(end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            DragHandle(handle)
+            if (position !=
+                null
+            ) {
+                Text(
+                    "$position.",
+                    style = MolkkyBoardTheme.typography.scoreSmall,
+                    modifier = Modifier.padding(end = 8.dp),
+                )
+            }
+            val avatarLabel = stringResource(R.string.setup_change_avatar, player.name)
+            Box(Modifier.clip(CircleShape).clickable(onClickLabel = avatarLabel, onClick = onAvatar)) {
+                Avatar(player.avatar, player.photoUri, colors[player.colorIndex % colors.size].fill, 44.dp)
+            }
+            Text(
+                player.name,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 2,
+                modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
+            )
+            extra()
+            val removeLabel = stringResource(R.string.setup_remove, player.name)
+            IconButton(
+                onClick = onRemove,
+                modifier =
+                    Modifier.size(MBDimens.MinTouch).semantics {
+                        contentDescription =
+                            removeLabel
+                    },
+            ) {
+                Text(
+                    "✕",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+/** Avatar d'un joueur : sa photo si elle existe, sinon son emoji sur un disque à sa couleur. */
+@Composable
+fun Avatar(emoji: String, photoUri: String?, background: androidx.compose.ui.graphics.Color, size: Dp) {
+    if (photoUri != null) {
+        AsyncImage(
+            model = photoUri,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.size(size).clip(CircleShape),
+        )
+    } else {
+        Box(
+            Modifier.size(size).background(background.copy(alpha = AVATAR_ALPHA), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                emoji,
+                style =
+                    if (size >
+                        40.dp
+                    ) {
+                        MaterialTheme.typography.headlineSmall
+                    } else {
+                        MaterialTheme.typography.titleMedium
+                    },
+            )
+        }
+    }
+}
+
+@Composable
+private fun TeamsOrder(state: SetupUiState, actions: SetupActions, onAvatar: (PlayerId) -> Unit) {
+    ReorderableColumn(
+        items = state.teams,
+        key = { it.id.value },
+        label = { it.name },
+        onMove = actions.onMoveTeam,
+        spacing = MBDimens.Gap,
+    ) { index, team, handle ->
+        TeamCard(
+            team = team,
+            position = index + 1,
+            state = state,
+            actions = actions,
+            handle = handle,
+            canRemove = state.teams.size > 2,
+            onAvatar = onAvatar,
+        )
+    }
+    TextButton(onClick = actions.onAddTeam, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+        Text(stringResource(R.string.setup_add_team))
+    }
+}
+
+@Composable
+private fun TeamCard(
+    team: SetupTeam,
+    position: Int,
+    state: SetupUiState,
+    actions: SetupActions,
+    handle: Modifier,
+    canRemove: Boolean,
+    onAvatar: (PlayerId) -> Unit,
+) {
+    val colors = MolkkyBoardTheme.colors.teams
+    val color = colors[team.colorIndex % colors.size]
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(3.dp, color.fill),
+    ) {
+        Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(Modifier.padding(end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                DragHandle(handle)
+                Text("$position.", style = MolkkyBoardTheme.typography.scoreSmall)
+                val emblemLabel = stringResource(R.string.setup_change_emblem, team.name)
+                val keys = TEAM_EMBLEMS.keys.toList()
+                IconButton(
+                    onClick = { actions.onTeamEmblem(team.id, keys[(keys.indexOf(team.emblem) + 1) % keys.size]) },
+                    modifier = Modifier.size(MBDimens.MinTouch).semantics { contentDescription = emblemLabel },
+                ) {
+                    Text(emblemSymbol(team.emblem), style = MaterialTheme.typography.headlineSmall)
+                }
+                OutlinedTextField(
+                    value = team.name,
+                    onValueChange = { actions.onRenameTeam(team.id, it) },
+                    label = { Text(stringResource(R.string.setup_team_name)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                    modifier = Modifier.weight(1f),
+                )
+                val diceLabel = stringResource(R.string.setup_random_name)
+                IconButton(
+                    onClick = { actions.onRandomName(team.id) },
+                    modifier =
+                        Modifier.size(MBDimens.MinTouch).semantics {
+                            contentDescription =
+                                diceLabel
+                        },
+                ) {
+                    Text("🎲", style = MaterialTheme.typography.headlineSmall)
+                }
+            }
+            ColorPicker(team.colorIndex) { actions.onTeamColor(team.id, it) }
+            team.known?.let { known ->
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    color = MolkkyBoardTheme.colors.saffron.copy(alpha = KNOWN_ALPHA),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                ) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text(
+                            stringResource(R.string.setup_known_team, emblemSymbol(known.emblem), known.name),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                        Row {
+                            TextButton(
+                                onClick = { actions.onAcceptKnown(team.id) },
+                            ) { Text(stringResource(R.string.setup_known_accept)) }
+                            TextButton(
+                                onClick = { actions.onDismissKnown(team.id) },
+                            ) { Text(stringResource(R.string.setup_known_dismiss)) }
+                        }
+                    }
+                }
+            }
+            val members = team.members.mapNotNull(state::player)
+            if (members.isEmpty()) {
+                Hint(R.string.setup_team_empty, Modifier.padding(horizontal = 16.dp))
+            }
+            ReorderableColumn(
+                items = members,
+                key = { it.id.value },
+                label = { it.name },
+                onMove = { from, to -> actions.onMoveMember(team.id, from, to) },
+                modifier = Modifier.padding(horizontal = 8.dp),
+            ) { _, player, memberHandle ->
+                PlayerRow(
+                    player = player,
+                    position = null,
+                    handle = memberHandle,
+                    onAvatar = { onAvatar(player.id) },
+                    onRemove = { actions.onRemove(player.id) },
+                ) {
+                    if (state.teams.size > 1) {
+                        val label = stringResource(R.string.setup_switch_team, player.name)
+                        IconButton(
+                            onClick = { actions.onSwitchTeam(player.id) },
+                            modifier = Modifier.size(MBDimens.MinTouch).semantics { contentDescription = label },
+                        ) {
+                            Text("⇄", style = MaterialTheme.typography.titleLarge)
+                        }
+                    }
+                }
+            }
+            if (canRemove) {
+                TextButton(
+                    onClick = { actions.onRemoveTeam(team.id) },
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                ) {
+                    Text(stringResource(R.string.setup_remove_team), color = MolkkyBoardTheme.colors.coralText)
+                }
+            }
+        }
+    }
+}
+
+/** Les 8 couleurs d'équipe, en pastilles. */
+@Composable
+private fun ColorPicker(current: Int, onSelect: (Int) -> Unit) {
+    val colors = MolkkyBoardTheme.colors.teams
+    Row(Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        colors.forEachIndexed { index, color ->
+            val label = stringResource(R.string.setup_color, index + 1)
+            Box(
+                Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .clickable(onClickLabel = label) { onSelect(index) }
+                    .semantics { selected = index == current },
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    Modifier
+                        .size(if (index == current) 30.dp else 24.dp)
+                        .background(color.fill, CircleShape)
+                        .then(
+                            if (index == current) {
+                                Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                            } else {
+                                Modifier
+                            },
+                        ),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RulesSection(state: SetupUiState, actions: SetupActions, onEditPlayful: () -> Unit) {
+    Label(R.string.setup_rules)
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+        RulesMode.entries.forEachIndexed { index, mode ->
+            SegmentedButton(
+                selected = state.mode == mode,
+                onClick = { actions.onMode(mode) },
+                shape = SegmentedButtonDefaults.itemShape(index, RulesMode.entries.size),
+                modifier = Modifier.heightIn(min = MBDimens.MinTouch),
+                icon = {},
+            ) {
+                Text(
+                    stringResource(
+                        if (mode ==
+                            RulesMode.OFFICIAL
+                        ) {
+                            R.string.setup_rules_official
+                        } else {
+                            R.string.setup_rules_playful
+                        },
+                    ),
+                )
+            }
+        }
+    }
+    if (state.mode == RulesMode.OFFICIAL) {
+        Hint(R.string.setup_rules_official_hint)
+        SwitchCard(
+            title = stringResource(R.string.setup_rules_imo),
+            hint = stringResource(R.string.setup_rules_imo_hint),
+            checked = state.imo,
+            onChange = actions.onImo,
+        )
+    } else {
+        Hint(R.string.setup_rules_playful_hint)
+        Text(playfulSummary(state.playful), style = MaterialTheme.typography.titleSmall)
+        TextButton(onClick = onEditPlayful, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+            Text(stringResource(R.string.setup_rules_playful_edit))
+        }
+        FamilySection(state, actions)
+    }
+}
+
+/** Mode famille (Ludique) : score de départ, objectif réduit et exemption d'élimination par joueur ou équipe. */
+@Composable
+private fun FamilySection(state: SetupUiState, actions: SetupActions) {
+    var open by rememberSaveable { mutableStateOf(state.family.isNotEmpty()) }
+    SwitchCard(
+        title = stringResource(R.string.setup_family),
+        hint = stringResource(R.string.setup_family_hint),
+        checked = open,
+        onChange = { open = it },
+    )
+    if (!open) return
+    Hint(R.string.setup_family_distance)
+    val target = state.playful.targetScore
+    state.units.forEach { unit ->
+        val override = state.family[unit.id] ?: TeamOverride()
+        val unitTarget = override.targetScore ?: target
+        Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface) {
+            Column(Modifier.padding(vertical = 8.dp)) {
+                Text(
+                    unit.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                )
+                Stepper(
+                    label = R.string.setup_family_start,
+                    value = override.startScore ?: 0,
+                    canDecrease = (override.startScore ?: 0) > 0,
+                    canIncrease = (override.startScore ?: 0) + FAMILY_STEP < unitTarget,
+                    onDecrease = {
+                        actions.onFamily(
+                            unit.id,
+                            override.withStartScore((override.startScore ?: 0) - FAMILY_STEP, target),
+                        )
+                    },
+                    onIncrease = {
+                        actions.onFamily(
+                            unit.id,
+                            override.withStartScore((override.startScore ?: 0) + FAMILY_STEP, target),
+                        )
+                    },
+                )
+                Stepper(
+                    label = R.string.setup_family_target,
+                    value = unitTarget,
+                    canDecrease = unitTarget > PlayfulRules.MIN_TARGET,
+                    canIncrease = unitTarget < PlayfulRules.MAX_TARGET,
+                    onDecrease = { actions.onFamily(unit.id, override.withTarget(unitTarget - FAMILY_STEP, target)) },
+                    onIncrease = { actions.onFamily(unit.id, override.withTarget(unitTarget + FAMILY_STEP, target)) },
+                )
+                SwitchCard(
+                    title = stringResource(R.string.setup_family_exempt),
+                    hint = null,
+                    checked = override.exemptFromMissLimit,
+                    onChange = { actions.onFamily(unit.id, override.copy(exemptFromMissLimit = it)) },
+                )
+            }
+        }
+    }
+}
+
+/** Choix de l'avatar : un emoji, ou une photo (appareil photo ou galerie), jamais obligatoire. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AvatarSheet(player: SetupPlayer, actions: SetupActions, onDismiss: () -> Unit) {
+    var capture by remember { mutableStateOf<Uri?>(null) }
+    val camera =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
+            capture?.takeIf { saved }?.let { actions.onPhoto(player.id, it) }
+            onDismiss()
+        }
+    val gallery =
+        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            uri?.let { actions.onPhoto(player.id, it) }
+            onDismiss()
+        }
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            Modifier
+                .navigationBarsPadding()
+                .padding(
+                    horizontal = MBDimens.ScreenPadding,
+                ).padding(bottom = MBDimens.ScreenPadding),
+            verticalArrangement = Arrangement.spacedBy(MBDimens.Gap),
+        ) {
+            Text(stringResource(R.string.setup_avatar_title, player.name), style = MaterialTheme.typography.titleLarge)
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                PLAYER_AVATARS.forEach { emoji ->
+                    val chosen = emoji == player.avatar && player.photoUri == null
+                    Box(
+                        Modifier
+                            .size(MBDimens.MinTouch)
+                            .clip(CircleShape)
+                            .background(
+                                if (chosen) {
+                                    MolkkyBoardTheme.colors.saffron.copy(
+                                        alpha = KNOWN_ALPHA,
+                                    )
+                                } else {
+                                    MaterialTheme.colorScheme.surface
+                                },
+                            ).clickable {
+                                actions.onAvatar(player.id, emoji)
+                                if (player.photoUri != null) actions.onRemovePhoto(player.id)
+                                onDismiss()
+                            }.semantics { selected = chosen },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(emoji, style = MaterialTheme.typography.headlineSmall)
+                    }
+                }
+            }
+            Hint(R.string.setup_photo_hint)
+            Row(horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap)) {
+                TextButton(onClick = {
+                    capture = actions.captureUri()
+                    capture?.let(camera::launch)
+                }) { Text(stringResource(R.string.setup_photo_camera)) }
+                TextButton(onClick = {
+                    gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                }) { Text(stringResource(R.string.setup_photo_gallery)) }
+            }
+            if (player.photoUri != null) {
+                TextButton(onClick = {
+                    actions.onRemovePhoto(player.id)
+                    onDismiss()
+                }) { Text(stringResource(R.string.setup_photo_remove), color = MolkkyBoardTheme.colors.coralText) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Hint(text: Int, modifier: Modifier = Modifier) {
     Text(
         stringResource(text),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier,
     )
 }
 
@@ -253,3 +776,7 @@ private fun Label(text: Int) {
         modifier = Modifier.padding(top = 8.dp),
     )
 }
+
+private const val AVATAR_ALPHA = 0.35f
+private const val KNOWN_ALPHA = 0.3f
+private const val FAMILY_STEP = 5

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Photo de joueur prise avec l'appareil photo : fichier temporaire privé, partagé avec l'appli photo. -->
+        <provider
+            android:name="com.yogistudio.molkkyboard.feature.setup.AvatarFileProvider"
+            android:authorities="${applicationId}.avatars"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/avatar_paths" />
+        </provider>
+    </application>
+</manifest>

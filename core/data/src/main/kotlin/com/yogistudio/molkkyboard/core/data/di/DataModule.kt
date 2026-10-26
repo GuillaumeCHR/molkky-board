@@ -3,7 +3,9 @@ package com.yogistudio.molkkyboard.core.data.di
 import com.yogistudio.molkkyboard.core.data.DataStoreSettingsRepository
 import com.yogistudio.molkkyboard.core.data.GameRepository
 import com.yogistudio.molkkyboard.core.data.IdGenerator
+import com.yogistudio.molkkyboard.core.data.PlayerRepository
 import com.yogistudio.molkkyboard.core.data.RoomGameRepository
+import com.yogistudio.molkkyboard.core.data.RoomPlayerRepository
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.data.TimeSource
 import dagger.Binds
@@ -18,6 +20,9 @@ import java.util.UUID
 abstract class DataModule {
     @Binds
     abstract fun gameRepository(impl: RoomGameRepository): GameRepository
+
+    @Binds
+    abstract fun playerRepository(impl: RoomPlayerRepository): PlayerRepository
 
     @Binds
     abstract fun settingsRepository(impl: DataStoreSettingsRepository): SettingsRepository
