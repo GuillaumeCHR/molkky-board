@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.molkkyboard.android.compose)
     alias(libs.plugins.molkkyboard.hilt)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.aboutlibraries)
 }
 
 android {
@@ -17,8 +18,11 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
+            // « Envoyer un retour » : versions de test seulement.
+            buildConfigField("boolean", "FEEDBACK", "true")
         }
         release {
+            buildConfigField("boolean", "FEEDBACK", "false")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -28,6 +32,11 @@ android {
     buildFeatures {
         buildConfig = true
     }
+}
+
+// Licences des bibliothèques, collectées au build sans aucun accès réseau (rien n'est téléchargé).
+aboutLibraries {
+    offlineMode = true
 }
 
 dependencies {
@@ -51,4 +60,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.timber)
+    implementation(libs.aboutlibraries.compose.m3)
+
+    testImplementation(libs.junit4)
 }

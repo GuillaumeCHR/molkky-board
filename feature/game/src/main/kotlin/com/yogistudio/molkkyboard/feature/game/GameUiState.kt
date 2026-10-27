@@ -122,6 +122,8 @@ data class GameUiState(
     val guide: GuideStep? = null,
     /** Carte « Prêts à jouer ? » à afficher au début de la partie. */
     val readyCard: Boolean = false,
+    /** Réglage « Sons » (désactivé par défaut). */
+    val sounds: Boolean = false,
     val beginnerMode: Boolean = false,
 ) {
     /** Le déroulé se modifie tant que la partie n'est pas abandonnée (même terminée : la victoire peut changer). */

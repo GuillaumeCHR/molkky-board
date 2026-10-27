@@ -105,6 +105,8 @@ import com.yogistudio.molkkyboard.core.designsystem.component.ScoreboardRow
 import com.yogistudio.molkkyboard.core.designsystem.component.guideAnchor
 import com.yogistudio.molkkyboard.core.designsystem.component.rememberGuideAnchors
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
+import com.yogistudio.molkkyboard.core.designsystem.sound.Sound
+import com.yogistudio.molkkyboard.core.designsystem.sound.rememberSoundEffects
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.InputMode
@@ -169,6 +171,8 @@ fun GameScreen(
     val announcer = rememberVoiceAnnouncer(voice.enabled)
     val currentAnnouncer by rememberUpdatedState(announcer)
     val currentVoice by rememberUpdatedState(voice)
+    val sounds = rememberSoundEffects(state.sounds)
+    val currentSounds by rememberUpdatedState(sounds)
     var animationKey by remember { mutableIntStateOf(0) }
     var logMessage by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(logMessage) {
@@ -211,6 +215,7 @@ fun GameScreen(
                 is GameEffect.Twelve -> {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     twelve = TwelveShow(effect.strike, ++animationKey)
+                    currentSounds?.play(Sound.TWELVE)
                 }
 
                 is GameEffect.EliminationCancelled -> {
@@ -219,6 +224,7 @@ fun GameScreen(
 
                 is GameEffect.Eliminated -> {
                     elimination = EliminationShow(effect.team, effect.missLimit, reverse = false, key = ++animationKey)
+                    currentSounds?.play(Sound.ELIMINATED)
                     scope.launch {
                         // Double vibration à l'élimination.
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -237,6 +243,7 @@ fun GameScreen(
                             effect.perfect,
                             ++animationKey,
                         )
+                    currentSounds?.play(Sound.VICTORY)
                     scope.launch {
                         // Double vibration de célébration.
                         haptic.performHapticFeedback(HapticFeedbackType.Confirm)

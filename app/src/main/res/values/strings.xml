@@ -63,7 +63,7 @@
     <string name="notification_permission_text">Une notification discrète montre le tour, qui doit lancer et les scores, pour revenir à la partie en un geste. Tout reste sur le téléphone.</string>
     <string name="notification_permission_allow">Continuer</string>
     <string name="notification_permission_later">Plus tard</string>
-    <string name="settings_coming_hint">Pas encore disponible</string>
+    <string name="settings_coming_hint">Choc de l\'intro, « 12 ! », victoire et élimination : des sons maison, muets en silencieux et en vibreur.</string>
     <string name="settings_startup">Démarrage</string>
     <string name="settings_short_intro">Introduction courte</string>
     <string name="settings_short_intro_hint">Environ 1,5 s : l\'impact puis le logotype</string>
@@ -115,5 +115,21 @@
     <!-- À propos -->
     <string name="about_version">Version %1$s</string>
     <string name="about_publisher">Une application Yogi Studio</string>
-    <string name="about_privacy">Aucune publicité, aucun traceur. Sans compte, vos parties restent sur ce téléphone.</string>
+    <string name="about_privacy_title">Vie privée</string>
+    <string name="about_privacy_no_ads">Molkky Board ne contient aucune publicité, aucun traceur publicitaire, aucun outil de mesure d\'audience, et ne revend aucune donnée.</string>
+    <string name="about_privacy_local">Tout reste sur votre téléphone : l\'application ne demande même pas l\'accès à Internet.</string>
+    <string name="about_privacy_control">Vous pouvez sauvegarder, exporter ou supprimer vos données à tout moment, dans Réglages › Données.</string>
+    <string name="about_credits">Crédits</string>
+    <string name="about_fonts">Polices Bricolage Grotesque et Inter, sous licence SIL Open Font License 1.1, intégrées à l\'application.</string>
+    <string name="about_licenses">Bibliothèques open source</string>
+    <string name="about_feedback_title">Version de test</string>
+    <string name="about_feedback_hint">Un bug, une idée ? Le message contient seulement la version de l\'app et le modèle du téléphone.</string>
+    <string name="about_feedback">Envoyer un retour</string>
+    <string name="about_feedback_subject">Retour sur Molkky Board</string>
+    <string name="about_feedback_body">Votre retour :\n\n\n—\n%1$s</string>
+    <string name="crash_title">Molkky Board s\'est arrêté</string>
+    <string name="crash_text">Vous pouvez envoyer ce rapport par e-mail pour aider à corriger le problème. Il ne contient que ce qui suit : aucune donnée de partie, aucun nom, aucun identifiant. Rien n\'est envoyé sans vous.</string>
+    <string name="crash_send">Envoyer par e-mail</string>
+    <string name="crash_ignore">Ne pas envoyer</string>
+    <string name="crash_subject">Rapport de plantage Molkky Board</string>
 </resources>

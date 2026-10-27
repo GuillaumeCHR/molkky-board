@@ -61,7 +61,7 @@
     <string name="notification_permission_text">A discreet notification shows the round, who is throwing and the scores, so you can get back to the game in one tap. Everything stays on the phone.</string>
     <string name="notification_permission_allow">Continue</string>
     <string name="notification_permission_later">Later</string>
-    <string name="settings_coming_hint">Not available yet</string>
+    <string name="settings_coming_hint">Intro impact, “12!”, victory and elimination: home-made sounds, silent in silent and vibrate mode.</string>
     <string name="settings_startup">Startup</string>
     <string name="settings_short_intro">Short intro</string>
     <string name="settings_short_intro_hint">About 1.5 s: the impact, then the logo</string>
@@ -113,5 +113,21 @@
     <!-- About -->
     <string name="about_version">Version %1$s</string>
     <string name="about_publisher">A Yogi Studio app</string>
-    <string name="about_privacy">No ads, no trackers. Without an account, your games stay on this phone.</string>
+    <string name="about_privacy_title">Privacy</string>
+    <string name="about_privacy_no_ads">Molkky Board contains no ads, no ad trackers, no audience measurement tools, and sells no data.</string>
+    <string name="about_privacy_local">Everything stays on your phone: the app does not even request Internet access.</string>
+    <string name="about_privacy_control">You can back up, export or delete your data at any time, in Settings › Data.</string>
+    <string name="about_credits">Credits</string>
+    <string name="about_fonts">Bricolage Grotesque and Inter fonts, under the SIL Open Font License 1.1, bundled with the app.</string>
+    <string name="about_licenses">Open source libraries</string>
+    <string name="about_feedback_title">Test version</string>
+    <string name="about_feedback_hint">A bug, an idea? The message only contains the app version and the phone model.</string>
+    <string name="about_feedback">Send feedback</string>
+    <string name="about_feedback_subject">Feedback on Molkky Board</string>
+    <string name="about_feedback_body">Your feedback:\n\n\n—\n%1$s</string>
+    <string name="crash_title">Molkky Board stopped</string>
+    <string name="crash_text">You can send this report by email to help fix the problem. It only contains what is shown below: no game data, no names, no identifiers. Nothing is sent without you.</string>
+    <string name="crash_send">Send by email</string>
+    <string name="crash_ignore">Don\'t send</string>
+    <string name="crash_subject">Molkky Board crash report</string>
 </resources>

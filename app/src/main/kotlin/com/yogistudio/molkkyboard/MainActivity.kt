@@ -11,12 +11,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
+import com.yogistudio.molkkyboard.crash.CrashReports
 import com.yogistudio.molkkyboard.navigation.LaunchTarget
 import com.yogistudio.molkkyboard.navigation.MolkkyBoardNavHost
 import com.yogistudio.molkkyboard.startup.StartupLoader
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 
@@ -29,6 +32,12 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var settingsRepository: SettingsRepository
 
+    @Inject
+    lateinit var crashReports: CrashReports
+
+    /** Rapport du dernier plantage, proposé (jamais envoyé) au retour sur l'accueil. */
+    private val crashReport = MutableStateFlow<String?>(null)
+
     /** Écran demandé par la notification « Saisir le lancer » ou par un raccourci de l'icône. */
     private val target = MutableStateFlow<LaunchTarget?>(null)
 
@@ -36,7 +45,10 @@ class MainActivity : AppCompatActivity() {
         // L'écran de démarrage système ne reste que le temps de lire les réglages (intro courte ou complète).
         installSplashScreen().setKeepOnScreenCondition { startupLoader.state.value.shortIntro == null }
         super.onCreate(savedInstanceState)
-        if (savedInstanceState == null) readTarget(intent)
+        if (savedInstanceState == null) {
+            readTarget(intent)
+            lifecycleScope.launch { crashReport.value = withContext(Dispatchers.IO) { crashReports.pending() } }
+        }
         AppShortcuts.publish(this)
         enableEdgeToEdge()
         setContent {
@@ -44,10 +56,16 @@ class MainActivity : AppCompatActivity() {
             val settings by settingsRepository.settings.collectAsStateWithLifecycle(initialValue = null)
             MolkkyBoardTheme(sunlight = settings?.sunlight ?: false) {
                 val open by target.collectAsStateWithLifecycle()
+                val crash by crashReport.collectAsStateWithLifecycle()
                 MolkkyBoardNavHost(
                     startup = startup,
                     target = open,
                     onTargetOpened = { target.value = null },
+                    crashReport = crash,
+                    onCrashReportHandled = {
+                        crashReport.value = null
+                        lifecycleScope.launch(Dispatchers.IO) { crashReports.clear() }
+                    },
                     settings = settings,
                     onNotificationPrompted = { lifecycleScope.launch { settingsRepository.setNotificationPrompted() } },
                 )

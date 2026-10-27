@@ -34,6 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import com.yogistudio.molkkyboard.core.designsystem.brand.drawYogiStudioMark
+import com.yogistudio.molkkyboard.core.designsystem.sound.Sound
+import com.yogistudio.molkkyboard.core.designsystem.sound.rememberSoundEffects
 import com.yogistudio.molkkyboard.core.designsystem.theme.BricolageGrotesque
 import com.yogistudio.molkkyboard.core.designsystem.theme.Inter
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
@@ -60,6 +62,7 @@ enum class IntroLoadState {
  * @param logotype logotype Molkky Board ; l'appelant y applique l'élément partagé vers l'accueil.
  * @param short version courte : impact puis logotype (≈ 1,6 s), sans la signature sauf si le chargement traîne.
  * @param frameTimeMs fige l'intro à cet instant (aperçus et captures) au lieu de la jouer.
+ * @param sounds réglage « Sons » : le choc de l'impact (muet en silencieux).
  */
 @Composable
 fun IntroScreen(
@@ -69,6 +72,7 @@ fun IntroScreen(
     modifier: Modifier = Modifier,
     short: Boolean = false,
     frameTimeMs: Long? = null,
+    sounds: Boolean = false,
 ) {
     val reduced = MolkkyBoardTheme.reducedMotion
     val end = if (reduced) IntroTimeline.REDUCED_END else IntroTimeline.END
@@ -78,7 +82,18 @@ fun IntroScreen(
     val currentLoad by rememberUpdatedState(loadState)
     val currentOnFinished by rememberUpdatedState(onFinished)
 
-    if (frameTimeMs == null) IntroClock(elapsed, reduced, short, hold, end, { currentLoad.done }, currentOnFinished)
+    val effects = rememberSoundEffects(sounds && frameTimeMs == null)
+    if (frameTimeMs == null) {
+        IntroClock(
+            elapsed,
+            reduced,
+            short,
+            hold,
+            end,
+            { currentLoad.done },
+            currentOnFinished,
+        ) { effects?.play(Sound.IMPACT) }
+    }
     val waiting by remember { derivedStateOf { !currentLoad.done && elapsed.longValue >= hold } }
     val skipLabel = stringResource(R.string.intro_skip_hint)
 
@@ -145,6 +160,7 @@ private fun IntroClock(
     end: Long,
     loaded: () -> Boolean,
     onFinished: () -> Unit,
+    onImpact: () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
     val currentLoaded by rememberUpdatedState(loaded)
@@ -166,6 +182,7 @@ private fun IntroClock(
                 if (!currentLoaded() && next > hold) next = maxOf(before, hold)
                 if (!reduced && before < IntroTimeline.IMPACT && next >= IntroTimeline.IMPACT) {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onImpact()
                 }
                 elapsed.longValue = next
                 finished = next >= end && currentLoaded()

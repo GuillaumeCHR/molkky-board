@@ -27,6 +27,8 @@ data class StartupState(
     /** `null` tant que les réglages ne sont pas lus : l'écran de démarrage système reste affiché. */
     val shortIntro: Boolean? = null,
     val ongoingGameId: String? = null,
+    /** Réglage « Sons » : le choc de l'intro n'est joué que s'il est activé. */
+    val sounds: Boolean = false,
 )
 
 /**
@@ -53,7 +55,12 @@ class StartupLoader
                 val result =
                     runCatching {
                         val current = settings.recordLaunch()
-                        mutableState.update { it.copy(shortIntro = current.shortIntro && current.canChooseShortIntro) }
+                        mutableState.update {
+                            it.copy(
+                                shortIntro = current.shortIntro && current.canChooseShortIntro,
+                                sounds = current.sounds,
+                            )
+                        }
                         val ongoing = games.observeOngoingGameId().first()
                         preloadFonts()
                         ongoing

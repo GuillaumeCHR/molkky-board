@@ -35,6 +35,7 @@ import com.yogistudio.molkkyboard.core.designsystem.component.MolkkyBoardLogotyp
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.UserSettings
+import com.yogistudio.molkkyboard.crash.CrashReportDialog
 import com.yogistudio.molkkyboard.feature.game.GameScreen
 import com.yogistudio.molkkyboard.feature.game.PlacementScreen
 import com.yogistudio.molkkyboard.feature.game.RulesScreen
@@ -50,6 +51,7 @@ import com.yogistudio.molkkyboard.startup.StartupState
 import com.yogistudio.molkkyboard.ui.AboutScreen
 import com.yogistudio.molkkyboard.ui.EmptyStateScreen
 import com.yogistudio.molkkyboard.ui.HomeScreen
+import com.yogistudio.molkkyboard.ui.LicensesScreen
 import com.yogistudio.molkkyboard.ui.SettingsScreen
 import kotlin.reflect.KClass
 
@@ -71,6 +73,8 @@ fun MolkkyBoardNavHost(
     startup: StartupState,
     target: LaunchTarget? = null,
     onTargetOpened: () -> Unit = {},
+    crashReport: String? = null,
+    onCrashReportHandled: () -> Unit = {},
     settings: UserSettings? = null,
     onNotificationPrompted: () -> Unit = {},
 ) {
@@ -122,6 +126,7 @@ fun MolkkyBoardNavHost(
                     IntroScreen(
                         loadState = startup.load,
                         short = startup.shortIntro == true,
+                        sounds = startup.sounds,
                         onFinished = {
                             navController.navigate(HomeRoute) { popUpTo<IntroRoute> { inclusive = true } }
                         },
@@ -129,6 +134,7 @@ fun MolkkyBoardNavHost(
                     )
                 }
                 composable<HomeRoute> {
+                    if (crashReport != null) CrashReportDialog(crashReport, onCrashReportHandled)
                     HomeScreen(
                         onNewGame = { navController.navigate(SetupRoute) },
                         onJoin = { navController.navigate(JoinRoute) },
@@ -154,7 +160,13 @@ fun MolkkyBoardNavHost(
                         onRules = { navController.navigate(RulesRoute) },
                     )
                 }
-                composable<AboutRoute> { AboutScreen(onBack = navController::navigateUp) }
+                composable<AboutRoute> {
+                    AboutScreen(
+                        onBack = navController::navigateUp,
+                        onLicenses = { navController.navigate(LicensesRoute) },
+                    )
+                }
+                composable<LicensesRoute> { LicensesScreen(onBack = navController::navigateUp) }
                 composable<PlayfulRulesRoute> { PlayfulRulesScreen(onBack = navController::navigateUp) }
                 composable<RulesRoute> { RulesScreen(onBack = navController::navigateUp) }
                 composable<PlacementRoute> { PlacementScreen(onBack = navController::navigateUp) }
@@ -237,5 +249,11 @@ private fun LaunchTargetEffect(
 
 private fun showsBottomBar(d: NavDestination): Boolean =
     TopLevel.entries.any { d.hasRoute(it.routeClass) } ||
-        listOf(AboutRoute::class, PlayfulRulesRoute::class, RulesRoute::class, PlacementRoute::class, StatsRoute::class)
-            .any { d.hasRoute(it) }
+        listOf(
+            AboutRoute::class,
+            LicensesRoute::class,
+            PlayfulRulesRoute::class,
+            RulesRoute::class,
+            PlacementRoute::class,
+            StatsRoute::class,
+        ).any { d.hasRoute(it) }

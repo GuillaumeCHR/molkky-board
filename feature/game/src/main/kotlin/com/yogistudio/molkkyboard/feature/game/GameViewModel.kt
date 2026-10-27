@@ -133,6 +133,7 @@ class GameViewModel
                     pendingOrder = input.pending,
                     readyCard = snapshot.showsReadyCard(prefs, input.readySeen),
                     beginnerMode = prefs.beginnerMode,
+                    sounds = prefs.sounds,
                 )
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), GameUiState())
 

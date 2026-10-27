@@ -56,3 +56,7 @@ data object StatsRoute
 /** Placement des quilles pas à pas (accueil, raccourci de l'icône). */
 @Serializable
 data object PlacementRoute
+
+/** Licences des bibliothèques open source (À propos › Crédits). */
+@Serializable
+data object LicensesRoute
