@@ -8,7 +8,7 @@ question ; en revenant, dis « retour du test » et je te poserai les questions 
 - Réglages › « Revoir la prise en main » (pour voir les bulles), puis une nouvelle partie à 2 joueurs.
 
 ## 1. Intro et prise en main
-- **Q1** Intro « strike » (lignes de vitesse, image figée safran, « 12 ! », quilles qui s'envolent, scintillement,
+- **Q1** Intro « strike » (lignes de vitesse, image figée safran, quilles qui s'envolent, scintillement,
   signature, logotype qui claque) :
   A. Spectaculaire et lisible · B. Trop rapide · C. Trop lente · D. Saccadée · E. Pas testé
 - **Q2** Timings de l'intro (≈ 4,5 s ; version courte ≈ 1,7 s dans les Réglages à partir du 2e lancement) :
