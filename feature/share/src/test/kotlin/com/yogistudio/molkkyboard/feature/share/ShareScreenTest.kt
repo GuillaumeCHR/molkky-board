@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger
 /** Écran de partage sur une vraie partie : moments détectés, le plus fort en premier, aperçu et réglages. */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
 class ShareScreenTest {
     @get:Rule
     val compose = createComposeRule()

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ds_pin_standing">Pin %1$d, standing</string>
+    <string name="ds_pin_knocked">Pin %1$d, knocked down</string>
+    <string name="ds_pin_state_knocked">knocked down</string>
+    <string name="ds_pin_state_standing">standing</string>
+    <string name="ds_score">Score: %1$d out of %2$d</string>
+    <string name="ds_misses">Misses in a row: %1$d out of %2$d</string>
+    <string name="ds_player_active">%1$s, your turn</string>
+    <string name="ds_remove">Remove %1$s</string>
+    <string name="ds_quickpad_single">Single pin</string>
+    <string name="ds_quickpad_count">Number of pins</string>
+    <string name="ds_quickpad_value_single">Pin %1$d alone</string>
+    <string name="ds_quickpad_value_count">%1$d pins</string>
+    <string name="ds_quickpad_value_miss">No pins</string>
+    <string name="ds_player_score">%1$s: %2$d points</string>
+    <string name="ds_back">Back</string>
+    <string name="ds_round">Round %1$d</string>
+    <string name="ds_rank">Rank %1$d</string>
+    <string name="ds_remaining">%1$d to go</string>
+    <string name="ds_misses_warning">Misses in a row: %1$d out of %2$d, careful with the next one</string>
+    <string name="ds_guide_step">Getting started · %1$d of %2$d</string>
+    <string name="ds_guide_skip">Skip the guide</string>
+    <string name="ds_guide_done">Got it!</string>
+</resources>

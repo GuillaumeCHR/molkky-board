@@ -1141,3 +1141,13 @@ et tiens-la à jour jusqu'à la publication.
 - « Partager ce moment » sur l'écran de fin, sous la forme d'un bouton secondaire, une seule proposition par partie, jamais avant la revanche.
 - Non faits au J6 : « Défier » (code à 6 caractères, Phase 4), bilan du mois / de la saison de groupe (groupes en Phase 4), sons des clips, mesure de viralité (à proposer avant toute implémentation, côté serveur), mise à jour du modèle de menaces (à créer avant la Phase 4, avec le partage).
 
+### Confiance et langues (J7 — 2026-10-27)
+- **Sauvegarde / restauration** (Réglages › Données) : fichier JSON lisible (`molkky-board-backup` v1) avec profils, équipes et parties (journaux complets, l'état se recalcule) ; il sert aussi d'**export RGPD**. Les photos ne sont pas incluses (elles restent sur le téléphone). Sélecteur de documents Android : aucune permission de stockage.
+- Restauration **en ajout seul**, en une transaction : une partie déjà présente est ignorée, jamais écrasée. Le fichier est traité comme non fiable : 20 Mo au plus, identifiants et textes bornés sans caractères de contrôle, manches contiguës, journaux rejoués, identifiants d'événements uniques, champs réencodés par l'app ; une partie invalide est écartée et comptée dans le bilan.
+- **Supprimer toutes mes données** (confirmation) : parties, profils, équipes, photos et cache de partage ; les réglages sont conservés.
+- **Traduction anglaise complète** (`values-en` dans chaque module, ~600 chaînes, mêmes clés et mêmes paramètres vérifiés). « Ludique » = *Casual*, « Valider » = *OK* (« Confirm » était tronqué en police 2,0). Captures Roborazzi en anglais (jeu, jeu en police 2,0, règles, création en équipes).
+- Langue (demande du 2026-10-27) : choix **🇫🇷 Français / 🇬🇧 English** seulement, « Langue du téléphone » retirée. Sans choix explicite, l'app suit un téléphone en anglais et reste en français sinon (textes par défaut en français) ; la case cochée montre la langue affichée. Annonces vocales dans la langue de l'app.
+- Vitrine du design system retirée des Réglages (validée, sans intérêt pour l'utilisateur), demande du 2026-10-27.
+- Tests : Robolectric fixé en français par défaut (`qualifiers=fr` et préfixe `fr-`), sinon les tests passaient en anglais ; les dates des captures sont désormais en français.
+- CI : **Android Lint** ajouté (`lintDebug`) ; corrigé : ressources lues via `LocalContext` dans le partage (textes figés après un changement de langue).
+

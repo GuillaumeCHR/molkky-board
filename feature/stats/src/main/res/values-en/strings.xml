@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hall_title">Hall of Fame</string>
+    <string name="hall_tab_players">Players</string>
+    <string name="hall_tab_teams">Teams</string>
+    <string name="hall_period_all">All time</string>
+    <string name="hall_period_year">This year</string>
+    <string name="hall_period_month">This month</string>
+    <string name="hall_size_all">All sizes</string>
+    <string name="hall_size">%1$d players</string>
+    <string name="hall_wins">Wins</string>
+    <string name="hall_wins_line">%1$s · %2$s · %3$d %%</string>
+    <plurals name="hall_wins_count">
+        <item quantity="one">%d win</item>
+        <item quantity="other">%d wins</item>
+    </plurals>
+    <plurals name="hall_played_count">
+        <item quantity="one">%d game</item>
+        <item quantity="other">%d games</item>
+    </plurals>
+    <string name="hall_fastest">Fastest win</string>
+    <string name="hall_fastest_line">%1$d throws · %2$s</string>
+    <string name="hall_perfect">Perfect game</string>
+    <string name="hall_team_size">%1$d pl.</string>
+    <string name="hall_empty_players">No solo wins yet. Only games finished normally count (not abandoned, not changed after the end).</string>
+    <string name="hall_empty_teams">No team wins yet. Only games finished normally count (not abandoned, not changed after the end).</string>
+    <string name="hall_fastest_note">Official rules only (no Casual mode, no family mode).</string>
+    <string name="hall_open">See every throw</string>
+    <string name="hall_stats">Statistics</string>
+    <string name="stats_title">Statistics</string>
+    <string name="stats_empty">Statistics will appear after your first finished game with regular players.</string>
+    <string name="stats_average">Average per throw</string>
+    <string name="stats_miss_rate">Miss rate</string>
+    <string name="stats_wins">Games won</string>
+    <string name="stats_wins_value">%1$d / %2$d</string>
+    <string name="stats_throws">Throws</string>
+    <string name="stats_records">Personal records</string>
+    <string name="stats_best_streak">Longest streak without a miss: %1$d throws</string>
+    <string name="stats_fastest">Fastest win: %1$d throws</string>
+    <string name="stats_fastest_none">No win under official rules yet</string>
+    <string name="stats_chart">Average per throw, set after set</string>
+    <string name="stats_chart_description">Bar chart: average per throw over the last %1$d sets, from %2$s to %3$s.</string>
+</resources>

@@ -48,7 +48,6 @@ import com.yogistudio.molkkyboard.ui.AboutScreen
 import com.yogistudio.molkkyboard.ui.EmptyStateScreen
 import com.yogistudio.molkkyboard.ui.HomeScreen
 import com.yogistudio.molkkyboard.ui.SettingsScreen
-import com.yogistudio.molkkyboard.ui.ShowcaseScreen
 import kotlin.reflect.KClass
 
 /** Onglets de la barre de navigation du bas : toujours visibles au pouce, sauf pendant une partie. */
@@ -162,7 +161,6 @@ fun MolkkyBoardNavHost(
                         onAbout = { navController.navigate(AboutRoute) },
                         onPlayfulRules = { navController.navigate(PlayfulRulesRoute) },
                         onRules = { navController.navigate(RulesRoute) },
-                        onShowcase = { navController.navigate(ShowcaseRoute) },
                     )
                 }
                 composable<AboutRoute> { AboutScreen(onBack = navController::navigateUp) }
@@ -202,7 +200,6 @@ fun MolkkyBoardNavHost(
                         onPrompted = onNotificationPrompted,
                     )
                 }
-                composable<ShowcaseRoute> { ShowcaseScreen(onBack = navController::navigateUp) }
             }
         }
     }

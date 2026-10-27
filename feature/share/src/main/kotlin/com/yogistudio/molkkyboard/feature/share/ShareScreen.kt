@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -124,17 +125,14 @@ fun ShareContentScreen(state: ShareUiState, actions: ShareActions) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     state.teams.forEach { (id, name) ->
                         val hidden = id in state.choices.masked
+                        val description = stringResource(if (hidden) R.string.share_show else R.string.share_hide, name)
                         FilterChip(
                             selected = !hidden,
                             onClick = { actions.onToggleMasked(id) },
                             label = { Text(name) },
                             modifier =
                                 Modifier.semantics {
-                                    contentDescription =
-                                        context.getString(
-                                            if (hidden) R.string.share_show else R.string.share_hide,
-                                            name,
-                                        )
+                                    contentDescription = description
                                 },
                         )
                     }
@@ -148,18 +146,19 @@ fun ShareContentScreen(state: ShareUiState, actions: ShareActions) {
             )
             val title = momentLabel(moment)
             val key = keyFigure(content)
+            val resources = LocalResources.current
             val reel =
-                remember(content, title, key) {
+                remember(content, title, key, resources) {
                     snapshot.reelData(
                         content,
                         title,
                         key,
                         ReelLabels(
-                            round = { context.getString(R.string.reel_round, it) },
-                            reset = context.getString(R.string.reel_reset),
-                            eliminated = context.getString(R.string.reel_eliminated),
-                            scan = context.getString(R.string.card_scan),
-                            hashtag = context.getString(R.string.card_hashtag),
+                            round = { resources.getString(R.string.reel_round, it) },
+                            reset = resources.getString(R.string.reel_reset),
+                            eliminated = resources.getString(R.string.reel_eliminated),
+                            scan = resources.getString(R.string.card_scan),
+                            hashtag = resources.getString(R.string.card_hashtag),
                         ),
                     )
                 }

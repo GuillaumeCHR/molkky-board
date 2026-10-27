@@ -30,7 +30,7 @@ import java.time.ZoneId
 /** Chaque modèle dans les trois formats, avec des noms longs, à 2 et à 6 équipes, et noms masqués. */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
 class ShareCardsTest {
     @get:Rule
     val compose = createComposeRule()

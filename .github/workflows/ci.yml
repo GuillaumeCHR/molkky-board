@@ -30,7 +30,7 @@ jobs:
           validate-wrappers: true
 
       - name: Lint
-        run: ./gradlew ktlintCheck detekt
+        run: ./gradlew ktlintCheck detekt lintDebug
 
       - name: Tests unitaires et couverture du moteur
         run: ./gradlew test :core:scoring:koverVerify

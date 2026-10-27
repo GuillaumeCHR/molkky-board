@@ -134,9 +134,9 @@ class DesignSystemScreenshotTest {
         }
 
     private companion object {
-        const val CATALOG = "w420dp-h1500dp-xhdpi"
-        const val PHONE = "w411dp-h891dp-xxhdpi"
-        const val SMALL_PHONE = "w360dp-h640dp-xhdpi"
+        const val CATALOG = "fr-w420dp-h1500dp-xhdpi"
+        const val PHONE = "fr-w411dp-h891dp-xxhdpi"
+        const val SMALL_PHONE = "fr-w360dp-h640dp-xhdpi"
     }
 }
 

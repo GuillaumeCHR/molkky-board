@@ -67,7 +67,7 @@ import java.util.concurrent.atomic.AtomicLong
 // Première partie guidée (prise en main en 4 bulles, dont 3 sur l'écran de jeu).
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
-@Config(qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
 class GuidedFirstGameTest {
     @get:Rule
     val compose = createComposeRule()

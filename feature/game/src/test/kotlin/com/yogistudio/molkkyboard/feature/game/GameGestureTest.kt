@@ -19,7 +19,7 @@ import org.robolectric.annotation.Config
 
 /** Gestes et messages de l'écran de jeu : le tableau des scores s'ouvre au glissement, le coach parle. */
 @RunWith(AndroidJUnit4::class)
-@Config(qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
 class GameGestureTest {
     @get:Rule
     val compose = createComposeRule()

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="intro_presents">Yogi Studio presents</string>
+    <string name="intro_skip_hint">Tap the screen to skip the intro</string>
+</resources>

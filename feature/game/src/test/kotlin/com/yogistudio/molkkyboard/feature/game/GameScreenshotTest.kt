@@ -30,7 +30,7 @@ import org.robolectric.annotation.GraphicsMode
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
 class GameScreenshotTest {
     @get:Rule
     val compose = createComposeRule()
@@ -103,6 +103,22 @@ class GameScreenshotTest {
             playing.copy(inputMode = InputMode.QUICK, selection = Selection.None, preview = Preview()),
             fontScale = 2f,
         )
+
+    // Traduction anglaise : aucun libellé coupé, y compris en grande police.
+    @Test
+    @Config(qualifiers = "en-w411dp-h891dp-xxhdpi")
+    fun jeuAnglais() = capture("jeu_en", playing)
+
+    @Test
+    @Config(qualifiers = "en-w411dp-h891dp-xxhdpi")
+    fun jeuAnglaisPolice200() = capture("jeu_en_police_200", playing, fontScale = 2f)
+
+    @Test
+    @Config(qualifiers = "en-w411dp-h2600dp-xxhdpi")
+    fun reglesAnglais() {
+        compose.setContent { MolkkyBoardTheme(reducedMotion = true) { RulesScreen(onBack = {}) } }
+        compose.onRoot().captureRoboImage("src/test/screenshots/regles_en.png")
+    }
 
     @Test
     fun jeuTourEtAvertissement() = capture("jeu_tour_avertissement", playing.copy(round = 4, missWarning = true))
@@ -236,7 +252,7 @@ class GameScreenshotTest {
     }
 
     @Test
-    @Config(qualifiers = "w411dp-h2600dp-xxhdpi")
+    @Config(qualifiers = "fr-w411dp-h2600dp-xxhdpi")
     fun regles() {
         compose.setContent { MolkkyBoardTheme(reducedMotion = true) { RulesScreen(onBack = {}) } }
         compose.onRoot().captureRoboImage("src/test/screenshots/regles.png")

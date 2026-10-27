@@ -19,7 +19,7 @@ import org.robolectric.annotation.GraphicsMode
 /** Captures de la création de partie, en solo et en équipes. */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(qualifiers = "w411dp-h1400dp-xxhdpi")
+@Config(qualifiers = "fr-w411dp-h1400dp-xxhdpi")
 class SetupScreenshotTest {
     @get:Rule
     val compose = createComposeRule()
@@ -45,6 +45,29 @@ class SetupScreenshotTest {
     fun equipes() =
         capture(
             "creation_equipes",
+            SetupUiState(
+                playMode = PlayMode.TEAMS,
+                players = players,
+                teams =
+                    listOf(
+                        SetupTeam(
+                            TeamId("t1"),
+                            "Les Bouleaux",
+                            0,
+                            "leaf",
+                            listOf(PlayerId("Alice"), PlayerId("Chloé")),
+                            known = KnownTeam("k", "Les Pives", 5, "bolt"),
+                        ),
+                        SetupTeam(TeamId("t2"), "Les Élans", 1, "bolt", listOf(PlayerId("Bruno"), PlayerId("Denis"))),
+                    ),
+            ),
+        )
+
+    @Test
+    @Config(qualifiers = "en-w411dp-h1400dp-xxhdpi")
+    fun equipesAnglais() =
+        capture(
+            "creation_equipes_en",
             SetupUiState(
                 playMode = PlayMode.TEAMS,
                 players = players,

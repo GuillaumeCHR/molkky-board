@@ -54,15 +54,28 @@ import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.model.InputMode
 import java.time.LocalDate
+import java.util.Locale
 
-/** Langues proposées : celle du téléphone, ou une langue imposée à l'application. */
+/**
+ * Langues de l'application. Sans choix explicite, l'app suit le téléphone s'il est en anglais, et reste en
+ * français sinon (les textes par défaut sont en français) : la case cochée montre toujours la langue affichée.
+ */
 private enum class AppLanguage(
     val tag: String,
+    val flag: String,
     @param:StringRes val label: Int,
 ) {
-    System("", R.string.settings_language_system),
-    French("fr", R.string.settings_language_fr),
-    English("en", R.string.settings_language_en),
+    French("fr", "🇫🇷", R.string.settings_language_fr),
+    English("en", "🇬🇧", R.string.settings_language_en),
+    ;
+
+    companion object {
+        fun current(): AppLanguage {
+            val chosen = AppCompatDelegate.getApplicationLocales()
+            val tag = if (chosen.isEmpty) Locale.getDefault().language else chosen[0]?.language
+            return entries.firstOrNull { it.tag == tag } ?: French
+        }
+    }
 }
 
 @Composable
@@ -70,7 +83,6 @@ internal fun SettingsScreen(
     onAbout: () -> Unit,
     onPlayfulRules: () -> Unit,
     onRules: () -> Unit,
-    onShowcase: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
@@ -181,9 +193,6 @@ internal fun SettingsScreen(
                 onChange = viewModel::setShortIntro,
             )
 
-            if (SHOWCASE_AVAILABLE) {
-                SettingsLink(R.string.settings_showcase, R.string.settings_showcase_hint, onShowcase)
-            }
             SettingsLink(R.string.settings_about, null, onAbout)
         }
     }
@@ -319,7 +328,7 @@ private const val BACKUP_MIME = "application/json"
 /** Langue de l'application (Android 13+ : la même que dans les réglages système de l'app). */
 @Composable
 private fun LanguageCard() {
-    var current by remember { mutableStateOf(AppCompatDelegate.getApplicationLocales().toLanguageTags()) }
+    var current by remember { mutableStateOf(AppLanguage.current()) }
     SettingsCard {
         Column(Modifier.padding(vertical = 8.dp)) {
             Text(
@@ -328,13 +337,13 @@ private fun LanguageCard() {
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
             )
             AppLanguage.entries.forEach { language ->
-                val selected = current.substringBefore('-') == language.tag
+                val selected = current == language
                 Row(
                     modifier =
                         Modifier
                             .fillMaxWidth()
                             .selectable(selected = selected, role = Role.RadioButton) {
-                                current = language.tag
+                                current = language
                                 AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language.tag))
                             }.heightIn(min = MBDimens.MinTouch)
                             .padding(horizontal = 12.dp),
@@ -342,7 +351,7 @@ private fun LanguageCard() {
                 ) {
                     RadioButton(selected = selected, onClick = null)
                     Text(
-                        stringResource(language.label),
+                        "${language.flag}  ${stringResource(language.label)}",
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(start = 12.dp),
                     )

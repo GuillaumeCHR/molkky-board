@@ -52,7 +52,3 @@ data class ShareRoute(
 /** Hall of Fame › Statistiques des joueurs. */
 @Serializable
 data object StatsRoute
-
-/** Vitrine du design system (build debug uniquement). */
-@Serializable
-data object ShowcaseRoute

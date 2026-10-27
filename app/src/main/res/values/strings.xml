@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Molkky Board</string>
+    <string name="app_name" translatable="false">Molkky Board</string>
     <string name="placeholder_tagline">Le tableau de score du Mölkky</string>
 
     <!-- Navigation -->
@@ -30,9 +30,8 @@
     <string name="settings_sunlight">Plein soleil</string>
     <string name="settings_sunlight_hint">Contraste renforcé pour jouer en plein soleil</string>
     <string name="settings_language">Langue</string>
-    <string name="settings_language_system">Langue du téléphone</string>
     <string name="settings_language_fr">Français</string>
-    <string name="settings_language_en">English (traduction en cours)</string>
+    <string name="settings_language_en">English</string>
     <string name="settings_game">Partie</string>
     <string name="settings_input_mode">Mode de saisie</string>
     <string name="settings_input_pins">Quilles</string>
@@ -64,8 +63,6 @@
     <string name="settings_short_intro">Introduction courte</string>
     <string name="settings_short_intro_hint">Environ 1,5 s : l\'impact puis le logotype</string>
     <string name="settings_short_intro_locked">Proposée à partir du deuxième lancement</string>
-    <string name="settings_showcase">Vitrine du design system</string>
-    <string name="settings_showcase_hint">Build de développement uniquement</string>
     <string name="settings_about">À propos</string>
     <string name="settings_rules">Règles du jeu</string>
     <string name="settings_rules_hint">Installation des quilles, points, 50 exactement, ratés, questions fréquentes.</string>

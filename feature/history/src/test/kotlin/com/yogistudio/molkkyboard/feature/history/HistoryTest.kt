@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
 class HistoryTest {
     @get:Rule
     val compose = createComposeRule()

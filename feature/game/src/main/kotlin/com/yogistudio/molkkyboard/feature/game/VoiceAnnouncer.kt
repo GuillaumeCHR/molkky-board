@@ -18,6 +18,9 @@ class VoiceAnnouncer(
     context: Context,
 ) {
     private val appContext = context.applicationContext
+
+    // Langue de l'écran (celle choisie dans l'app), pas celle du contexte d'application.
+    private val locale = context.resources.configuration.locales[0]
     private val audio = appContext.getSystemService(AudioManager::class.java)
     private val accessibility = appContext.getSystemService(AccessibilityManager::class.java)
     private var ready = false
@@ -29,7 +32,7 @@ class VoiceAnnouncer(
 
     fun speak(text: String, rate: Float, volume: Float) {
         if (!ready || muted()) return
-        tts.language = appContext.resources.configuration.locales[0]
+        tts.language = locale
         tts.setSpeechRate(rate)
         val params = Bundle().apply { putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volume) }
         tts.speak(text, TextToSpeech.QUEUE_ADD, params, "mb-${counter++}")
