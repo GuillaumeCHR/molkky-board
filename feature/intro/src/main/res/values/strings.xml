@@ -2,4 +2,5 @@
 <resources>
     <string name="intro_presents">Yogi Studio présente</string>
     <string name="intro_skip_hint">Touchez l\'écran pour passer l\'introduction</string>
+    <string name="intro_twelve">12 !</string>
 </resources>

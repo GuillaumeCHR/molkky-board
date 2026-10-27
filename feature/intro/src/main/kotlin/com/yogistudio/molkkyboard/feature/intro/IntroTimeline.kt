@@ -3,33 +3,36 @@ package com.yogistudio.molkkyboard.feature.intro
 import kotlin.math.cos
 import kotlin.math.exp
 
-/** Découpage de l'intro (millisecondes), d'après le storyboard de `CLAUDE.md`. */
+/** Découpage de l'intro « strike » (millisecondes), d'après le storyboard de `CLAUDE.md` (spec du 2026-10-26). */
 internal object IntroTimeline {
-    /** 1. Mise en place : les quilles apparaissent avec un rebond. */
+    /** 1. Mise en place : les 12 quilles apparaissent dans leur formation avec un rebond. */
     const val SETUP_END = 600L
 
-    /** 2. Le lancer : le mölkky arrive du bas en tournoyant. */
-    const val IMPACT = 1_200L
+    /** 2. Le lancer : le mölkky arrive du bas en tournoyant, les lignes de vitesse s'accélèrent. */
+    const val IMPACT = 1_100L
 
-    /** 3. L'impact : les quilles volent en éclats et sortent de l'écran. */
-    const val SHATTER_END = 2_300L
+    /** 3a. Image d'impact figée (≈ 100 ms) : aplat safran, éclat radial, quilles en silhouettes. */
+    const val FREEZE_END = 1_200L
+
+    /** 3b. L'envol : quilles intactes projetées hors champ, bulle « 12 ! », le mölkky retombe. */
+    const val STRIKE_END = 2_400L
 
     /** 4. La signature Yogi Studio ; on y reste tant que le chargement n'est pas fini. */
-    const val SIGNATURE_END = 3_600L
+    const val SIGNATURE_END = 3_500L
 
-    /** 5. Fondu du logotype Molkky Board, puis le menu apparaît. */
-    const val LOGOTYPE_IN = 3_700L
-    const val LOGOTYPE_SHOWN = 4_200L
+    /** 5. Le logotype Molkky Board claque au centre, puis le menu apparaît. */
+    const val LOGOTYPE_IN = 3_500L
+    const val LOGOTYPE_SHOWN = 3_900L
     const val END = 4_500L
 
-    /** Fin des trajectoires précalculées des éclats. */
-    const val SIMULATION_END = 2_600L
+    /** Fin des trajectoires précalculées des quilles. */
+    const val SIMULATION_END = STRIKE_END
 
-    /** Version courte (réglage, à partir du 2e lancement) : on part de l'arrivée du mölkky… */
-    const val SHORT_START = 1_050L
+    /** Version courte (réglage, à partir du 2e lancement) : on part juste avant l'impact… */
+    const val SHORT_START = 950L
 
-    /** … et, l'explosion passée, on saute directement au logotype (≈ 1,6 s au total). */
-    const val SHORT_JUMP = 1_900L
+    /** … et, l'envol passé, on saute directement au logotype (≈ 1,7 s au total). */
+    const val SHORT_JUMP = 1_700L
 
     /** Version « Réduire les animations » : simple fondu du logo Yogi Studio. */
     const val REDUCED_END = 1_000L

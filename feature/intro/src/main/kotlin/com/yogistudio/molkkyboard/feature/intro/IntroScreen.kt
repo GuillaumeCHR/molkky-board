@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import com.yogistudio.molkkyboard.core.designsystem.brand.drawYogiStudioMark
+import com.yogistudio.molkkyboard.core.designsystem.component.ImpactBurst
 import com.yogistudio.molkkyboard.core.designsystem.theme.BricolageGrotesque
 import com.yogistudio.molkkyboard.core.designsystem.theme.Inter
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
@@ -51,8 +52,9 @@ enum class IntroLoadState {
 }
 
 /**
- * Intro animée (≈ 4,5 s) : mise en place des quilles, lancer, explosion qui sort de l'écran, signature
- * Yogi Studio, puis fondu du logotype Molkky Board. [onFinished] est appelé quand l'animation
+ * Intro « strike » (≈ 4,5 s) : mise en place des quilles, lancer et lignes de vitesse, image d'impact
+ * figée, bulle « 12 ! » et quilles qui s'envolent intactes, signature Yogi Studio, puis le logotype
+ * Molkky Board claque. [onFinished] est appelé quand l'animation
  * ET le chargement sont terminés ; si le chargement traîne, on reste sur la signature avec un indicateur.
  * Un tap passe directement au logotype. Avec « Réduire les animations », simple fondu du logo Yogi Studio.
  *
@@ -105,10 +107,16 @@ fun IntroScreen(
         if (reduced) {
             ReducedIntro(elapsed)
         } else {
-            ShatterScene(elapsed)
+            StrikeScene(elapsed)
+            TwelveBubble(elapsed)
+            // Le logotype entre en claquant (ressort), porté par une dernière salve de lignes de vitesse.
             Box(
                 Modifier.graphicsLayer {
-                    alpha = progress(elapsed.longValue, IntroTimeline.LOGOTYPE_IN, IntroTimeline.LOGOTYPE_SHOWN)
+                    val p = progress(elapsed.longValue, IntroTimeline.LOGOTYPE_IN, IntroTimeline.LOGOTYPE_SHOWN)
+                    alpha = (p * LOGOTYPE_FADE_SPEED).coerceAtMost(1f)
+                    val slam = LOGOTYPE_START_SCALE + (1f - LOGOTYPE_START_SCALE) * springCurve(p)
+                    scaleX = slam
+                    scaleY = slam
                 },
             ) { logotype(Modifier) }
         }
@@ -178,18 +186,54 @@ private fun ReducedIntro(elapsed: MutableLongState) {
     }
 }
 
+/** Bulle « 12 ! » (composant partagé avec l'écran de jeu) : elle claque après l'image figée, puis s'efface. */
 @Composable
-private fun ShatterScene(elapsed: MutableLongState) {
-    val background = MaterialTheme.colorScheme.background
-    val ink = MaterialTheme.colorScheme.onBackground
+private fun TwelveBubble(elapsed: MutableLongState) {
+    val visible by remember {
+        derivedStateOf { elapsed.longValue in IntroTimeline.FREEZE_END until TWELVE_END }
+    }
+    if (!visible) return
+    ImpactBurst(
+        text = stringResource(R.string.intro_twelve),
+        modifier =
+            Modifier
+                // Sous la formation : les quilles qui s'envolent restent visibles.
+                .padding(top = 360.dp)
+                .graphicsLayer {
+                    val t = elapsed.longValue
+                    val pop =
+                        springCurve(progress(t, IntroTimeline.FREEZE_END, IntroTimeline.FREEZE_END + TWELVE_POP_MS))
+                    scaleX = pop
+                    scaleY = pop
+                    rotationZ = TWELVE_ANGLE
+                    alpha = 1f - progress(t, TWELVE_END - TWELVE_FADE_MS, TWELVE_END)
+                },
+    )
+}
+
+@Composable
+private fun StrikeScene(elapsed: MutableLongState) {
+    val scheme = MaterialTheme.colorScheme
+    val brand = MolkkyBoardTheme.colors
+    val colors =
+        remember(scheme, brand) {
+            SceneColors(
+                background = scheme.background,
+                forest = scheme.primary,
+                saffron = brand.saffron,
+                coral = brand.coral,
+            )
+        }
+    val ink = scheme.onBackground
     val measurer = rememberTextMeasurer()
     val presents = stringResource(R.string.intro_presents)
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val density = LocalDensity.current
         val width = constraints.maxWidth.toFloat()
         val height = constraints.maxHeight.toFloat()
-        val simulation = remember(width, height) { ShatterSimulation(width, height) }
+        val simulation = remember(width, height) { StrikeSimulation(width, height) }
         val painter = remember(simulation) { ScenePainter(simulation) }
+        // Numéros des quilles : toujours foncés, sur le bois clair (clair comme sombre).
         val numberStyle =
             TextStyle(
                 fontFamily = BricolageGrotesque,
@@ -197,15 +241,7 @@ private fun ShatterScene(elapsed: MutableLongState) {
                 fontSize = with(density) { (simulation.pinWidth * 0.42f).toSp() },
                 color = Color(0xFF1B1B18),
             )
-        val numbers =
-            remember(simulation, numberStyle) {
-                Array(13) { measurer.measure(it.toString(), numberStyle) }
-            }
-        // Numéros emportés par les éclats : couleur du texte du thème (clairs en mode sombre).
-        val flyingNumbers =
-            remember(simulation, numberStyle, ink) {
-                Array(13) { measurer.measure(it.toString(), numberStyle.copy(color = ink)) }
-            }
+        val numbers = remember(simulation, numberStyle) { Array(13) { measurer.measure(it.toString(), numberStyle) } }
         val presentsLayout =
             remember(presents, ink) {
                 measurer.measure(
@@ -213,19 +249,18 @@ private fun ShatterScene(elapsed: MutableLongState) {
                     TextStyle(
                         fontFamily = Inter,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize =
-                            with(density) {
-                                (
-                                    14f *
-                                        simulation.unit
-                                ).toSp()
-                            },
+                        fontSize = with(density) { (14f * simulation.unit).toSp() },
                         color = ink,
                     ),
                 )
             }
-        Canvas(Modifier.fillMaxSize()) {
-            painter.draw(this, elapsed.longValue, numbers, flyingNumbers, presentsLayout, background)
-        }
+        Canvas(Modifier.fillMaxSize()) { painter.draw(this, elapsed.longValue, numbers, presentsLayout, colors) }
     }
 }
+
+private const val TWELVE_END = 2_100L
+private const val TWELVE_POP_MS = 350L
+private const val TWELVE_FADE_MS = 250L
+private const val TWELVE_ANGLE = -6f
+private const val LOGOTYPE_START_SCALE = 1.6f
+private const val LOGOTYPE_FADE_SPEED = 3f

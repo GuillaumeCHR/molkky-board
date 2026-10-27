@@ -42,17 +42,26 @@ class IntroScreenshotTest {
     fun etape1MiseEnPlace() = capture("intro_1_mise_en_place", 450)
 
     @Test
-    fun etape2Lancer() = capture("intro_2_lancer", 1_050)
+    fun etape2Lancer() = capture("intro_2_lancer", 1_000)
 
     @Test
-    fun etape3Impact() = capture("intro_3_impact", 1_280)
+    fun etape3Impact() = capture("intro_3_impact", 1_150)
 
     @Test
-    fun etape4Signature() = capture("intro_4_signature", 3_200)
+    fun etape3Envol() = capture("intro_3b_envol", 1_500)
 
     @Test
-    fun etape5Logotype() = capture("intro_5_logotype", 4_300)
+    fun etape3Scintillement() = capture("intro_3c_scintillement", 1_950)
 
     @Test
-    fun etape3ImpactSombre() = capture("intro_3_impact_sombre", 1_280, dark = true)
+    fun etape4Signature() = capture("intro_4_signature", 3_150)
+
+    @Test
+    fun etape5Logotype() = capture("intro_5_logotype", 3_700)
+
+    @Test
+    fun etape3ImpactSombre() = capture("intro_3_impact_sombre", 1_150, dark = true)
+
+    @Test
+    fun etape3EnvolSombre() = capture("intro_3b_envol_sombre", 1_500, dark = true)
 }
