@@ -143,6 +143,26 @@ reste possible. Le principal atout de Firebase (cache hors ligne) ne sert pas ic
 déjà la source de vérité. Risque résiduel : Supabase Inc. est une société américaine (même
 exposition que Google) ; l'auto-hébergement est la porte de sortie.
 
+### Souveraineté et auto-hébergement (complément du 2026-10-27)
+
+Héberger en région UE chez un fournisseur soumis au droit américain **n'équivaut pas** à un fournisseur
+européen : Supabase Inc. (États-Unis) et son infrastructure (AWS) relèvent du **CLOUD Act**, qui permet aux
+autorités américaines d'exiger des données quel que soit le lieu de stockage. Firebase (Google) a la même
+exposition, aggravée par Firebase Auth traité aux États-Unis.
+
+| Option | Souveraineté | Coût mensuel (ordre de grandeur, **à vérifier au J8**) | Exploitation |
+|---|---|---|---|
+| Supabase Cloud, Paris | données en UE, **exposées au CLOUD Act** | gratuit (projet mis en pause après une semaine sans activité, sans sauvegarde à restaurer) ; offre payante ≈ 25 $ | nulle : mises à jour, sauvegardes, TLS gérés |
+| **Supabase auto-hébergé** chez Scaleway ou OVHcloud (sociétés françaises) | hors CLOUD Act pour le fournisseur ; c'est toi l'hébergeur | VPS 2 vCPU / 4 Go ≈ 10 à 20 €, + stockage objet pour les sauvegardes chiffrées ≈ 1 à 3 €, + envoi d'e-mails (OTP) via un service UE (palier gratuit chez plusieurs) | réelle : Docker Compose (Postgres, GoTrue, Realtime, Kong…), mises à jour de sécurité, sauvegardes et **test de restauration**, supervision, certificats ; compter **2 à 4 h par mois**, plus les incidents |
+| Postgres managé UE + API maison | maximale | similaire | développement de l'auth et du temps réel à notre charge : écarté |
+
+**Recommandation** : développer les jalons J8 à J11 sur **Supabase Cloud Paris** (aucune exploitation, on
+valide le produit), en n'utilisant que des briques portables (Postgres standard, RLS, RPC SQL, supabase-kt). Avant
+l'ouverture au public, **basculer sur un Supabase auto-hébergé chez Scaleway ou OVHcloud** si l'engagement
+« hébergé en Europe, hors CLOUD Act » doit figurer dans l'encart « Vie privée » ; sinon, rester sur le cloud
+et l'écrire honnêtement (« en Europe, chez un sous-traitant américain »). La bascule ne touche que l'URL et
+la clé `anon` de l'app, les migrations et les données. **Décision à prendre avec toi au J8.**
+
 ### Schéma (migrations dans `supabase/migrations/`)
 - `profiles(user_id PK → auth.users, display_name, color)` : rien d'autre (pas d'avatar distant en v1,
   les avatars restent locaux).
@@ -193,9 +213,12 @@ exposition que Google) ; l'auto-hébergement est la porte de sortie.
 - **Code de partie** : 6 caractères, alphabet de 31 symboles sans caractères ambigus
   (pas de 0/O, 1/I/L), soit environ 887 millions de combinaisons. Il expire à la fin de la partie ou
   après 24 h, avec limitation de débit sur `join_game`.
-- **QR** : contient **uniquement le code** (texte `ABC123`), généré avec zxing et scanné avec CameraX
-  et ML Kit (version embarquée) ; le scan remplit le champ « Rejoindre » (objectif : rejoindre en moins de
-  10 s). **Les liens profonds restent reportés** (schéma `molkkyboard://` réservé) : aucun intent-filter en V1.
+- **QR** : contient **uniquement le code** (texte `ABC123`), généré avec **zxing core** et scanné avec
+  **CameraX (`ImageAnalysis`) + zxing-cpp** (wrapper Android, Apache 2.0, aucune connexion réseau) ; analyse
+  limitée à la zone de cadrage et à quelques images par seconde, nouvel essai en image inversée et contraste
+  renforcé contre les reflets d'écran. **Pas de ML Kit** : même embarqué, il envoie des statistiques d'usage
+  à Google. La **saisie manuelle du code** reste toujours proposée sur l'écran de scan. Le scan remplit le
+  champ « Rejoindre » (objectif : rejoindre en moins de 10 s). **Les liens profonds restent reportés** (schéma `molkkyboard://` réservé) : aucun intent-filter en V1.
 - **Partage social (décision du 2026-10-25)** : le QR des vignettes et « Défier » mènent à la **fiche Play
   Store** ; l'invitation de groupe ou la revanche passent par le **code à 6 caractères** écrit dans le message.
   Vrais liens (App Links) quand un domaine sera acquis, en même temps que le lien spectateur.
@@ -220,7 +243,8 @@ exposition que Google) ; l'auto-hébergement est la porte de sortie.
 
 > Replanifiés le 2026-10-25 après l'élargissement de la V1 (prompt du soir). Fait : J0 à J4, navigation et intro.
 > J4 clos le 2026-10-27 ; ses restes (coach, première partie guidée, geste du bandeau, avatars) faits le même
-> jour après le J5. Restent : intro « strike », et dans ce document zxing-cpp à la place de ML Kit.
+> jour après le J5, ainsi que l'intro « strike » (timings à valider sur téléphone) et la mise à jour de ce document
+> (zxing-cpp, souveraineté).
 
 | # | Jalon | Contenu | Arrêt pour validation |
 |---|---|---|---|

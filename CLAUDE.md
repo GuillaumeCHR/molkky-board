@@ -1128,4 +1128,6 @@ et tiens-la à jour jusqu'à la publication.
 - Bandeau des scores : le glissement vertical est détecté à la passe initiale (les puces et le défilement horizontal ne l'interceptent plus) ; testé par un balayage simulé. Le bouton « Scores » reste.
 - Avatars en jeu : emoji du profil pour un joueur seul, emblème pour une équipe (banque déplacée dans `core:designsystem`). Les photos ne sont pas encore affichées en jeu.
 - Sélection vidée avant l'écriture d'un lancer : le joueur suivant n'hérite plus, même un instant, des quilles du précédent.
+- Intro « strike » faite (2026-10-27) : storyboard de la spec du 26 (lignes de vitesse, image figée sur aplat safran, « 12 ! », quilles intactes qui s'envolent, scintillement, signature, logotype qui claque). Version courte ≈ 1,7 s. **Timings à valider sur téléphone** (captures des étapes dans `feature/intro/src/test/screenshots`).
+- `ARCHITECTURE.md` mis à jour : zxing-cpp au lieu de ML Kit ; section souveraineté (CLOUD Act, Supabase auto-hébergé chez Scaleway/OVHcloud, coût et exploitation). **Point ouvert pour le J8** : rester sur Supabase Cloud Paris ou basculer en auto-hébergé avant l'ouverture au public (l'encart « Vie privée » en dépend).
 
