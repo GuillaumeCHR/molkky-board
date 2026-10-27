@@ -18,6 +18,11 @@
     <string name="home_ongoing">Partie en cours</string>
     <string name="home_ongoing_turn">Au tour de %1$s</string>
     <string name="home_resume">Reprendre</string>
+    <string name="home_placement">Placer les quilles</string>
+    <string name="home_rules">Règles du jeu</string>
+    <string name="shortcut_new_game">Nouvelle partie</string>
+    <string name="shortcut_placement">Placer les quilles</string>
+    <string name="shortcut_rules">Règles du jeu</string>
 
     <!-- Écrans à venir -->
     <string name="coming_soon">Bientôt disponible</string>
@@ -68,6 +73,11 @@
     <string name="settings_rules_hint">Installation des quilles, points, 50 exactement, ratés, questions fréquentes.</string>
     <string name="settings_playful_rules">Règles du mode Ludique</string>
     <string name="settings_playful_rules_hint">Choisir les exceptions aux règles officielles : élimination, dépassement, cible…</string>
+
+    <string name="settings_ready_card">Carte « Prêts à jouer ? »</string>
+    <string name="settings_ready_card_hint">Au début de chaque partie, un rappel du placement des quilles (affichée d\'office aux 3 premières parties).</string>
+    <string name="settings_beginner">Mode débutant</string>
+    <string name="settings_beginner_hint">Un rappel après chaque lancer, et une explication au premier retour à 25 ou au premier deuxième raté.</string>
 
     <!-- Données -->
     <string name="settings_data">Données</string>

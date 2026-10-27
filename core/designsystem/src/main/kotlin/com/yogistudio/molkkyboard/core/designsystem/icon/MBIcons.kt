@@ -144,6 +144,43 @@ object MBIcons {
         }
     }
 
+    /** Trois quilles biseautées : placement des quilles. */
+    val Pins: ImageVector by lazy {
+        stroke("pins") {
+            moveTo(4f, 9f)
+            lineTo(8f, 7.5f)
+            lineTo(8f, 19f)
+            lineTo(4f, 19f)
+            close()
+            moveTo(10f, 6f)
+            lineTo(14f, 4.5f)
+            lineTo(14f, 19f)
+            lineTo(10f, 19f)
+            close()
+            moveTo(16f, 9f)
+            lineTo(20f, 7.5f)
+            lineTo(20f, 19f)
+            lineTo(16f, 19f)
+            close()
+        }
+    }
+
+    /** Livre ouvert : règles du jeu. */
+    val Book: ImageVector by lazy {
+        stroke("book") {
+            moveTo(12f, 7f)
+            curveTo(10f, 5.5f, 7f, 5f, 4f, 5.5f)
+            lineTo(4f, 18f)
+            curveTo(7f, 17.5f, 10f, 18f, 12f, 19.5f)
+            curveTo(14f, 18f, 17f, 17.5f, 20f, 18f)
+            lineTo(20f, 5.5f)
+            curveTo(17f, 5f, 14f, 5.5f, 12f, 7f)
+            close()
+            moveTo(12f, 7f)
+            lineTo(12f, 19.5f)
+        }
+    }
+
     /** Barres : statistiques. */
     val Chart: ImageVector by lazy {
         stroke("chart") {

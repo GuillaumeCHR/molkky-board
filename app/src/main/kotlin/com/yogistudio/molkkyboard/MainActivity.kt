@@ -11,6 +11,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
+import com.yogistudio.molkkyboard.navigation.LaunchTarget
 import com.yogistudio.molkkyboard.navigation.MolkkyBoardNavHost
 import com.yogistudio.molkkyboard.startup.StartupLoader
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,24 +29,25 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var settingsRepository: SettingsRepository
 
-    /** Partie à ouvrir, demandée par la notification « Saisir le lancer ». */
-    private val gameToOpen = MutableStateFlow<String?>(null)
+    /** Écran demandé par la notification « Saisir le lancer » ou par un raccourci de l'icône. */
+    private val target = MutableStateFlow<LaunchTarget?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // L'écran de démarrage système ne reste que le temps de lire les réglages (intro courte ou complète).
         installSplashScreen().setKeepOnScreenCondition { startupLoader.state.value.shortIntro == null }
         super.onCreate(savedInstanceState)
-        if (savedInstanceState == null) readGameToOpen(intent)
+        if (savedInstanceState == null) readTarget(intent)
+        AppShortcuts.publish(this)
         enableEdgeToEdge()
         setContent {
             val startup by startupLoader.state.collectAsStateWithLifecycle()
             val settings by settingsRepository.settings.collectAsStateWithLifecycle(initialValue = null)
             MolkkyBoardTheme(sunlight = settings?.sunlight ?: false) {
-                val open by gameToOpen.collectAsStateWithLifecycle()
+                val open by target.collectAsStateWithLifecycle()
                 MolkkyBoardNavHost(
                     startup = startup,
-                    gameToOpen = open,
-                    onGameOpened = { gameToOpen.value = null },
+                    target = open,
+                    onTargetOpened = { target.value = null },
                     settings = settings,
                     onNotificationPrompted = { lifecycleScope.launch { settingsRepository.setNotificationPrompted() } },
                 )
@@ -55,13 +57,28 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        readGameToOpen(intent)
+        readTarget(intent)
     }
 
-    /** Seul un identifiant de partie bien formé (UUID) est accepté ; tout le reste est ignoré. */
-    private fun readGameToOpen(intent: Intent?) {
-        val id = intent?.getStringExtra(EXTRA_GAME_ID) ?: return
-        gameToOpen.value = runCatching { UUID.fromString(id).toString() }.getOrNull()?.takeIf { it == id }
+    /**
+     * Seuls un identifiant de partie bien formé (UUID) et les trois raccourcis connus sont acceptés ; tout le reste
+     * est ignoré.
+     */
+    private fun readTarget(intent: Intent?) {
+        intent ?: return
+        intent.getStringExtra(EXTRA_GAME_ID)?.let { id ->
+            runCatching { UUID.fromString(id).toString() }.getOrNull()?.takeIf { it == id }?.let {
+                target.value = LaunchTarget.Game(it)
+            }
+            return
+        }
+        target.value =
+            when (intent.getStringExtra(AppShortcuts.EXTRA_SHORTCUT)) {
+                AppShortcuts.NEW_GAME -> LaunchTarget.NewGame
+                AppShortcuts.PLACEMENT -> LaunchTarget.Placement
+                AppShortcuts.RULES -> LaunchTarget.Rules
+                else -> return
+            }
     }
 
     companion object {

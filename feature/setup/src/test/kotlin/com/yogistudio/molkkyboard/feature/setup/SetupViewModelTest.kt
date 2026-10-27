@@ -348,6 +348,19 @@ class SetupViewModelTest {
                 settings.value.copy(playfulRules = config),
             )
 
+        override suspend fun setReadyCard(enabled: Boolean) = settings.emit(settings.value.copy(readyCard = enabled))
+
+        override suspend fun recordGameStarted() =
+            settings.emit(settings.value.copy(gamesStarted = settings.value.gamesStarted + 1))
+
+        override suspend fun setBeginnerMode(enabled: Boolean) =
+            settings.emit(
+                settings.value.copy(beginnerMode = enabled),
+            )
+
+        override suspend fun setBeginnerTipSeen(tip: com.yogistudio.molkkyboard.core.model.BeginnerTip) =
+            settings.emit(settings.value.copy(beginnerTipsSeen = settings.value.beginnerTipsSeen + tip))
+
         override suspend fun recordLaunch() = settings.value
     }
 

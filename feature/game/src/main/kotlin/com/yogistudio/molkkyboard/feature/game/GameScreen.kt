@@ -30,9 +30,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,6 +48,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -74,6 +78,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -138,6 +143,7 @@ data class GameActions(
     val onMolkkoutUndo: () -> Unit = {},
     val onGuideDone: () -> Unit = {},
     val onShare: () -> Unit = {},
+    val onStartPlaying: (neverAgain: Boolean, beginner: Boolean) -> Unit = { _, _ -> },
 )
 
 @Composable
@@ -276,6 +282,7 @@ fun GameScreen(
                 onMolkkoutUndo = viewModel::undoMolkkout,
                 onGuideDone = viewModel::finishGuide,
                 onShare = onShare,
+                onStartPlaying = viewModel::startPlaying,
             ),
         logMessage = logMessage,
         snackbar = snackbar,
@@ -304,12 +311,26 @@ private suspend fun showValidated(
         } else {
             context.getString(R.string.game_validated_points, effect.points)
         }
+    val validated = context.getString(R.string.game_validated, effect.name, what)
+    // Mode débutant : rappel ou explication sous le résultat ; une explication reste plus longtemps.
+    val tip =
+        when (effect.tip) {
+            GameTip.RAISE -> context.getString(R.string.beginner_raise)
+            GameTip.RESET -> context.getString(R.string.beginner_reset)
+            GameTip.MISS_WARNING -> context.getString(R.string.beginner_miss_warning)
+            null -> null
+        }
     snackbar.currentSnackbarData?.dismiss()
     val result =
         snackbar.showSnackbar(
-            message = context.getString(R.string.game_validated, effect.name, what),
+            message = if (tip == null) validated else "$validated\n$tip",
             actionLabel = context.getString(R.string.game_undo_action),
-            duration = SnackbarDuration.Short,
+            duration =
+                if (effect.tip == GameTip.RESET || effect.tip == GameTip.MISS_WARNING) {
+                    SnackbarDuration.Long
+                } else {
+                    SnackbarDuration.Short
+                },
         )
     if (result == SnackbarResult.ActionPerformed) onUndo()
 }
@@ -366,6 +387,7 @@ fun GameContent(
     var showLog by rememberSaveable { mutableStateOf(logOpen) }
     var showPlayers by rememberSaveable { mutableStateOf(playersOpen) }
     var showRules by rememberSaveable { mutableStateOf(false) }
+    var showPlacement by rememberSaveable { mutableStateOf(false) }
     val anchors = rememberGuideAnchors()
     // Surface parente : fond et couleur de texte du thème (clair, sombre, Plein soleil).
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -376,7 +398,7 @@ fun GameContent(
                 }, onOpenPlayers = { showPlayers = true }, onOpenRules = {
                     showRules =
                         true
-                })
+                }, onOpenPlacement = { showPlacement = true })
                 if (state.loading) return@Column
                 ScoresStrip(state, onOpen = { showScoreboard = true })
                 ActiveCard(state, shakeKey)
@@ -394,11 +416,15 @@ fun GameContent(
             OvershootSticker(overshoot, onOvershootShown, Modifier.align(Alignment.Center))
             // Un 12 gagnant claque d'abord, puis la victoire ; l'écran de fin suit.
             if ((state.finished || state.abandoned) && twelve == null) {
-                EndPanel(state, actions, onOpenLog = { showLog = true })
+                EndPanel(state, actions, onOpenLog = { showLog = true }, onOpenPlacement = { showPlacement = true })
             }
             EliminationOverlay(elimination, onEliminationDone)
             if (twelve == null) VictoryOverlay(victory, onVictoryDone)
-            if (twelve == null && elimination == null) GameGuide(state, anchors, actions.onGuideDone)
+            if (twelve == null && elimination == null &&
+                !state.readyCard
+            ) {
+                GameGuide(state, anchors, actions.onGuideDone)
+            }
         }
     }
     if (!state.loading) {
@@ -418,7 +444,7 @@ fun GameContent(
             },
         )
     }
-    if (showRules) RulesSheet(onDismiss = { showRules = false })
+    HelpSheets(state, actions, showRules, onRulesClosed = { showRules = false }, showPlacement) { showPlacement = it }
 }
 
 private enum class Sheet { SCOREBOARD, LOG, PLAYERS }
@@ -478,12 +504,19 @@ private fun GameTopBar(
     onOpenLog: () -> Unit,
     onOpenPlayers: () -> Unit,
     onOpenRules: () -> Unit,
+    onOpenPlacement: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
-    MBTopBar(stringResource(R.string.game_title), actions.onBack) {
+    // En grande police, les boutons passent avant le titre « Partie » (évident sur cet écran plein écran).
+    val title = if (LocalDensity.current.fontScale >= LARGE_FONT_SCALE) "" else stringResource(R.string.game_title)
+    MBTopBar(title, actions.onBack) {
         // Accès visible au tableau des scores, sans dépendre d'un geste.
         TextButton(onClick = onOpenScores, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
             Text(stringResource(R.string.game_scores_button), style = MaterialTheme.typography.titleMedium)
+        }
+        // Placement des quilles, discret mais toujours là (utile entre deux manches).
+        IconButton(onClick = onOpenPlacement, modifier = Modifier.size(MBDimens.MinTouch)) {
+            Icon(MBIcons.Pins, contentDescription = stringResource(R.string.placement_title))
         }
         IconButton(
             onClick = actions.onUndo,
@@ -802,3 +835,5 @@ private const val DOUBLE_VIBRATION_GAP_MS = 180L
 private const val TWELVE_PINS_ALPHA = 0.1f
 private const val STICKER_MS = 1_600L
 private const val LOG_MESSAGE_MS = 4_000L
+
+private const val LARGE_FONT_SCALE = 1.3f

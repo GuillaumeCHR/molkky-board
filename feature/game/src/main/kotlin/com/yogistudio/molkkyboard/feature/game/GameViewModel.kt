@@ -15,6 +15,7 @@ import com.yogistudio.molkkyboard.core.data.memberKey
 import com.yogistudio.molkkyboard.core.data.toStatsGame
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.designsystem.icon.emblemSymbol
+import com.yogistudio.molkkyboard.core.model.BeginnerTip
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.MissPenalty
 import com.yogistudio.molkkyboard.core.model.Overshoot
@@ -96,6 +97,10 @@ class GameViewModel
                 .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
         private val gameId: String = checkNotNull(savedStateHandle[GAME_ID])
+        private val handle = savedStateHandle
+
+        /** Carte « Prêts à jouer ? » déjà passée pour cette partie (survit à la recréation de l'écran). */
+        private val readySeen = savedStateHandle.getStateFlow(READY_SEEN, false)
         private val selection = MutableStateFlow<Selection>(Selection.None)
         private val quickMode = MutableStateFlow(QuickPadMode.SinglePin)
 
@@ -121,11 +126,40 @@ class GameViewModel
             combine(
                 snapshots,
                 settings.settings,
-                combine(selection, quickMode, pendingOrder, ::Triple),
+                combine(selection, quickMode, pendingOrder, readySeen, ::InputState),
                 combine(history, newRecord, avatars, ::Triple),
-            ) { snapshot, prefs, (sel, mode, pending), (past, record, faces) ->
-                snapshot.toUiState(prefs, sel, mode, past, record, faces).copy(pendingOrder = pending)
+            ) { snapshot, prefs, input, (past, record, faces) ->
+                snapshot.toUiState(prefs, input.selection, input.mode, past, record, faces).copy(
+                    pendingOrder = input.pending,
+                    readyCard = snapshot.showsReadyCard(prefs, input.readySeen),
+                    beginnerMode = prefs.beginnerMode,
+                )
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), GameUiState())
+
+        private data class InputState(
+            val selection: Selection,
+            val mode: QuickPadMode,
+            val pending: List<TeamId>?,
+            val readySeen: Boolean,
+        )
+
+        /** « Prêts à jouer ? » : au tout début de la première manche, si la carte est active. */
+        private fun GameSnapshot.showsReadyCard(prefs: UserSettings, seen: Boolean): Boolean =
+            prefs.showReadyCard &&
+                !seen &&
+                currentSet.index == 0 &&
+                currentSet.replay.effectiveLog.isEmpty() &&
+                currentSet.replay.state.status == SetStatus.IN_PROGRESS
+
+        /** « C'est parti » : la carte se ferme, et ses choix (ne plus afficher, mode débutant) sont retenus. */
+        fun startPlaying(neverAgain: Boolean, beginner: Boolean) {
+            handle[READY_SEEN] = true
+            viewModelScope.launch {
+                settings.recordGameStarted()
+                if (neverAgain) settings.setReadyCard(false)
+                settings.setBeginnerMode(beginner)
+            }
+        }
 
         fun togglePin(pin: Int, knocked: Boolean) =
             selection.update { current ->
@@ -186,7 +220,7 @@ class GameViewModel
                 }
                 val after = outcome.value.state
                 val points = result.points
-                effects.send(GameEffect.Validated(name, points))
+                effects.send(GameEffect.Validated(name, points, beginnerTip(before, after, team, points)))
                 emitConsequences(before, after, team, result)
                 applyPendingOrder(after)
                 announceNext(
@@ -198,6 +232,39 @@ class GameViewModel
                         ?.replay
                         ?.state ?: after,
                 )
+            }
+        }
+
+        /**
+         * Mode débutant : une explication la première fois qu'on dépasse la cible ou qu'on fait deux ratés de suite
+         * (une seule fois en tout), sinon un rappel « Relevez les quilles » après un lancer qui en fait tomber.
+         */
+        private suspend fun beginnerTip(before: SetState, after: SetState, team: TeamState, points: Int): GameTip? {
+            val prefs = settings.settings.first()
+            if (!prefs.beginnerMode) return null
+            val explained = explanation(before, after, team, points)?.takeIf { it !in prefs.beginnerTipsSeen }
+            explained?.let { settings.setBeginnerTipSeen(it) }
+            return when {
+                explained == BeginnerTip.RESET -> GameTip.RESET
+                explained == BeginnerTip.MISS_WARNING -> GameTip.MISS_WARNING
+                points > 0 -> GameTip.RAISE
+                else -> null
+            }
+        }
+
+        /** Ce que ce lancer mérite d'expliquer : un dépassement de la cible, ou un deuxième raté consécutif. */
+        private fun explanation(before: SetState, after: SetState, team: TeamState, points: Int): BeginnerTip? {
+            val config = before.config
+            val misses = after.team(team.id)?.misses ?: 0
+            return when {
+                points > 0 && team.score + points > config.targetFor(team.id) -> BeginnerTip.RESET
+
+                config.missLimit > 1 &&
+                    misses == config.missLimit - 1 &&
+                    config.onMissLimit != MissPenalty.Nothing &&
+                    !config.isExemptFromMissLimit(team.id) -> BeginnerTip.MISS_WARNING
+
+                else -> null
             }
         }
 
@@ -619,6 +686,7 @@ class GameViewModel
 
             /** Argument de navigation : identifiant de la partie. */
             const val GAME_ID = "gameId"
+            private const val READY_SEEN = "ready_seen"
             private const val STOP_TIMEOUT_MS = 5_000L
         }
     }

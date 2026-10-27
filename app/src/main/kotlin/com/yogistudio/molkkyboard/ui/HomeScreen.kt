@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -18,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,6 +30,7 @@ import com.yogistudio.molkkyboard.R
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionButton
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionKind
 import com.yogistudio.molkkyboard.core.designsystem.component.MolkkyBoardLogotype
+import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 
@@ -36,6 +40,8 @@ internal fun HomeScreen(
     onNewGame: () -> Unit,
     onJoin: () -> Unit,
     onResume: (String) -> Unit,
+    onRules: () -> Unit = {},
+    onPlacement: () -> Unit = {},
     logotypeModifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
@@ -69,6 +75,30 @@ internal fun HomeScreen(
         Spacer(Modifier.height(16.dp))
         val game = ongoing
         if (game != null) OngoingCard(game, onResume) else NoGameCard()
+        // Pour qui n'a jamais joué : installer les quilles et apprendre les règles avec l'app seule.
+        Row(horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap)) {
+            HomeLink(stringResource(R.string.home_placement), MBIcons.Pins, onPlacement, Modifier.weight(1f))
+            HomeLink(stringResource(R.string.home_rules), MBIcons.Book, onRules, Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun HomeLink(text: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier) {
+    Surface(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        modifier = modifier.heightIn(min = 72.dp),
+    ) {
+        Row(
+            Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
+        ) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Text(text, style = MaterialTheme.typography.titleMedium)
+        }
     }
 }
 

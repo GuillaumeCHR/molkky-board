@@ -133,7 +133,7 @@ class GuidedFirstGameTest {
      * (Avec l'étape de création — deux pseudos et « Lancer la partie » — on reste loin des 30 secondes.)
      */
     @Test
-    fun `premier lancer valide en deux taps, sans que les bulles ne bloquent la saisie`() =
+    fun `premier lancer valide en trois taps (C'est parti, quille, Valider), sans que bulles ni carte ne bloquent`() =
         runTest {
             val vm = viewModel()
             compose.setContent {
@@ -145,10 +145,15 @@ class GuidedFirstGameTest {
                             onTogglePin = vm::togglePin,
                             onValidate = vm::validate,
                             onGuideDone = vm::finishGuide,
+                            onStartPlaying = vm::startPlaying,
                         ),
                     )
                 }
             }
+            // Première partie : la carte « Prêts à jouer ? » s'affiche, puis les bulles.
+            compose.waitUntil(TIMEOUT_MS) { vm.state.value.readyCard }
+            compose.onNodeWithText("C'est parti").performClick()
+            compose.waitUntil(TIMEOUT_MS) { !vm.state.value.readyCard }
             compose.waitUntil(TIMEOUT_MS) { vm.state.value.guide == GuideStep.PINS }
             compose.onNodeWithText("un second tap relève une quille", substring = true).assertIsDisplayed()
             compose.onNodeWithContentDescription("Quille 7, debout").performClick()
@@ -202,6 +207,19 @@ class GuidedFirstGameTest {
             settings.emit(
                 settings.value.copy(playfulRules = config),
             )
+
+        override suspend fun setReadyCard(enabled: Boolean) = settings.emit(settings.value.copy(readyCard = enabled))
+
+        override suspend fun recordGameStarted() =
+            settings.emit(settings.value.copy(gamesStarted = settings.value.gamesStarted + 1))
+
+        override suspend fun setBeginnerMode(enabled: Boolean) =
+            settings.emit(
+                settings.value.copy(beginnerMode = enabled),
+            )
+
+        override suspend fun setBeginnerTipSeen(tip: com.yogistudio.molkkyboard.core.model.BeginnerTip) =
+            settings.emit(settings.value.copy(beginnerTipsSeen = settings.value.beginnerTipsSeen + tip))
 
         override suspend fun recordLaunch() = settings.value
     }

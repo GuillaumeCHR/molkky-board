@@ -78,6 +78,10 @@ class SettingsViewModel
         /** « Revoir la prise en main » : les bulles d'aide reviennent à la prochaine partie. */
         fun replayGuide() = launch { repository.setOnboardingDone(false) }
 
+        fun setReadyCard(enabled: Boolean) = launch { repository.setReadyCard(enabled) }
+
+        fun setBeginnerMode(enabled: Boolean) = launch { repository.setBeginnerMode(enabled) }
+
         fun setSounds(enabled: Boolean) = launch { repository.setSounds(enabled) }
 
         fun setShortIntro(enabled: Boolean) = launch { repository.setShortIntro(enabled) }

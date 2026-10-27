@@ -143,6 +143,18 @@ internal fun SettingsScreen(
                 settings.coach,
                 onChange = viewModel::setCoach,
             )
+            SettingsSwitch(
+                R.string.settings_ready_card,
+                R.string.settings_ready_card_hint,
+                settings.showReadyCard,
+                onChange = viewModel::setReadyCard,
+            )
+            SettingsSwitch(
+                R.string.settings_beginner,
+                R.string.settings_beginner_hint,
+                settings.beginnerMode,
+                onChange = viewModel::setBeginnerMode,
+            )
             SettingsLink(
                 R.string.settings_guide,
                 if (settings.onboardingDone) R.string.settings_guide_hint else R.string.settings_guide_pending,

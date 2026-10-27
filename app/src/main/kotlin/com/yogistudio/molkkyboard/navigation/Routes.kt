@@ -52,3 +52,7 @@ data class ShareRoute(
 /** Hall of Fame › Statistiques des joueurs. */
 @Serializable
 data object StatsRoute
+
+/** Placement des quilles pas à pas (accueil, raccourci de l'icône). */
+@Serializable
+data object PlacementRoute

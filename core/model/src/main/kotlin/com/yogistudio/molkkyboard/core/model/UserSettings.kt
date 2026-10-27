@@ -28,9 +28,33 @@ data class UserSettings(
     val shortIntro: Boolean = false,
     val launchCount: Int = 0,
     val onboardingDone: Boolean = false,
+    /** Carte « Prêts à jouer ? » : `null` = automatique (les [READY_CARD_GAMES] premières parties). */
+    val readyCard: Boolean? = null,
+    /** Parties commencées après la carte « Prêts à jouer ? » (compte pour l'affichage automatique). */
+    val gamesStarted: Int = 0,
+    /** Mode débutant : rappels après chaque lancer et explications au premier retour à 25 ou deuxième raté. */
+    val beginnerMode: Boolean = false,
+    /** Explications du mode débutant déjà données une fois (elles ne reviennent pas). */
+    val beginnerTipsSeen: Set<BeginnerTip> = emptySet(),
     /** Exceptions par défaut des nouvelles parties en mode Ludique (`RULES.md` § 8.1), sans surcharge par équipe. */
     val playfulRules: GameConfig = GameConfig.Playful,
 ) {
     /** La version courte de l'intro n'est proposée qu'à partir du deuxième lancement. */
     val canChooseShortIntro: Boolean get() = launchCount >= 2
+
+    /** La carte s'affiche d'office aux premières parties, puis seulement si on l'a réactivée. */
+    val showReadyCard: Boolean get() = readyCard ?: (gamesStarted < READY_CARD_GAMES)
+
+    companion object {
+        const val READY_CARD_GAMES = 3
+    }
+}
+
+/** Explications du mode débutant, données une seule fois. */
+enum class BeginnerTip {
+    /** Premier dépassement de la cible : retour à 25. */
+    RESET,
+
+    /** Premier deuxième raté consécutif : le prochain élimine. */
+    MISS_WARNING,
 }

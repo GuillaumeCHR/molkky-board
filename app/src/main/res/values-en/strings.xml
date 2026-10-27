@@ -17,6 +17,11 @@
     <string name="home_ongoing">Game in progress</string>
     <string name="home_ongoing_turn">%1$s to throw</string>
     <string name="home_resume">Resume</string>
+    <string name="home_placement">Set up the pins</string>
+    <string name="home_rules">Game rules</string>
+    <string name="shortcut_new_game">New game</string>
+    <string name="shortcut_placement">Set up the pins</string>
+    <string name="shortcut_rules">Game rules</string>
 
     <!-- Coming screens -->
     <string name="coming_soon">Coming soon</string>
@@ -66,6 +71,11 @@
     <string name="settings_rules_hint">Setting up the pins, scoring, exactly 50, misses, frequently asked questions.</string>
     <string name="settings_playful_rules">Casual mode rules</string>
     <string name="settings_playful_rules_hint">Choose the exceptions to the official rules: elimination, going over, target…</string>
+
+    <string name="settings_ready_card">“Ready to play?” card</string>
+    <string name="settings_ready_card_hint">At the start of each game, a reminder of how to set up the pins (shown automatically for the first 3 games).</string>
+    <string name="settings_beginner">Beginner mode</string>
+    <string name="settings_beginner_hint">A reminder after each throw, and an explanation the first time you go back to 25 or miss twice in a row.</string>
 
     <!-- Data -->
     <string name="settings_data">Data</string>

@@ -4,7 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -119,6 +121,19 @@ class GameScreenshotTest {
         compose.setContent { MolkkyBoardTheme(reducedMotion = true) { RulesScreen(onBack = {}) } }
         compose.onRoot().captureRoboImage("src/test/screenshots/regles_en.png")
     }
+
+    @Test
+    @Config(qualifiers = "fr-w411dp-h1100dp-xxhdpi")
+    fun placementPasAPas() {
+        compose.setContent { MolkkyBoardTheme(reducedMotion = true) { PlacementScreen(onBack = {}) } }
+        repeat(4) { compose.onNodeWithText("Suivante").performClick() }
+        compose.onRoot().captureRoboImage("src/test/screenshots/placement_pas_a_pas.png")
+        compose.onNodeWithText("Vue de côté").performClick()
+        compose.onRoot().captureRoboImage("src/test/screenshots/placement_vue_de_cote.png")
+    }
+
+    @Test
+    fun cartePretsAJouer() = capture("prets_a_jouer", playing.copy(readyCard = true))
 
     @Test
     fun jeuTourEtAvertissement() = capture("jeu_tour_avertissement", playing.copy(round = 4, missWarning = true))

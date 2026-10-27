@@ -109,6 +109,16 @@
     <string name="rules_part_play">Play</string>
     <string name="rules_part_win">Win… or be knocked out</string>
     <string name="rules_part_together">Playing together</string>
+    <string name="rules_search">Search the rules</string>
+    <string name="rules_search_empty">No rule matches. Try “pin”, “50” or “miss”.</string>
+    <string name="rules_demo_replay">Replay the animation</string>
+    <string name="rules_demo_single">Pin 12 alone: 12 points</string>
+    <string name="rules_demo_several">Three pins: 3 points</string>
+    <string name="rules_demo_before">%1$d points… and a throw worth %2$d</string>
+    <string name="rules_demo_over">%1$d: over 50!</string>
+    <string name="rules_demo_reset">Back to %1$d</string>
+    <string name="rules_demo_miss">Misses in a row: %1$d of %2$d</string>
+    <string name="rules_demo_eliminated">Three misses: out of the set</string>
     <string name="rules_gear_title">The equipment</string>
     <string name="rules_gear">12 wooden pins numbered 1 to 12, and a throwing pin: the mölkky. You throw from a line (or a frame, the mölkkaari) laid on the ground.</string>
     <string name="rules_setup_title">Setting up</string>
@@ -205,4 +215,41 @@
     <string name="announce_victory_team">Team %1$s wins</string>
     <string name="announce_twelve">Twelve!</string>
 
+    <!-- Pin placement -->
+    <string name="placement_title">Set up the pins</string>
+    <string name="placement_pin">Pin %1$d: %2$s, %3$s</string>
+    <string name="placement_row_1">first row (front)</string>
+    <string name="placement_row_2">second row</string>
+    <string name="placement_row_3">third row</string>
+    <string name="placement_row_4">fourth row (back)</string>
+    <string name="placement_left">on the left</string>
+    <string name="placement_right">on the right</string>
+    <string name="placement_center">in the centre</string>
+    <string name="placement_center_left">centre left</string>
+    <string name="placement_center_right">centre right</string>
+    <string name="placement_step">Pin %1$d of %2$d</string>
+    <string name="placement_previous">Previous</string>
+    <string name="placement_next">Next</string>
+    <string name="placement_done">See the formation</string>
+    <string name="placement_restart">Start again</string>
+    <string name="placement_show_all">Show all</string>
+    <string name="placement_all_shown">Full formation: the pins touch each other.</string>
+    <string name="placement_from_line">From the line</string>
+    <string name="placement_from_side">Side view</string>
+    <string name="placement_read_aloud">Read aloud</string>
+    <string name="placement_side_caption">The 4 rows are packed tightly together. The throwing line is about 3.5 m from the first row.</string>
+    <string name="placement_side_description">Side view: the throwing line on the left, the 4 tightly packed rows of pins on the right, about 3.5 metres away.</string>
+    <string name="placement_distance">Throwing distance: about 3.5 m, or 4 long adult steps. For children or in family mode, move the line closer (about 2 m).</string>
+
+    <!-- Ready to play? and beginner mode -->
+    <string name="ready_title">Ready to play?</string>
+    <string name="ready_text">Are the pins in the starting formation, tightly packed, about 3.5 m from the throwing line?</string>
+    <string name="ready_placement">See the setup</string>
+    <string name="ready_go">Let\'s go</string>
+    <string name="ready_never_again">Don\'t show again</string>
+    <string name="ready_beginner">Beginner mode</string>
+    <string name="ready_beginner_hint">A short reminder after each throw, and the rules explained at the right moment.</string>
+    <string name="beginner_raise">Stand the pins back up where they fell.</string>
+    <string name="beginner_reset">Over 50: the score drops back to 25. You need exactly 50.</string>
+    <string name="beginner_miss_warning">Two misses in a row: one more and you\'re out. Knocking down a pin resets the count.</string>
 </resources>

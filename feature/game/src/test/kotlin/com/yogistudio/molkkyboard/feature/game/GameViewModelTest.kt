@@ -15,6 +15,7 @@ import com.yogistudio.molkkyboard.core.data.RoomPlayerRepository
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.data.memberKey
 import com.yogistudio.molkkyboard.core.database.MolkkyBoardDatabase
+import com.yogistudio.molkkyboard.core.model.BeginnerTip
 import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.PlayerId
@@ -147,6 +148,87 @@ class GameViewModelTest {
         }
 
     @Test
+    fun `carte Prets a jouer - premieres parties seulement, ne plus afficher retenu`() =
+        runTest {
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            assertTrue(vm.awaitState { true }.readyCard)
+            vm.startPlaying(neverAgain = false, beginner = true)
+            assertFalse(vm.awaitState { !it.readyCard }.readyCard)
+            assertEquals(1, settings.settings.value.gamesStarted)
+            assertTrue(settings.settings.value.beginnerMode)
+            // Après 3 parties, la carte ne s'affiche plus d'office ; « Ne plus afficher » la coupe tout de suite.
+            assertTrue(
+                settings.settings.value
+                    .copy(gamesStarted = 3)
+                    .let { !it.showReadyCard },
+            )
+            assertTrue(
+                settings.settings.value
+                    .copy(gamesStarted = 3, readyCard = true)
+                    .showReadyCard,
+            )
+            vm.startPlaying(neverAgain = true, beginner = false)
+            assertEquals(false, settings.settings.value.readyCard)
+            assertFalse(settings.settings.value.beginnerMode)
+        }
+
+    @Test
+    fun `carte Prets a jouer absente une fois la partie commencee`() =
+        runTest {
+            play(5)
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            assertFalse(vm.awaitState { it.currentTeam?.name == "Bruno" }.readyCard)
+        }
+
+    @Test
+    fun `mode debutant - rappel apres chaque lancer, explications une seule fois`() =
+        runTest {
+            settings.setBeginnerMode(true)
+            listOf(12, 12, 12, 9).forEach {
+                play(it)
+                play(1)
+            }
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            vm.gameEffects().test {
+                vm.togglePin(9, true)
+                vm.awaitState { it.selection != Selection.None }
+                vm.validate()
+                assertEquals(GameEffect.Validated("Alice", 9, GameTip.RESET), awaitItem())
+                assertEquals(GameEffect.Overshoot(25), awaitItem())
+            }
+            assertTrue(BeginnerTip.RESET in settings.settings.value.beginnerTipsSeen)
+            vm.gameEffects().test {
+                vm.awaitState { it.currentTeam?.name == "Bruno" }
+                vm.togglePin(4, true)
+                vm.awaitState { it.selection != Selection.None }
+                vm.validate()
+                assertEquals(GameEffect.Validated("Bruno", 4, GameTip.RAISE), awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
+            // Deux ratés de suite pour Alice : l'explication vient une fois.
+            vm.gameEffects().test {
+                repeat(2) { i ->
+                    vm.awaitState { it.currentTeam?.name == "Alice" }
+                    vm.toggleMiss()
+                    vm.awaitState { it.selection == Selection.Miss }
+                    vm.validate()
+                    val expected = if (i == 1) GameTip.MISS_WARNING else null
+                    assertEquals(GameEffect.Validated("Alice", 0, expected), awaitItem())
+                    vm.awaitState { it.currentTeam?.name == "Bruno" }
+                    vm.togglePin(1, true)
+                    vm.awaitState { it.selection != Selection.None }
+                    vm.validate()
+                    assertEquals(GameEffect.Validated("Bruno", 1, GameTip.RAISE), awaitItem())
+                }
+                cancelAndIgnoreRemainingEvents()
+            }
+            assertTrue(BeginnerTip.MISS_WARNING in settings.settings.value.beginnerTipsSeen)
+        }
+
+    @Test
     fun `rien n'est enregistre sans selection`() =
         runTest {
             val vm = viewModel()
@@ -218,7 +300,8 @@ class GameViewModelTest {
             }
             val finished = vm.awaitState { it.finished }
             assertEquals("Alice", finished.winnerName)
-            assertNull(games.observeOngoingGameId().first())
+            // La clôture est écrite après l'animation de victoire : on attend qu'elle arrive.
+            assertNull(games.observeOngoingGameId().first { it == null })
             vm.undo()
             vm.awaitState { !it.finished }
             // La réouverture est écrite juste après l'annulation : on attend qu'elle arrive.
@@ -627,6 +710,19 @@ class GameViewModelTest {
             settings.emit(
                 settings.value.copy(playfulRules = config),
             )
+
+        override suspend fun setReadyCard(enabled: Boolean) = settings.emit(settings.value.copy(readyCard = enabled))
+
+        override suspend fun recordGameStarted() =
+            settings.emit(settings.value.copy(gamesStarted = settings.value.gamesStarted + 1))
+
+        override suspend fun setBeginnerMode(enabled: Boolean) =
+            settings.emit(
+                settings.value.copy(beginnerMode = enabled),
+            )
+
+        override suspend fun setBeginnerTipSeen(tip: com.yogistudio.molkkyboard.core.model.BeginnerTip) =
+            settings.emit(settings.value.copy(beginnerTipsSeen = settings.value.beginnerTipsSeen + tip))
 
         override suspend fun recordLaunch() = settings.value
     }

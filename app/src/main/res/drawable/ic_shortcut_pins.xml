@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Raccourci « Placer les quilles » : trois quilles biseautées sur fond bouleau. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path android:fillColor="#F4EBDD" android:pathData="M24,0a24,24 0 1,0 0.01,0z" />
+    <path android:fillColor="#1F4D3A" android:pathData="M12,19L18,17L18,35L12,35Z" />
+    <path android:fillColor="#F2A93B" android:pathData="M21,15L27,13L27,35L21,35Z" />
+    <path android:fillColor="#1F4D3A" android:pathData="M30,19L36,17L36,35L30,35Z" />
+</vector>

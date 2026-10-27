@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Raccourci « Règles du jeu » : un livre ouvert sur fond bouleau. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path android:fillColor="#F4EBDD" android:pathData="M24,0a24,24 0 1,0 0.01,0z" />
+    <path
+        android:pathData="M24,17C20,14 15,14 12,15L12,33C15,32 20,32 24,35C28,32 33,32 36,33L36,15C33,14 28,14 24,17ZM24,17L24,35"
+        android:strokeWidth="3"
+        android:strokeColor="#1F4D3A"
+        android:strokeLineJoin="round" />
+</vector>

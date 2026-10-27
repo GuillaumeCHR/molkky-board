@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,12 +32,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionButton
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionKind
+import com.yogistudio.molkkyboard.core.designsystem.component.PinGrid
 import com.yogistudio.molkkyboard.core.designsystem.component.PinView
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
@@ -49,7 +52,12 @@ import java.util.Locale
  * mêmes équipes, puis « Revanche » (ou « Manche suivante » dans un match). Défile si la place manque.
  */
 @Composable
-internal fun EndPanel(state: GameUiState, actions: GameActions, onOpenLog: () -> Unit) {
+internal fun EndPanel(
+    state: GameUiState,
+    actions: GameActions,
+    onOpenLog: () -> Unit,
+    onOpenPlacement: () -> Unit = {},
+) {
     val end = state.end
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
@@ -66,13 +74,7 @@ internal fun EndPanel(state: GameUiState, actions: GameActions, onOpenLog: () ->
             end?.match?.molkkout?.let { MolkkoutCard(it, actions) }
             RankingCard(state, end)
             end?.series?.let { SeriesCard(it) }
-            if (!state.abandoned) {
-                Text(
-                    stringResource(R.string.end_replace_pins),
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center,
-                )
-            }
+            if (!state.abandoned) ReplacePins(onOpenPlacement)
             EndActions(state, end, actions)
             Row(horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap)) {
                 // Pendant un Mölkkout, seule son annulation est proposée (deux « Annuler » prêteraient à confusion).
@@ -396,3 +398,21 @@ private fun NextStarter.label(): Int =
         NextStarter.LoserFirst -> R.string.end_order_loser_first
         NextStarter.WinnerLast -> R.string.end_order_winner_last
     }
+
+/** Entre deux manches : rappel de la formation de départ, avec un schéma miniature et l'accès au placement. */
+@Composable
+private fun ReplacePins(onOpenPlacement: () -> Unit) {
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            stringResource(R.string.end_replace_pins),
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+        )
+        Box(Modifier.fillMaxWidth().height(MINI_FORMATION).clearAndSetSemantics {}) {
+            PinGrid(knocked = emptySet(), onToggle = { _, _ -> }, enabled = true, modifier = Modifier.fillMaxSize())
+        }
+        TextButton(onClick = onOpenPlacement) { Text(stringResource(R.string.placement_title)) }
+    }
+}
+
+private val MINI_FORMATION = 170.dp

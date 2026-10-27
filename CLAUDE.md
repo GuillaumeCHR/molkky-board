@@ -1151,3 +1151,12 @@ et tiens-la à jour jusqu'à la publication.
 - Tests : Robolectric fixé en français par défaut (`qualifiers=fr` et préfixe `fr-`), sinon les tests passaient en anglais ; les dates des captures sont désormais en français.
 - CI : **Android Lint** ajouté (`lintDebug`) ; corrigé : ressources lues via `LocalContext` dans le partage (textes figés après un changement de langue).
 
+### Phase 4 mise de côté, le reste d'abord (2026-10-27)
+- Demandé le 2026-10-27 : **multi-téléphones (Phase 4) mis de côté**, hébergement non tranché (Supabase Cloud, VPS UE ou NAS pour le développement ; détail dans la réponse du jour). On fait tout ce qui ne dépend pas d'un serveur, par lots : aides aux débutants, À propos, sons, compléments, sécurité et CI, Phase 5, documents Play Store.
+- Lot 1 — aides aux débutants (fait) :
+  - **Placer les quilles** pas à pas (`PlacementGuide`) : apparition quille par quille de 1-2 à 7-9-8, position en clair (« Quille 12 : troisième rangée, au centre droit »), lue par TalkBack et à voix haute sur demande, « Tout afficher », vue de côté avec la distance. Dans les règles, à l'accueil, en feuille pendant la partie (bouton « Quilles » de la barre), entre deux manches (schéma miniature) et en raccourci de l'icône.
+  - **« Prêts à jouer ? »** au début de la première manche : 3 premières parties, puis seulement si réactivée (« Ne plus afficher », Réglages) ; propose le **mode débutant** (rappel « Relevez les quilles » après chaque lancer, explication une seule fois au premier dépassement et au premier deuxième raté).
+  - **Règles** : recherche (sans accents), sommaire, schémas animés (points, dépassement et retour à 25, trois ratés) joués deux fois puis figés (pas d'animation sans fin), « Rejouer ».
+  - **Raccourcis de l'icône** (dynamiques, dans la langue de l'app) : Nouvelle partie, Placer les quilles, Règles du jeu ; « Rejoindre une partie » viendra avec la Phase 4. Intention explicite, extra validé contre une liste fermée.
+  - Titre « Partie » masqué en police ≥ 1,3 (les boutons de la barre passent avant).
+

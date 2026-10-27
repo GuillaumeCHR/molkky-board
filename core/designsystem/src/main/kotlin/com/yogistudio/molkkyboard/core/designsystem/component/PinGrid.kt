@@ -1,11 +1,15 @@
 package com.yogistudio.molkkyboard.core.designsystem.component
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.yogistudio.molkkyboard.core.designsystem.theme.MBMotion
 
 /** Formation de départ officielle, vue du lanceur (rangée du fond en haut). */
 val PIN_FORMATION: List<List<Int>> = listOf(listOf(7, 9, 8), listOf(5, 11, 12, 6), listOf(3, 10, 4), listOf(1, 2))
@@ -22,6 +26,8 @@ private val MAX_PIN = 92.dp
  * hauteur) : la grille tient toujours sans défilement, avec des cibles tactiles aussi grandes que possible.
  *
  * @param highlighted quilles mises en avant (coach de fin de partie).
+ * @param visible quilles affichées (`null` : toutes) ; les autres gardent leur place, invisibles (placement pas à pas).
+ * @param pinModifier modificateur propre à chaque quille (description TalkBack de sa position, par exemple).
  */
 @Composable
 fun PinGrid(
@@ -30,6 +36,8 @@ fun PinGrid(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     highlighted: Set<Int> = emptySet(),
+    visible: Set<Int>? = null,
+    pinModifier: (Int) -> Modifier = { Modifier },
 ) {
     BoxWithConstraints(modifier) {
         val rows = PIN_FORMATION.size
@@ -40,11 +48,23 @@ fun PinGrid(
         Layout(
             content = {
                 PIN_FORMATION.flatten().forEach { number ->
+                    val shown = visible == null || number in visible
+                    val appear by animateFloatAsState(
+                        if (shown) 1f else 0f,
+                        animationSpec = MBMotion.bouncy(),
+                        label = "appear",
+                    )
                     PinView(
+                        modifier =
+                            pinModifier(number).graphicsLayer {
+                                alpha = appear.coerceIn(0f, 1f)
+                                scaleX = appear
+                                scaleY = appear
+                            },
                         number = number,
                         knocked = number in knocked,
                         onToggle = { onToggle(number, it) },
-                        enabled = enabled,
+                        enabled = enabled && shown,
                         highlighted = number in highlighted,
                         size = pin,
                     )

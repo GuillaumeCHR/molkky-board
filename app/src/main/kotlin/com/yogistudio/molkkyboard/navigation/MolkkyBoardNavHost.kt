@@ -20,9 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -34,6 +36,7 @@ import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.UserSettings
 import com.yogistudio.molkkyboard.feature.game.GameScreen
+import com.yogistudio.molkkyboard.feature.game.PlacementScreen
 import com.yogistudio.molkkyboard.feature.game.RulesScreen
 import com.yogistudio.molkkyboard.feature.history.HistoryScreen
 import com.yogistudio.molkkyboard.feature.intro.IntroScreen
@@ -66,31 +69,17 @@ private enum class TopLevel(
 @Composable
 fun MolkkyBoardNavHost(
     startup: StartupState,
-    gameToOpen: String? = null,
-    onGameOpened: () -> Unit = {},
+    target: LaunchTarget? = null,
+    onTargetOpened: () -> Unit = {},
     settings: UserSettings? = null,
     onNotificationPrompted: () -> Unit = {},
 ) {
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val destination = backStack?.destination
-    // « Saisir le lancer » depuis la notification : on ouvre la partie une fois l'intro passée.
-    LaunchedEffect(gameToOpen, destination) {
-        val id = gameToOpen ?: return@LaunchedEffect
-        if (destination == null || destination.hasRoute(IntroRoute::class)) return@LaunchedEffect
-        navController.navigate(GameRoute(id)) {
-            popUpTo<HomeRoute>()
-            launchSingleTop = true
-        }
-        onGameOpened()
-    }
-    // L'écran de jeu et la vitrine sont en plein écran : pas de barre du bas.
-    val showBar =
-        destination?.let { d ->
-            TopLevel.entries.any { d.hasRoute(it.routeClass) } || d.hasRoute(AboutRoute::class) ||
-                d.hasRoute(PlayfulRulesRoute::class) || d.hasRoute(RulesRoute::class) || d.hasRoute(StatsRoute::class)
-        }
-            ?: true
+    LaunchTargetEffect(navController, target, destination, onTargetOpened)
+    // L'écran de jeu est en plein écran : pas de barre du bas.
+    val showBar = destination?.let(::showsBottomBar) ?: true
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -144,6 +133,8 @@ fun MolkkyBoardNavHost(
                         onNewGame = { navController.navigate(SetupRoute) },
                         onJoin = { navController.navigate(JoinRoute) },
                         onResume = { navController.navigate(GameRoute(it)) },
+                        onRules = { navController.navigate(RulesRoute) },
+                        onPlacement = { navController.navigate(PlacementRoute) },
                         logotypeModifier = with(shared) { sharedLogotype(this@composable) },
                     )
                 }
@@ -166,6 +157,7 @@ fun MolkkyBoardNavHost(
                 composable<AboutRoute> { AboutScreen(onBack = navController::navigateUp) }
                 composable<PlayfulRulesRoute> { PlayfulRulesScreen(onBack = navController::navigateUp) }
                 composable<RulesRoute> { RulesScreen(onBack = navController::navigateUp) }
+                composable<PlacementRoute> { PlacementScreen(onBack = navController::navigateUp) }
                 composable<JoinRoute> {
                     EmptyStateScreen(R.string.join_title, R.string.join_empty, onBack = navController::navigateUp)
                 }
@@ -216,3 +208,34 @@ private fun SharedTransitionScope.sharedLogotype(scope: AnimatedVisibilityScope)
         animatedVisibilityScope = scope,
         resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(),
     )
+
+/** Notification « Saisir le lancer » ou raccourci de l'icône : l'écran s'ouvre une fois l'intro passée. */
+@Composable
+private fun LaunchTargetEffect(
+    navController: NavHostController,
+    target: LaunchTarget?,
+    destination: NavDestination?,
+    onTargetOpened: () -> Unit,
+) {
+    LaunchedEffect(target, destination) {
+        val wanted = target ?: return@LaunchedEffect
+        if (destination == null || destination.hasRoute(IntroRoute::class)) return@LaunchedEffect
+        val route: Any =
+            when (wanted) {
+                is LaunchTarget.Game -> GameRoute(wanted.id)
+                LaunchTarget.NewGame -> SetupRoute
+                LaunchTarget.Placement -> PlacementRoute
+                LaunchTarget.Rules -> RulesRoute
+            }
+        navController.navigate(route) {
+            popUpTo<HomeRoute>()
+            launchSingleTop = true
+        }
+        onTargetOpened()
+    }
+}
+
+private fun showsBottomBar(d: NavDestination): Boolean =
+    TopLevel.entries.any { d.hasRoute(it.routeClass) } ||
+        listOf(AboutRoute::class, PlayfulRulesRoute::class, RulesRoute::class, PlacementRoute::class, StatsRoute::class)
+            .any { d.hasRoute(it) }

@@ -109,6 +109,16 @@
     <string name="rules_part_play">Jouer</string>
     <string name="rules_part_win">Gagner… ou être éliminé</string>
     <string name="rules_part_together">À plusieurs</string>
+    <string name="rules_search">Rechercher dans les règles</string>
+    <string name="rules_search_empty">Aucune règle ne correspond. Essayez « quille », « 50 » ou « raté ».</string>
+    <string name="rules_demo_replay">Rejouer l\'animation</string>
+    <string name="rules_demo_single">La quille 12 seule : 12 points</string>
+    <string name="rules_demo_several">Trois quilles : 3 points</string>
+    <string name="rules_demo_before">%1$d points… et un lancer à %2$d</string>
+    <string name="rules_demo_over">%1$d : plus de 50 !</string>
+    <string name="rules_demo_reset">Retour à %1$d</string>
+    <string name="rules_demo_miss">Ratés de suite : %1$d sur %2$d</string>
+    <string name="rules_demo_eliminated">Trois ratés : éliminé de la manche</string>
     <string name="rules_gear_title">Le matériel</string>
     <string name="rules_gear">12 quilles en bois numérotées de 1 à 12, et une quille de lancer : le mölkky. On lance depuis une ligne (ou un cadre, le mölkkaari) posée au sol.</string>
     <string name="rules_setup_title">L\'installation</string>
@@ -205,4 +215,41 @@
     <string name="announce_victory_team">Victoire de l\'équipe %1$s</string>
     <string name="announce_twelve">Douze !</string>
 
+    <!-- Placement des quilles -->
+    <string name="placement_title">Placer les quilles</string>
+    <string name="placement_pin">Quille %1$d : %2$s, %3$s</string>
+    <string name="placement_row_1">première rangée (devant)</string>
+    <string name="placement_row_2">deuxième rangée</string>
+    <string name="placement_row_3">troisième rangée</string>
+    <string name="placement_row_4">quatrième rangée (au fond)</string>
+    <string name="placement_left">à gauche</string>
+    <string name="placement_right">à droite</string>
+    <string name="placement_center">au centre</string>
+    <string name="placement_center_left">au centre gauche</string>
+    <string name="placement_center_right">au centre droit</string>
+    <string name="placement_step">Quille %1$d sur %2$d</string>
+    <string name="placement_previous">Précédente</string>
+    <string name="placement_next">Suivante</string>
+    <string name="placement_done">Voir la formation</string>
+    <string name="placement_restart">Recommencer</string>
+    <string name="placement_show_all">Tout afficher</string>
+    <string name="placement_all_shown">Formation complète : les quilles se touchent.</string>
+    <string name="placement_from_line">Depuis la ligne</string>
+    <string name="placement_from_side">Vue de côté</string>
+    <string name="placement_read_aloud">Lire à voix haute</string>
+    <string name="placement_side_caption">Les 4 rangées sont serrées les unes contre les autres. La ligne de lancer est à environ 3,5 m de la première rangée.</string>
+    <string name="placement_side_description">Vue de côté : la ligne de lancer à gauche, les 4 rangées de quilles serrées à droite, à environ 3,5 mètres.</string>
+    <string name="placement_distance">Distance de lancer : environ 3,5 m, soit 4 grands pas d\'adulte. Pour les enfants ou en mode famille, rapprochez la ligne (environ 2 m).</string>
+
+    <!-- Prêts à jouer ? et mode débutant -->
+    <string name="ready_title">Prêts à jouer ?</string>
+    <string name="ready_text">Les quilles sont en formation de départ, serrées, à environ 3,5 m de la ligne de lancer ?</string>
+    <string name="ready_placement">Voir le placement</string>
+    <string name="ready_go">C\'est parti</string>
+    <string name="ready_never_again">Ne plus afficher</string>
+    <string name="ready_beginner">Mode débutant</string>
+    <string name="ready_beginner_hint">Un petit rappel après chaque lancer, et une explication des règles au bon moment.</string>
+    <string name="beginner_raise">Relevez les quilles là où elles sont tombées.</string>
+    <string name="beginner_reset">Plus de 50 : le score redescend à 25. Il faut atteindre 50 exactement.</string>
+    <string name="beginner_miss_warning">Deux ratés de suite : encore un et c\'est l\'élimination. Faire tomber une quille remet le compteur à zéro.</string>
 </resources>

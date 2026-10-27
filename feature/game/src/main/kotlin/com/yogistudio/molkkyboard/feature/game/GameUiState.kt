@@ -120,6 +120,9 @@ data class GameUiState(
     val coach: Coach? = null,
     /** Première partie guidée : bulle à montrer, ou `null`. */
     val guide: GuideStep? = null,
+    /** Carte « Prêts à jouer ? » à afficher au début de la partie. */
+    val readyCard: Boolean = false,
+    val beginnerMode: Boolean = false,
 ) {
     /** Le déroulé se modifie tant que la partie n'est pas abandonnée (même terminée : la victoire peut changer). */
     val canEditLog: Boolean get() = !abandoned
@@ -170,11 +173,16 @@ data class VoicePrefs(
     val volume: Float = 1f,
 )
 
+/** Rappels du mode débutant après un lancer. */
+enum class GameTip { RAISE, RESET, MISS_WARNING }
+
 /** Effets ponctuels d'une validation (animations, vibrations, snackbar). */
 sealed interface GameEffect {
     data class Validated(
         val name: String,
         val points: Int,
+        /** Mode débutant : rappel ou explication à joindre au message. */
+        val tip: GameTip? = null,
     ) : GameEffect
 
     /** Dépassement de la cible : retour au score [resetTo]. */
