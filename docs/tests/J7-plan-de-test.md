@@ -1,5 +1,7 @@
 # Plan de test sur téléphone — J7 : sauvegarde, suppression, anglais (2026-10-27)
 
+> **Remplacé** par `rattrapage-J4-0.5-plan-de-test.md` (session unique du J4 à la 0.5.0).
+
 À jouer après `J5-plan-de-test.md` et `J6-plan-de-test.md`. **Comment répondre** : même mode opératoire, une
 lettre par question ; en revenant, dis « retour du test » et je te poserai les questions en choix multiples,
 avec « Pas testé » et un commentaire libre. Durée estimée : 15 minutes. 10 questions.

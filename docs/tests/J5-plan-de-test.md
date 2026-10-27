@@ -1,5 +1,7 @@
 # Plan de test sur téléphone — fin du J5 (2026-10-27)
 
+> **Remplacé** par `rattrapage-J4-0.5-plan-de-test.md` (session unique du J4 à la 0.5.0).
+
 Objectif : valider sur ton Fairphone ce qui a été livré au J5 (fin de partie, revanche, match et Mölkkout,
 historique, Hall of Fame, statistiques, notification, annonces vocales), ainsi que les points de fiabilité et
 d'accessibilité restés en suspens au J4.
