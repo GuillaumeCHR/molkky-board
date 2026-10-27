@@ -40,4 +40,20 @@
     <string name="stats_fastest_none">No win under official rules yet</string>
     <string name="stats_chart">Average per throw, set after set</string>
     <string name="stats_chart_description">Bar chart: average per throw over the last %1$d sets, from %2$s to %3$s.</string>
+    <string name="hall_secondary">Other records</string>
+    <string name="hall_secondary_twelves">Most “12”s in one game: %1$d</string>
+    <string name="hall_secondary_streak">Longest streak without a miss: %1$d throws</string>
+    <string name="hall_secondary_resets">Most drops back to 25: %1$d</string>
+    <string name="hall_secondary_comeback">Best comeback: %1$d points behind</string>
+    <string name="stats_twelves">“12”s scored: %1$d</string>
+    <string name="stats_resets">Drops back to 25: %1$d</string>
+    <string name="stats_badges">Badges</string>
+    <string name="badge_first_win">First win</string>
+    <string name="badge_first_win_hint">Win a game</string>
+    <string name="badge_perfect">Perfect game</string>
+    <string name="badge_perfect_hint">Win in 5 throws</string>
+    <string name="badge_phoenix">Phoenix</string>
+    <string name="badge_phoenix_hint">Win after dropping back to 25</string>
+    <string name="badge_sniper">Sniper</string>
+    <string name="badge_sniper_hint">Three “12”s in one game</string>
 </resources>

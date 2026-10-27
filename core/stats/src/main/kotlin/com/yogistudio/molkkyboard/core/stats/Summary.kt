@@ -17,6 +17,7 @@ import com.yogistudio.molkkyboard.core.scoring.WrongTeam
 import com.yogistudio.molkkyboard.core.scoring.describe
 import com.yogistudio.molkkyboard.core.scoring.getOrNull
 import com.yogistudio.molkkyboard.core.scoring.points
+import com.yogistudio.molkkyboard.core.scoring.reduce
 import com.yogistudio.molkkyboard.core.scoring.start
 
 /** Une équipe d'une partie et son identité durable ([memberKey]) : c'est elle qui accumule le palmarès. */
@@ -42,6 +43,8 @@ data class StatsGame(
     val teams: List<StatsTeam>,
     val sets: List<StatsSet>,
     val abandoned: Boolean = false,
+    /** Nom affiché de chaque joueur dans cette partie (records secondaires). */
+    val playerNames: Map<PlayerId, String> = emptyMap(),
 )
 
 /** Lancers d'un joueur dans une manche. Les fautes ne sont pas des lancers ; les ratés en sont. */
@@ -53,6 +56,10 @@ data class PlayerLine(
     val singlePins: Map<Int, Int> = emptyMap(),
     /** Plus longue série de lancers sans raté. */
     val bestStreak: Int = 0,
+    /** Lancers à 12 points qui comptent (un 12 qui fait dépasser la cible n'en est pas un). */
+    val twelves: Int = 0,
+    /** Lancers qui ont fait dépasser la cible (retour à 25, ou selon la variante). */
+    val resets: Int = 0,
 )
 
 /** Une équipe dans le résumé d'une manche. */
@@ -63,6 +70,10 @@ data class SummaryTeam(
     val score: Int,
     /** Lancers de l'équipe dans la manche, fautes comprises. */
     val throws: Int,
+    /** Dépassements de la cible de l'équipe dans la manche. */
+    val resets: Int = 0,
+    /** Plus grand retard sur l'équipe en tête au cours de la manche (« plus belle remontée » si elle gagne). */
+    val maxDeficit: Int = 0,
 )
 
 /** Résumé d'une manche, base de tous les classements et statistiques. */
@@ -78,6 +89,7 @@ data class SetSummary(
     /** Règles officielles (cible 50, retour à 25, sans handicap) : compte aussi pour les records « purs ». */
     val standard: Boolean,
     val players: Map<PlayerId, PlayerLine>,
+    val playerNames: Map<PlayerId, String> = emptyMap(),
 ) {
     /** Partie en solo : chaque équipe n'a qu'un joueur (onglet Joueurs du Hall of Fame). */
     val solo: Boolean get() = teams.all { it.players.size == 1 }
@@ -90,8 +102,8 @@ data class SetSummary(
 /** Résume chaque manche de [game] à partir de son journal effectif. */
 fun summarize(game: StatsGame): List<SetSummary> = game.sets.mapNotNull { summarize(game, it) }
 
-/** Ajoute un lancer ; [streak] est la série sans raté en cours après ce lancer. */
-private fun PlayerLine.plus(result: ThrowResult, streak: Int): PlayerLine {
+/** Ajoute un lancer ; [streak] est la série sans raté en cours après ce lancer, [reset] un dépassement. */
+private fun PlayerLine.plus(result: ThrowResult, streak: Int, reset: Boolean): PlayerLine {
     val points = result.points
     val single = (result as? ThrowResult.Pins)?.pins?.singleOrNull()
     return copy(
@@ -100,31 +112,55 @@ private fun PlayerLine.plus(result: ThrowResult, streak: Int): PlayerLine {
         points = this.points + points,
         singlePins = if (single == null) singlePins else singlePins + (single to (singlePins[single] ?: 0) + 1),
         bestStreak = maxOf(bestStreak, streak),
+        twelves = twelves + if (points == TWELVE && !reset) 1 else 0,
+        resets = resets + if (reset) 1 else 0,
     )
 }
 
-/** Lancers par équipe (fautes comprises) et lignes de chaque joueur, en rejouant le journal effectif. */
+private const val TWELVE = 12
+
+/**
+ * Lancers par équipe (fautes comprises), lignes de chaque joueur, dépassements et plus grand retard de chaque équipe,
+ * en rejouant le journal effectif événement par événement.
+ */
 private class Tally(
     initial: SetState,
     log: List<PlayEvent>,
 ) {
     val throwsByTeam = mutableMapOf<TeamId, Int>()
+    val resetsByTeam = mutableMapOf<TeamId, Int>()
+    val deficits = mutableMapOf<TeamId, Int>()
     val lines = mutableMapOf<PlayerId, PlayerLine>()
     private val streaks = mutableMapOf<PlayerId, Int>()
+    private var state = initial
 
     init {
         describe(initial, log).forEach(::add)
     }
 
     private fun add(entry: LogEntry) {
+        val before = state
+        state = reduce(state, entry.event).getOrNull() ?: state
+        trackDeficits()
         val event = entry.event
         val team = entry.team ?: return
         if (event is Throw || event is Fault || event is WrongTeam) throwsByTeam.merge(team, 1, Int::plus)
         val player = entry.player ?: return
         if (event !is Throw) return
+        val reset = isReset(before, team, event.result.points)
+        if (reset) resetsByTeam.merge(team, 1, Int::plus)
         val streak = if (event.result.points == 0) 0 else (streaks[player] ?: 0) + 1
         streaks[player] = streak
-        lines[player] = (lines[player] ?: PlayerLine()).plus(event.result, streak)
+        lines[player] = (lines[player] ?: PlayerLine()).plus(event.result, streak, reset)
+    }
+
+    /** Un lancer qui marque mais fait baisser le score : la cible a été dépassée. */
+    private fun isReset(before: SetState, team: TeamId, points: Int): Boolean =
+        points > 0 && (state.team(team)?.score ?: 0) < (before.team(team)?.score ?: 0)
+
+    private fun trackDeficits() {
+        val leader = state.teams.maxOfOrNull { it.score } ?: return
+        state.teams.forEach { deficits[it.id] = maxOf(deficits[it.id] ?: 0, leader - it.score) }
     }
 }
 
@@ -147,11 +183,14 @@ private fun summarize(game: StatsGame, set: StatsSet): SetSummary? {
                     players = team.players,
                     score = team.score,
                     throws = tally.throwsByTeam[team.id] ?: 0,
+                    resets = tally.resetsByTeam[team.id] ?: 0,
+                    maxDeficit = tally.deficits[team.id] ?: 0,
                 )
             },
         winner = state.winner?.takeIf { finished }?.let { keys[it]?.memberKey ?: it.value },
         eligible = set.replay.eligibleForRecords && !game.abandoned,
         standard = game.config.isStandard,
         players = tally.lines,
+        playerNames = game.playerNames,
     )
 }

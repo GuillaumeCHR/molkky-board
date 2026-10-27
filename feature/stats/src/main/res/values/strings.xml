@@ -40,4 +40,20 @@
     <string name="stats_fastest_none">Pas encore de victoire aux règles officielles</string>
     <string name="stats_chart">Moyenne par lancer, manche après manche</string>
     <string name="stats_chart_description">Graphique en barres : moyenne par lancer sur les %1$d dernières manches, de %2$s à %3$s.</string>
+    <string name="hall_secondary">Autres records</string>
+    <string name="hall_secondary_twelves">Le plus de « 12 » en une partie : %1$d</string>
+    <string name="hall_secondary_streak">La plus longue série sans raté : %1$d lancers</string>
+    <string name="hall_secondary_resets">Le plus de retours à 25 : %1$d</string>
+    <string name="hall_secondary_comeback">La plus belle remontée : %1$d points de retard</string>
+    <string name="stats_twelves">« 12 » réussis : %1$d</string>
+    <string name="stats_resets">Retours à 25 : %1$d</string>
+    <string name="stats_badges">Badges</string>
+    <string name="badge_first_win">Première victoire</string>
+    <string name="badge_first_win_hint">Gagner une partie</string>
+    <string name="badge_perfect">Partie parfaite</string>
+    <string name="badge_perfect_hint">Gagner en 5 lancers</string>
+    <string name="badge_phoenix">Phénix</string>
+    <string name="badge_phoenix_hint">Gagner après un retour à 25</string>
+    <string name="badge_sniper">Sniper</string>
+    <string name="badge_sniper_hint">Trois « 12 » dans une partie</string>
 </resources>

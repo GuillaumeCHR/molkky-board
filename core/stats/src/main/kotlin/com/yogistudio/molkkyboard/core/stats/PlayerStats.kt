@@ -15,6 +15,8 @@ data class PlayerStats(
     val bestStreak: Int,
     /** Victoire la plus rapide aux règles officielles, en lancers de l'équipe. */
     val fastestWin: Int?,
+    val twelves: Int = 0,
+    val resets: Int = 0,
 ) {
     val average: Float get() = if (throws == 0) 0f else points.toFloat() / throws
     val missRate: Float get() = if (throws == 0) 0f else misses.toFloat() / throws
@@ -49,5 +51,7 @@ fun playerStats(summaries: List<SetSummary>, player: PlayerId): PlayerStats {
                 },
         bestStreak = lines.maxOfOrNull { it.second.bestStreak } ?: 0,
         fastestWin = wins.filter { it.standard }.mapNotNull { it.winnerTeam?.throws }.minOrNull(),
+        twelves = lines.sumOf { it.second.twelves },
+        resets = lines.sumOf { it.second.resets },
     )
 }

@@ -39,4 +39,5 @@ fun GameSnapshot.toStatsGame(): StatsGame =
         teams = teams.map { StatsTeam(it.id, it.memberKey, it.name) },
         sets = sets.map { StatsSet(it.index, it.lineup, it.replay) },
         abandoned = abandoned,
+        playerNames = players.associate { it.id to it.name },
     )

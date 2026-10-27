@@ -49,6 +49,7 @@ import com.yogistudio.molkkyboard.feature.stats.StatsScreen
 import com.yogistudio.molkkyboard.notification.NotificationPermissionPrompt
 import com.yogistudio.molkkyboard.startup.StartupState
 import com.yogistudio.molkkyboard.ui.AboutScreen
+import com.yogistudio.molkkyboard.ui.CreditsScreen
 import com.yogistudio.molkkyboard.ui.EmptyStateScreen
 import com.yogistudio.molkkyboard.ui.HomeScreen
 import com.yogistudio.molkkyboard.ui.LicensesScreen
@@ -167,6 +168,12 @@ fun MolkkyBoardNavHost(
                     )
                 }
                 composable<LicensesRoute> { LicensesScreen(onBack = navController::navigateUp) }
+                composable<CreditsRoute> {
+                    CreditsScreen(
+                        onBack = navController::navigateUp,
+                        onLicenses = { navController.navigate(LicensesRoute) },
+                    )
+                }
                 composable<PlayfulRulesRoute> { PlayfulRulesScreen(onBack = navController::navigateUp) }
                 composable<RulesRoute> { RulesScreen(onBack = navController::navigateUp) }
                 composable<PlacementRoute> { PlacementScreen(onBack = navController::navigateUp) }
@@ -252,6 +259,7 @@ private fun showsBottomBar(d: NavDestination): Boolean =
         listOf(
             AboutRoute::class,
             LicensesRoute::class,
+            CreditsRoute::class,
             PlayfulRulesRoute::class,
             RulesRoute::class,
             PlacementRoute::class,

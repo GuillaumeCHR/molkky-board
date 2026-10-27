@@ -41,6 +41,8 @@ import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.stats.HallTab
+import com.yogistudio.molkkyboard.core.stats.SecondaryRecord
+import com.yogistudio.molkkyboard.core.stats.SecondaryRecordKind
 import kotlin.math.roundToInt
 
 @Composable
@@ -175,6 +177,53 @@ fun HallOfFameContent(
                     onOpen = { onOpenGame(entry.gameId) },
                 )
             }
+            if (state.secondary.isNotEmpty()) item { SectionTitle(stringResource(R.string.hall_secondary)) }
+            itemsIndexed(state.secondary, key = { _, record -> "s" + record.kind }) { _, record ->
+                SecondaryRow(record, onOpen = { onOpenGame(record.gameId) })
+            }
+        }
+    }
+}
+
+/** Un record secondaire : son intitulé, le détenteur et la valeur ; un tap ouvre la partie. */
+@Composable
+private fun SecondaryRow(record: SecondaryRecord, onOpen: () -> Unit) {
+    val (emoji, label) =
+        when (record.kind) {
+            SecondaryRecordKind.MOST_TWELVES -> {
+                "🎯" to stringResource(R.string.hall_secondary_twelves, record.value)
+            }
+
+            SecondaryRecordKind.LONGEST_STREAK -> {
+                "🔥" to stringResource(R.string.hall_secondary_streak, record.value)
+            }
+
+            SecondaryRecordKind.MOST_RESETS -> {
+                "😅" to stringResource(R.string.hall_secondary_resets, record.value)
+            }
+
+            SecondaryRecordKind.BIGGEST_COMEBACK -> {
+                "🚀" to
+                    stringResource(R.string.hall_secondary_comeback, record.value)
+            }
+        }
+    val openLabel = stringResource(R.string.hall_open)
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth().clickable(onClickLabel = openLabel, onClick = onOpen),
+    ) {
+        Row(
+            Modifier.padding(horizontal = 16.dp, vertical = 12.dp).heightIn(min = 40.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(emoji, style = MaterialTheme.typography.titleLarge)
+            Column(Modifier.weight(1f)) {
+                Text(label, style = MaterialTheme.typography.titleMedium)
+                Text("${record.holder} · ${formatDate(record.playedAt)}", style = MaterialTheme.typography.bodyMedium)
+            }
+            Icon(MBIcons.ChevronRight, contentDescription = null)
         }
     }
 }

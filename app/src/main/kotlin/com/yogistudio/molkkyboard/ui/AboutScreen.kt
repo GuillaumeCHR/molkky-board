@@ -40,7 +40,7 @@ import com.yogistudio.molkkyboard.crash.deviceSummary
  * (bibliothèques et polices) et, dans les versions de test, « Envoyer un retour ».
  */
 @Composable
-internal fun AboutScreen(onBack: () -> Unit, onLicenses: () -> Unit) {
+internal fun AboutScreen(onBack: () -> Unit, onLicenses: () -> Unit, onCredits: () -> Unit = {}) {
     val context = LocalContext.current
     Column(Modifier.fillMaxSize()) {
         MBTopBar(stringResource(R.string.settings_about), onBack)
@@ -72,6 +72,9 @@ internal fun AboutScreen(onBack: () -> Unit, onLicenses: () -> Unit) {
             }
             AboutCard(R.string.about_credits) {
                 Text(stringResource(R.string.about_fonts), style = MaterialTheme.typography.bodyLarge)
+                OutlinedButton(onClick = onCredits, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+                    Text(stringResource(R.string.credits_open))
+                }
                 OutlinedButton(onClick = onLicenses, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
                     Text(stringResource(R.string.about_licenses))
                 }

@@ -109,3 +109,25 @@ remontée (70), strike des 12 quilles (60), victoire (50), « 12 ! » quille seu
 | M5 | trois ratés | élimination, puis victoire du dernier en lice |
 | M6 | mode Ludique | pas de partie parfaite, la victoire reste |
 | M7 | manche inconnue | aucun moment |
+
+## 9. Records secondaires et badges (`B`, compléments)
+
+Calculés depuis les résumés de manche (aucun stockage). Un « 12 » réussi est un lancer à 12 points qui ne fait pas
+dépasser la cible ; un retour à 25 est un lancer qui marque mais fait baisser le score. Le plus grand retard est
+mesuré après chaque événement, par rapport à l'équipe en tête.
+
+Records secondaires (manches terminées normalement, règles officielles ; à égalité, le premier à l'avoir réalisé) :
+plus de « 12 » d'un joueur dans une partie, plus longue série sans raté dans une manche, plus de retours à 25
+(total, lien vers la dernière partie), plus belle remontée (plus grand retard d'un vainqueur).
+
+Badges (manches terminées normalement) : première victoire ; partie parfaite (5 lancers, règles officielles) ;
+« Phénix » (victoire dans une manche où l'équipe est retombée à 25) ; « Sniper » (3 « 12 » ou plus dans une partie).
+
+| # | Cas | Attendu |
+|---|---|---|
+| B1 | cinq 12 de suite (le 5e fait dépasser) · partie « phénix » | 4 « 12 », 1 retour · 5 « 12 », 1 retour pour l'équipe |
+| B2 | mené 36 à 3, l'adversaire est éliminé | retard 33, plus belle remontée = 33 |
+| B3 | deux parties « phénix » identiques, puis une 3e partie | « 12 » : la plus ancienne garde le record ; retours : total 3 ; série : la meilleure |
+| B4 | mode Ludique · partie abandonnée | aucun record secondaire |
+| B5 | partie parfaite, puis partie « phénix » | première victoire, parfaite, sniper, puis phénix ; rien pour le perdant |
+| B6 | partie parfaite en mode Ludique | première victoire et sniper, pas de partie parfaite |

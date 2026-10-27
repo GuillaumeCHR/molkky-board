@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -49,7 +50,10 @@ import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.PlayerId
+import com.yogistudio.molkkyboard.core.stats.Badge
+import com.yogistudio.molkkyboard.core.stats.EarnedBadge
 import com.yogistudio.molkkyboard.core.stats.PlayerStats
+import com.yogistudio.molkkyboard.core.stats.badges
 import com.yogistudio.molkkyboard.core.stats.playerStats
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -74,6 +78,7 @@ data class StatsUiState(
     val players: List<StatsPlayer> = emptyList(),
     val selected: PlayerId? = null,
     val stats: PlayerStats? = null,
+    val badges: List<EarnedBadge> = emptyList(),
 )
 
 /** Statistiques simples des joueurs habituels (profils locaux), calculées depuis les journaux. */
@@ -94,7 +99,13 @@ class StatsViewModel
                         .filter { PlayerId(it.id) in played }
                         .map { StatsPlayer(PlayerId(it.id), it.name, it.avatar) }
                 val current = chosen?.takeIf { id -> players.any { it.id == id } } ?: players.firstOrNull()?.id
-                StatsUiState(false, players, current, current?.let { playerStats(summaries, it) })
+                StatsUiState(
+                    loading = false,
+                    players = players,
+                    selected = current,
+                    stats = current?.let { playerStats(summaries, it) },
+                    badges = current?.let { badges(summaries, it) }.orEmpty(),
+                )
             }.flowOn(Dispatchers.Default)
                 .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), StatsUiState())
 
@@ -142,6 +153,7 @@ fun StatsContent(state: StatsUiState, onBack: () -> Unit = {}, onSelect: (Player
                 }
             }
             state.stats?.let { PlayerStatsCards(it) }
+            if (state.stats != null) BadgesSection(state.badges)
         }
     }
 }
@@ -169,12 +181,71 @@ private fun PlayerStatsCards(stats: PlayerStats) {
             },
     )
     Text(stringResource(R.string.stats_best_streak, stats.bestStreak), style = MaterialTheme.typography.bodyLarge)
+    Text(stringResource(R.string.stats_twelves, stats.twelves), style = MaterialTheme.typography.bodyLarge)
+    Text(stringResource(R.string.stats_resets, stats.resets), style = MaterialTheme.typography.bodyLarge)
     Text(
         stats.fastestWin?.let { stringResource(R.string.stats_fastest, it) }
             ?: stringResource(R.string.stats_fastest_none),
         style = MaterialTheme.typography.bodyLarge,
     )
 }
+
+/** Badges obtenus (avec la date de la première fois), puis ceux qui restent à décrocher, grisés. */
+@Composable
+private fun BadgesSection(earned: List<EarnedBadge>) {
+    Text(
+        stringResource(R.string.stats_badges),
+        style = MaterialTheme.typography.titleLarge,
+        modifier = Modifier.semantics { heading() },
+    )
+    val context = LocalContext.current
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
+        verticalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
+    ) {
+        Badge.entries.forEach { badge ->
+            val got = earned.firstOrNull { it.badge == badge }
+            val (emoji, name, hint) = badge.texts()
+            Surface(
+                shape = MaterialTheme.shapes.large,
+                color = if (got != null) MolkkyBoardTheme.colors.saffron else MaterialTheme.colorScheme.surface,
+                contentColor =
+                    if (got !=
+                        null
+                    ) {
+                        MolkkyBoardTheme.colors.onSaffron
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                modifier = Modifier.alpha(if (got != null) 1f else LOCKED_ALPHA),
+            ) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+                    Text("$emoji ${stringResource(name)}", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        got?.let {
+                            DateUtils.formatDateTime(
+                                context,
+                                it.playedAt,
+                                DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH,
+                            )
+                        } ?: stringResource(hint),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun Badge.texts(): Triple<String, Int, Int> =
+    when (this) {
+        Badge.FIRST_WIN -> Triple("🥇", R.string.badge_first_win, R.string.badge_first_win_hint)
+        Badge.PERFECT_GAME -> Triple("✨", R.string.badge_perfect, R.string.badge_perfect_hint)
+        Badge.PHOENIX -> Triple("🐦‍🔥", R.string.badge_phoenix, R.string.badge_phoenix_hint)
+        Badge.SNIPER -> Triple("🎯", R.string.badge_sniper, R.string.badge_sniper_hint)
+    }
+
+private const val LOCKED_ALPHA = 0.6f
 
 @Composable
 private fun StatTile(label: String, value: String) {

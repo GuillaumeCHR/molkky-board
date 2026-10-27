@@ -6,9 +6,11 @@ import com.yogistudio.molkkyboard.core.data.StatsRepository
 import com.yogistudio.molkkyboard.core.stats.FastestEntry
 import com.yogistudio.molkkyboard.core.stats.HallTab
 import com.yogistudio.molkkyboard.core.stats.RankingFilter
+import com.yogistudio.molkkyboard.core.stats.SecondaryRecord
 import com.yogistudio.molkkyboard.core.stats.SetSummary
 import com.yogistudio.molkkyboard.core.stats.WinsEntry
 import com.yogistudio.molkkyboard.core.stats.fastestRanking
+import com.yogistudio.molkkyboard.core.stats.secondaryRecords
 import com.yogistudio.molkkyboard.core.stats.winsRanking
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -39,6 +41,8 @@ data class HallUiState(
     val fastest: List<FastestEntry> = emptyList(),
     /** Tailles d'équipe présentes dans l'historique (filtre de l'onglet Équipes). */
     val teamSizes: List<Int> = emptyList(),
+    /** Records secondaires (plus de « 12 », plus longue série, retours à 25, remontée), sur la période choisie. */
+    val secondary: List<SecondaryRecord> = emptyList(),
 )
 
 /** Hall of Fame local : classements recalculés depuis les journaux à chaque changement de filtre ou de partie. */
@@ -75,7 +79,8 @@ internal fun hallState(
     now: Long,
     zone: ZoneId = ZoneId.systemDefault(),
 ): HallUiState {
-    val filter = RankingFilter(filters.tab, since = filters.period.since(now, zone), teamSize = filters.teamSize)
+    val since = filters.period.since(now, zone)
+    val filter = RankingFilter(filters.tab, since = since, teamSize = filters.teamSize)
     return HallUiState(
         loading = false,
         filters = filters,
@@ -87,6 +92,7 @@ internal fun hallState(
                 .flatMap { s -> s.teams.map { it.players.size } }
                 .distinct()
                 .sorted(),
+        secondary = secondaryRecords(summaries.filter { since == null || it.playedAt >= since }),
     )
 }
 
