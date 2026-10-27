@@ -11,6 +11,7 @@ import com.yogistudio.molkkyboard.core.data.GameTeam
 import com.yogistudio.molkkyboard.core.data.JournalStatsRepository
 import com.yogistudio.molkkyboard.core.data.NewGame
 import com.yogistudio.molkkyboard.core.data.RoomGameRepository
+import com.yogistudio.molkkyboard.core.data.RoomPlayerRepository
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.data.memberKey
 import com.yogistudio.molkkyboard.core.database.MolkkyBoardDatabase
@@ -109,6 +110,7 @@ class GameEndViewModelTest {
             settings,
             { "ev-${ids.incrementAndGet()}" },
             JournalStatsRepository(games),
+            RoomPlayerRepository(database.playerDao()) { 1L },
         ).also(viewModels::add)
 
     /** Effets visuels seulement : les annonces vocales ont leurs propres tests. */
@@ -252,6 +254,24 @@ class GameEndViewModelTest {
             }
         }
 
+    @Test
+    fun `coach - a 38 points il faut 12, la quille 12 est surlignee, desactivable`() =
+        runTest {
+            listOf(12, 12, 12).forEach {
+                play(it)
+                play(1)
+            }
+            play(2)
+            play(1)
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            val coach = vm.awaitState { it.coach != null }.coach!!
+            assertEquals(12, coach.needed)
+            assertFalse(coach.danger)
+            settings.setCoach(false)
+            vm.awaitState { it.coach == null }
+        }
+
     private fun CoroutineScope.launchCollect(vm: GameViewModel) =
         launch(
             UnconfinedTestDispatcher(),
@@ -276,7 +296,7 @@ class GameEndViewModelTest {
 
         override suspend fun setNotificationPrompted() = Unit
 
-        override suspend fun setCoach(enabled: Boolean) = Unit
+        override suspend fun setCoach(enabled: Boolean) = settings.emit(settings.value.copy(coach = enabled))
 
         override suspend fun setShortIntro(enabled: Boolean) = Unit
 

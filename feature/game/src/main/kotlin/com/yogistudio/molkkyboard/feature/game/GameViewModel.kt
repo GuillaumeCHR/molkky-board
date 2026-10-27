@@ -8,13 +8,16 @@ import com.yogistudio.molkkyboard.core.data.GameRepository
 import com.yogistudio.molkkyboard.core.data.GameSnapshot
 import com.yogistudio.molkkyboard.core.data.GameTeam
 import com.yogistudio.molkkyboard.core.data.IdGenerator
+import com.yogistudio.molkkyboard.core.data.PlayerRepository
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.data.StatsRepository
 import com.yogistudio.molkkyboard.core.data.memberKey
 import com.yogistudio.molkkyboard.core.data.toStatsGame
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
+import com.yogistudio.molkkyboard.core.designsystem.icon.emblemSymbol
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.MissPenalty
+import com.yogistudio.molkkyboard.core.model.Overshoot
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.TeamLineup
@@ -32,6 +35,7 @@ import com.yogistudio.molkkyboard.core.scoring.MatchStatus
 import com.yogistudio.molkkyboard.core.scoring.MolkkoutThrow
 import com.yogistudio.molkkyboard.core.scoring.NextStarter
 import com.yogistudio.molkkyboard.core.scoring.Outcome
+import com.yogistudio.molkkyboard.core.scoring.PlayEvent
 import com.yogistudio.molkkyboard.core.scoring.PointsKind
 import com.yogistudio.molkkyboard.core.scoring.RemovePlayer
 import com.yogistudio.molkkyboard.core.scoring.Reorder
@@ -83,7 +87,14 @@ class GameViewModel
         private val settings: SettingsRepository,
         private val ids: IdGenerator,
         private val stats: StatsRepository,
+        players: PlayerRepository,
     ) : ViewModel() {
+        /** Avatars des profils locaux (emoji), pour les joueurs seuls. */
+        private val avatars: StateFlow<Map<String, String>> =
+            players.profiles
+                .map { list -> list.mapNotNull { p -> p.avatar?.let { p.id to it } }.toMap() }
+                .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+
         private val gameId: String = checkNotNull(savedStateHandle[GAME_ID])
         private val selection = MutableStateFlow<Selection>(Selection.None)
         private val quickMode = MutableStateFlow(QuickPadMode.SinglePin)
@@ -111,10 +122,9 @@ class GameViewModel
                 snapshots,
                 settings.settings,
                 combine(selection, quickMode, pendingOrder, ::Triple),
-                history,
-                newRecord,
-            ) { snapshot, prefs, (sel, mode, pending), past, record ->
-                snapshot.toUiState(prefs, sel, mode, past, record).copy(pendingOrder = pending)
+                combine(history, newRecord, avatars, ::Triple),
+            ) { snapshot, prefs, (sel, mode, pending), (past, record, faces) ->
+                snapshot.toUiState(prefs, sel, mode, past, record, faces).copy(pendingOrder = pending)
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), GameUiState())
 
         fun togglePin(pin: Int, knocked: Boolean) =
@@ -149,7 +159,8 @@ class GameViewModel
         }
 
         fun validate() {
-            val result = selection.value.toResult(quickMode.value) ?: return
+            val chosen = selection.value
+            val result = chosen.toResult(quickMode.value) ?: return
             viewModelScope.launch {
                 val before =
                     games
@@ -165,9 +176,14 @@ class GameViewModel
                         .first()
                         ?.team(team.id)
                         ?.name ?: team.id.value
-                val outcome = games.append(gameId, Throw(EventId(ids.newId()), result))
-                if (outcome !is Outcome.Ok) return@launch
+                // La sélection est vidée avant l'écriture : le joueur suivant n'hérite jamais des quilles du précédent,
+                // même un instant. Elle revient si le moteur refuse le lancer.
                 selection.value = Selection.None
+                val outcome = games.append(gameId, Throw(EventId(ids.newId()), result))
+                if (outcome !is Outcome.Ok) {
+                    selection.value = chosen
+                    return@launch
+                }
                 val after = outcome.value.state
                 val points = result.points
                 effects.send(GameEffect.Validated(name, points))
@@ -207,7 +223,7 @@ class GameViewModel
 
                 updated.eliminated && !team.eliminated -> {
                     effects.send(
-                        GameEffect.Eliminated(snapshot.teamUi(updated), after.config.missLimit),
+                        GameEffect.Eliminated(snapshot.teamUi(updated, faces = avatars.value), after.config.missLimit),
                     )
                     announce(Announcement.Eliminated(snapshot.team(team.id)?.name ?: team.id.value))
                 }
@@ -337,7 +353,14 @@ class GameViewModel
             syncClosed(updated)
             after.teams
                 .filter { !it.eliminated && before.team(it.id)?.eliminated == true }
-                .forEach { effects.send(GameEffect.EliminationCancelled(snapshot.teamUi(it), before.config.missLimit)) }
+                .forEach {
+                    effects.send(
+                        GameEffect.EliminationCancelled(
+                            snapshot.teamUi(it, faces = avatars.value),
+                            before.config.missLimit,
+                        ),
+                    )
+                }
             // Victoire nouvelle, ou vainqueur changé par la correction.
             val winner = after.winner.takeIf { finished }
             val newWinner = before.status != SetStatus.FINISHED || before.winner != winner
@@ -479,10 +502,11 @@ class GameViewModel
             mode: QuickPadMode,
             history: List<SetSummary>,
             record: Boolean,
+            faces: Map<String, String>,
         ): GameUiState {
             val replay = currentSet.replay
             val setState = replay.state
-            val teamsUi = setState.teams.map { teamUi(it, active = it.id == setState.turn) }
+            val teamsUi = setState.teams.map { teamUi(it, active = it.id == setState.turn, faces = faces) }
             val current = setState.currentTeam
             return GameUiState(
                 loading = false,
@@ -511,6 +535,38 @@ class GameViewModel
                 log = logRounds(),
                 end = if (setState.status == SetStatus.FINISHED) endUi(teamsUi, history, record) else null,
                 voice = VoicePrefs(prefs.voiceAnnouncements, prefs.voiceRate, prefs.voiceVolume),
+                guide = guideStep(prefs, setState, replay.effectiveLog, sel),
+                coach =
+                    current?.takeIf { prefs.coach && setState.status == SetStatus.IN_PROGRESS }?.let {
+                        coachFor(
+                            it,
+                        )
+                    },
+            )
+        }
+
+        /** Première partie guidée : quilles, puis « Valider », puis l'annulation, jusqu'à « Compris » ou « Passer ». */
+        private fun guideStep(prefs: UserSettings, state: SetState, log: List<PlayEvent>, sel: Selection): GuideStep? =
+            when {
+                prefs.onboardingDone || state.status != SetStatus.IN_PROGRESS -> null
+                log.any { it is Throw || it is Fault } -> GuideStep.UNDO
+                sel == Selection.None -> GuideStep.PINS
+                else -> GuideStep.VALIDATE
+            }
+
+        /** Fin (ou abandon) de la prise en main : elle ne revient que si on la redemande dans les Réglages. */
+        fun finishGuide() {
+            viewModelScope.launch { settings.setOnboardingDone(true) }
+        }
+
+        /** À 12 points ou moins de la cible (38 pour 50), le coach dit ce qu'il faut et surligne la quille. */
+        private fun GameSnapshot.coachFor(team: TeamState): Coach? {
+            val needed = config.targetFor(team.id) - team.score
+            if (needed !in 1..TWELVE) return null
+            return Coach(
+                needed = needed,
+                danger = needed <= DANGER_NEEDED,
+                resetTo = (config.overshoot as? Overshoot.ResetTo)?.score,
             )
         }
 
@@ -556,6 +612,9 @@ class GameViewModel
 
         companion object {
             private const val TWELVE = 12
+
+            /** Il reste 3 points ou moins : la plupart des lancers feraient dépasser la cible. */
+            private const val DANGER_NEEDED = 3
             private const val PALETTE_SIZE = 8
 
             /** Argument de navigation : identifiant de la partie. */
@@ -565,8 +624,19 @@ class GameViewModel
     }
 
 /** Une équipe telle que l'écran l'affiche. */
-internal fun GameSnapshot.teamUi(team: TeamState, active: Boolean = false): TeamUi {
+internal fun GameSnapshot.teamUi(
+    team: TeamState,
+    active: Boolean = false,
+    faces: Map<String, String> = emptyMap(),
+): TeamUi {
     val info = team(team.id)
+    // Joueur seul : l'emoji de son profil ; équipe : son emblème.
+    val avatar =
+        if (team.players.size == 1) {
+            players.firstOrNull { it.id == team.players.first() }?.profileId?.let(faces::get)
+        } else {
+            info?.emblem?.let(::emblemSymbol)
+        }
     return TeamUi(
         id = team.id,
         name = info?.name ?: team.id.value,
@@ -579,6 +649,7 @@ internal fun GameSnapshot.teamUi(team: TeamState, active: Boolean = false): Team
         remaining = (config.targetFor(team.id) - team.score).coerceAtLeast(0),
         members = team.players.map(::playerName),
         memberIds = team.players,
+        avatar = avatar,
     )
 }
 

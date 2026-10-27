@@ -26,6 +26,8 @@ data class TeamUi(
     val members: List<String> = emptyList(),
     /** Identifiants des joueurs, dans le même ordre que [members]. */
     val memberIds: List<PlayerId> = emptyList(),
+    /** Avatar affiché : l'emoji du joueur seul, ou l'emblème de l'équipe ; `null` → initiale. */
+    val avatar: String? = null,
 )
 
 /** Nature d'une ligne du déroulé. */
@@ -114,6 +116,10 @@ data class GameUiState(
     /** Fin de la manche (vainqueur, statistiques, match, série) ; `null` tant qu'elle se joue. */
     val end: EndUi? = null,
     val voice: VoicePrefs = VoicePrefs(),
+    /** Coach de fin de partie : ce qu'il faut pour gagner, quand la victoire est à portée d'un lancer. */
+    val coach: Coach? = null,
+    /** Première partie guidée : bulle à montrer, ou `null`. */
+    val guide: GuideStep? = null,
 ) {
     /** Le déroulé se modifie tant que la partie n'est pas abandonnée (même terminée : la victoire peut changer). */
     val canEditLog: Boolean get() = !abandoned
@@ -124,6 +130,37 @@ data class GameUiState(
     val scoreboard: List<TeamUi> get() =
         teams.filterNot { it.out }.sortedByDescending { it.score } +
             teams.filter { it.out }
+}
+
+/**
+ * Coach : il faut [needed] points pour gagner (la quille [needed] seule, ou [needed] quilles).
+ * [danger] : peu de points à faire, beaucoup de lancers feraient dépasser la cible (retour à [resetTo]).
+ */
+data class Coach(
+    val needed: Int,
+    val danger: Boolean,
+    val resetTo: Int?,
+)
+
+/** Étapes de la prise en main sur l'écran de jeu (la 1re, « ajouter les joueurs », est à la création). */
+enum class GuideStep {
+    /** Toucher les quilles tombées (ou les points, en saisie rapide). */
+    PINS,
+
+    /** « Valider » enregistre le lancer. */
+    VALIDATE,
+
+    /** Le bouton ↶ annule le dernier lancer. */
+    UNDO,
+    ;
+
+    /** Numéro affiché : l'étape 1 est à la création de partie. */
+    val number: Int get() = ordinal + 2
+
+    companion object {
+        /** Étapes en tout, création de partie comprise. */
+        val COUNT = entries.size + 1
+    }
 }
 
 /** Réglages des annonces vocales. */

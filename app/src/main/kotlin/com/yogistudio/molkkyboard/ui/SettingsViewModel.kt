@@ -35,6 +35,9 @@ class SettingsViewModel
 
         fun setOngoingNotification(enabled: Boolean) = launch { repository.setOngoingNotification(enabled) }
 
+        /** « Revoir la prise en main » : les bulles d'aide reviennent à la prochaine partie. */
+        fun replayGuide() = launch { repository.setOnboardingDone(false) }
+
         fun setSounds(enabled: Boolean) = launch { repository.setSounds(enabled) }
 
         fun setShortIntro(enabled: Boolean) = launch { repository.setShortIntro(enabled) }

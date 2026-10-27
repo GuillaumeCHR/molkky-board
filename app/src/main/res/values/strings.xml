@@ -43,6 +43,9 @@
     <string name="settings_voice">Annonces vocales</string>
     <string name="settings_sounds">Sons</string>
     <string name="settings_voice_hint">« Tour 4 », « Au tour de Léa, il lui faut 7 », « Retour à 25 ! »… par la synthèse vocale du téléphone. Muettes en silencieux et avec TalkBack.</string>
+    <string name="settings_guide">Revoir la prise en main</string>
+    <string name="settings_guide_hint">Les 4 bulles d\'aide reviendront à la prochaine partie.</string>
+    <string name="settings_guide_pending">Les bulles d\'aide s\'afficheront à la prochaine partie.</string>
     <string name="settings_voice_rate">Débit de la voix</string>
     <string name="settings_voice_volume">Volume de la voix</string>
     <string name="settings_notification">Notification de partie en cours</string>

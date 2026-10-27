@@ -148,4 +148,5 @@
     <string name="setup_format_match">Match en 2 manches</string>
     <string name="setup_format_match_hint">Le premier à gagner 2 manches remporte le match. Avant la belle, l\'équipe qui a marqué le plus de points commence ; à égalité, un Mölkkout les départage.</string>
     <string name="setup_format_match_imo_hint">Le premier à gagner 2 manches remporte le match ; l\'ordre de passage alterne à chaque manche (règlement IMO).</string>
+    <string name="setup_guide">Ajoutez au moins deux joueurs : un pseudo suffit. Puis « Lancer la partie ».</string>
 </resources>

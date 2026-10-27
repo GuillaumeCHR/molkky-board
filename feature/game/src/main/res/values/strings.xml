@@ -181,6 +181,19 @@
     <string name="molkkout_undo">Annuler le dernier lancer</string>
     <string name="molkkout_pin">Quille %1$d</string>
 
+    <!-- Première partie guidée -->
+    <string name="guide_pins">Touchez les quilles tombées (un second tap relève une quille). Rien n\'est compté avant « Valider ».</string>
+    <string name="guide_quick">Touchez les points du lancer. Rien n\'est compté avant « Valider ».</string>
+    <string name="guide_validate">« Valider » enregistre le lancer et passe au joueur suivant.</string>
+    <string name="guide_undo">Une erreur ? Ce bouton annule le dernier lancer. Le déroulé (⋮) corrige n\'importe quel lancer passé.</string>
+
+    <!-- Coach de fin de partie -->
+    <string name="coach_needed_one">Il te faut 1 : la quille 1 seule</string>
+    <string name="coach_needed">Il te faut %1$d : la quille %1$d seule, ou %1$d quilles</string>
+    <string name="coach_danger">Zone de danger : au-delà, retour à %1$d</string>
+    <string name="coach_danger_no_reset">Zone de danger : attention au dépassement</string>
+    <string name="coach_rules">Voir la règle du dépassement</string>
+
     <!-- Annonces vocales -->
     <string name="announce_round">Tour %1$d</string>
     <string name="announce_turn">Au tour de %1$s</string>

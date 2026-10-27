@@ -1107,7 +1107,7 @@ et tiens-la à jour jusqu'à la publication.
 - Test sur téléphone de fin de J4 : sections 1 à 6 jouées, corrections vérifiées le soir même (`docs/tests/J4-resultats.md`). Une partie complète se joue de bout en bout. Sections 7 à 11 non jouées : leurs points (fin de partie, réglages, fiabilité, performance) passent dans le plan de test du J5.
 - Tranché au J4 : « Raté » sélectionne et seul « Valider » enregistre ; le tableau des scores s'ouvre par le bouton « Scores » ou d'un tap sur le bandeau (le geste de glissement ne marche pas sur téléphone : à retirer ou revoir) ; un nouvel ordre demandé en plein tour est mis en attente et appliqué au début du tour suivant ; « + Ajouter un joueur » dans chaque carte d'équipe ; règles du jeu regroupées en parties avec intertitres.
 - 609 tests unitaires verts au moment de la clôture.
-- **Reportés** (non faits, à planifier avec l'utilisateur) : coach de fin de partie, première partie guidée en bulles (test < 30 s), geste du bandeau des scores, intro « strike » (spec du 26), `ARCHITECTURE.md` à mettre à jour (zxing-cpp au lieu de ML Kit, souveraineté), avatars sur l'écran de jeu.
+- **Reportés** au moment de la clôture : coach de fin de partie, première partie guidée, geste du bandeau des scores, avatars sur l'écran de jeu (faits le 2026-10-27, voir plus bas), intro « strike » (spec du 26), `ARCHITECTURE.md` à mettre à jour (zxing-cpp au lieu de ML Kit, souveraineté).
 
 ### Fin de partie et mémoire (J5 — 2026-10-27)
 - `core:stats` (Kotlin pur) : résumés de manche, victoires, victoire la plus rapide, « Nouveau record », série, statistiques de joueur ; tout est recalculé depuis les journaux (`docs/STATS_SPEC.md`, 27 cas). « Nouveau record » seulement si un record existait déjà (la toute première victoire n'est pas annoncée).
@@ -1121,4 +1121,11 @@ et tiens-la à jour jusqu'à la publication.
 - L'APK ne déclare pas la permission `INTERNET` : aucune requête réseau possible en mode local.
 - Plan de test : `docs/tests/J5-plan-de-test.md` (15 questions en QCM).
 - Non fait au J5 : son de victoire (optionnel, désactivé par défaut) ; le réglage « Sons » reste sans effet.
+
+### Restes du J4 (faits le 2026-10-27, après le J5, test sur téléphone à venir)
+- Coach de fin de partie : à 12 points ou moins de la cible, « Il te faut 7 : la quille 7 seule, ou 7 quilles », quille surlignée sur la grille, « Zone de danger » à 3 points ou moins ; un tap ouvre les règles ; désactivable (Réglages › Coach).
+- Première partie guidée en **4 bulles** (`GuideBubble`, design system) : ajouter les joueurs (création), toucher les quilles, « Valider », annuler. Les bulles ne captent que leurs boutons (pas de `Surface`, qui bloquait la rangée du fond : défaut trouvé par le test) ; « Passer le guide » et Réglages › « Revoir la prise en main ». Test Robolectric : premier lancer validé en deux taps sur l'écran de jeu.
+- Bandeau des scores : le glissement vertical est détecté à la passe initiale (les puces et le défilement horizontal ne l'interceptent plus) ; testé par un balayage simulé. Le bouton « Scores » reste.
+- Avatars en jeu : emoji du profil pour un joueur seul, emblème pour une équipe (banque déplacée dans `core:designsystem`). Les photos ne sont pas encore affichées en jeu.
+- Sélection vidée avant l'écriture d'un lancer : le joueur suivant n'hérite plus, même un instant, des quilles du précédent.
 

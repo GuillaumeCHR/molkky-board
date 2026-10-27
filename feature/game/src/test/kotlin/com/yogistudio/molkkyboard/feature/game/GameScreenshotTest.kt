@@ -37,8 +37,8 @@ class GameScreenshotTest {
 
     private val teams =
         listOf(
-            TeamUi(TeamId("A"), "Alice", 0, 38, 1, active = true, out = false, remaining = 12),
-            TeamUi(TeamId("B"), "Bruno", 1, 27, 0, active = false, out = false, remaining = 23),
+            TeamUi(TeamId("A"), "Alice", 0, 38, 1, active = true, out = false, remaining = 12, avatar = "🦊"),
+            TeamUi(TeamId("B"), "Bruno", 1, 27, 0, active = false, out = false, remaining = 23, avatar = "🐻"),
             TeamUi(TeamId("C"), "Chloé", 2, 12, 2, active = false, out = false, remaining = 38),
         )
     private val playing =
@@ -319,6 +319,35 @@ class GameScreenshotTest {
         compose.mainClock.advanceTimeBy(frameMs)
         compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
     }
+
+    private val idle = playing.copy(selection = Selection.None, preview = Preview())
+
+    /** Bulles de la première partie guidée, mises en page après la mesure des cibles. */
+    private fun captureGuide(name: String, state: GameUiState) {
+        compose.setContent { MolkkyBoardTheme(reducedMotion = true) { GameContent(state, GameActions()) } }
+        compose.waitForIdle()
+        compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
+    }
+
+    @Test
+    fun guideQuilles() = captureGuide("guide_quilles", idle.copy(guide = GuideStep.PINS))
+
+    @Test
+    fun guideValider() = captureGuide("guide_valider", playing.copy(guide = GuideStep.VALIDATE))
+
+    @Test
+    fun guideAnnuler() = captureGuide("guide_annuler", idle.copy(guide = GuideStep.UNDO, canUndo = true))
+
+    @Test
+    fun coach() =
+        capture(
+            "coach_zone_de_danger",
+            idle.copy(
+                teams = listOf(teams[0].copy(score = 47, remaining = 3)) + teams.drop(1),
+                currentTeam = teams[0].copy(score = 47, remaining = 3),
+                coach = Coach(needed = 3, danger = true, resetTo = 25),
+            ),
+        )
 
     @Test
     fun victoireExplosion() = captureVictory("victoire_explosion", VICTORY_BURST_MS)

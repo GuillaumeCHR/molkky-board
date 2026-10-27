@@ -19,4 +19,7 @@
     <string name="ds_rank">Rang %1$d</string>
     <string name="ds_remaining">reste %1$d</string>
     <string name="ds_misses_warning">Ratés consécutifs : %1$d sur %2$d, attention au prochain</string>
+    <string name="ds_guide_step">Prise en main · %1$d sur %2$d</string>
+    <string name="ds_guide_skip">Passer le guide</string>
+    <string name="ds_guide_done">Compris !</string>
 </resources>

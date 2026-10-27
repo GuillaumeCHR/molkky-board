@@ -219,9 +219,8 @@ exposition que Google) ; l'auto-hébergement est la porte de sortie.
 ## 9. Jalons
 
 > Replanifiés le 2026-10-25 après l'élargissement de la V1 (prompt du soir). Fait : J0 à J4, navigation et intro.
-> J4 clos le 2026-10-27 avec des restes reportés : coach de fin de partie, première partie guidée (bulles,
-> test < 30 s), geste de glissement du bandeau des scores, intro « strike », et dans ce document zxing-cpp à la
-> place de ML Kit.
+> J4 clos le 2026-10-27 ; ses restes (coach, première partie guidée, geste du bandeau, avatars) faits le même
+> jour après le J5. Restent : intro « strike », et dans ce document zxing-cpp à la place de ML Kit.
 
 | # | Jalon | Contenu | Arrêt pour validation |
 |---|---|---|---|

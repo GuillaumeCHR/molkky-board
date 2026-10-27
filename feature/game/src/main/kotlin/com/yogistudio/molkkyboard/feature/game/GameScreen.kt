@@ -11,9 +11,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,7 +52,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,11 +63,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -83,6 +86,8 @@ import com.yogistudio.molkkyboard.core.designsystem.component.BigActionButton
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionKind
 import com.yogistudio.molkkyboard.core.designsystem.component.FitRollingNumber
 import com.yogistudio.molkkyboard.core.designsystem.component.FitToScreen
+import com.yogistudio.molkkyboard.core.designsystem.component.GuideAnchors
+import com.yogistudio.molkkyboard.core.designsystem.component.GuideBubble
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 import com.yogistudio.molkkyboard.core.designsystem.component.MissIndicator
 import com.yogistudio.molkkyboard.core.designsystem.component.PinGrid
@@ -92,6 +97,8 @@ import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.designsystem.component.RoundBadge
 import com.yogistudio.molkkyboard.core.designsystem.component.ScoreRing
 import com.yogistudio.molkkyboard.core.designsystem.component.ScoreboardRow
+import com.yogistudio.molkkyboard.core.designsystem.component.guideAnchor
+import com.yogistudio.molkkyboard.core.designsystem.component.rememberGuideAnchors
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
@@ -129,6 +136,7 @@ data class GameActions(
     val onNextSet: () -> Unit = {},
     val onMolkkout: (Set<Int>) -> Unit = {},
     val onMolkkoutUndo: () -> Unit = {},
+    val onGuideDone: () -> Unit = {},
 )
 
 @Composable
@@ -264,6 +272,7 @@ fun GameScreen(
                 onNextSet = viewModel::nextSet,
                 onMolkkout = viewModel::molkkoutThrow,
                 onMolkkoutUndo = viewModel::undoMolkkout,
+                onGuideDone = viewModel::finishGuide,
             ),
         logMessage = logMessage,
         snackbar = snackbar,
@@ -354,11 +363,12 @@ fun GameContent(
     var showLog by rememberSaveable { mutableStateOf(logOpen) }
     var showPlayers by rememberSaveable { mutableStateOf(playersOpen) }
     var showRules by rememberSaveable { mutableStateOf(false) }
+    val anchors = rememberGuideAnchors()
     // Surface parente : fond et couleur de texte du thème (clair, sombre, Plein soleil).
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
-                GameTopBar(state, actions, onOpenScores = { showScoreboard = true }, onOpenLog = {
+                GameTopBar(state, actions, anchors, onOpenScores = { showScoreboard = true }, onOpenLog = {
                     showLog = true
                 }, onOpenPlayers = { showPlayers = true }, onOpenRules = {
                     showRules =
@@ -367,15 +377,15 @@ fun GameContent(
                 if (state.loading) return@Column
                 ScoresStrip(state, onOpen = { showScoreboard = true })
                 ActiveCard(state, shakeKey)
-                PreviewLine(state, actions)
+                PreviewLine(state, actions, onOpenRules = { showRules = true })
                 // Pendant « 12 ! », les quilles de la grille s'effacent (elles s'envolent) puis reviennent en fondu.
                 val pinsAlpha by animateFloatAsState(if (twelve != null) TWELVE_PINS_ALPHA else 1f, label = "pins")
                 Box(Modifier.weight(1f).fillMaxWidth()) {
-                    InputArea(state, actions, Modifier.fillMaxSize().alpha(pinsAlpha))
+                    InputArea(state, actions, Modifier.fillMaxSize().alpha(pinsAlpha).guideAnchor(anchors, GUIDE_INPUT))
                     // Les quilles s'envolent depuis la grille ; la bulle claque au centre de la zone de saisie.
                     TwelveOverlay(twelve, onTwelveDone)
                 }
-                ActionButtons(state, actions)
+                ActionButtons(state, actions, anchors)
             }
             SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp))
             OvershootSticker(overshoot, onOvershootShown, Modifier.align(Alignment.Center))
@@ -385,12 +395,45 @@ fun GameContent(
             }
             EliminationOverlay(elimination, onEliminationDone)
             if (twelve == null) VictoryOverlay(victory, onVictoryDone)
+            if (twelve == null && elimination == null) GameGuide(state, anchors, actions.onGuideDone)
         }
     }
-    if (showScoreboard && !state.loading) ScoreboardSheet(state, onDismiss = { showScoreboard = false })
-    if (showLog && !state.loading) LogSheet(state, actions, logMessage, onDismiss = { showLog = false })
-    if (showPlayers && !state.loading) PlayersSheet(state, actions, logMessage, onDismiss = { showPlayers = false })
+    if (!state.loading) {
+        GameSheets(
+            state = state,
+            actions = actions,
+            logMessage = logMessage,
+            scoreboard = showScoreboard,
+            log = showLog,
+            players = showPlayers,
+            onDismiss = { sheet ->
+                when (sheet) {
+                    Sheet.SCOREBOARD -> showScoreboard = false
+                    Sheet.LOG -> showLog = false
+                    Sheet.PLAYERS -> showPlayers = false
+                }
+            },
+        )
+    }
     if (showRules) RulesSheet(onDismiss = { showRules = false })
+}
+
+private enum class Sheet { SCOREBOARD, LOG, PLAYERS }
+
+/** Feuilles qui couvrent l'écran de saisie sans la perdre : tableau des scores, déroulé, joueurs. */
+@Composable
+private fun GameSheets(
+    state: GameUiState,
+    actions: GameActions,
+    logMessage: String?,
+    scoreboard: Boolean,
+    log: Boolean,
+    players: Boolean,
+    onDismiss: (Sheet) -> Unit,
+) {
+    if (scoreboard) ScoreboardSheet(state, onDismiss = { onDismiss(Sheet.SCOREBOARD) })
+    if (log) LogSheet(state, actions, logMessage, onDismiss = { onDismiss(Sheet.LOG) })
+    if (players) PlayersSheet(state, actions, logMessage, onDismiss = { onDismiss(Sheet.PLAYERS) })
 }
 
 /** Grille de quilles ou pavé rapide, selon le mode de saisie. */
@@ -403,6 +446,8 @@ private fun InputArea(state: GameUiState, actions: GameActions, modifier: Modifi
                     knocked = (state.selection as? Selection.Pins)?.pins.orEmpty(),
                     onToggle = actions.onTogglePin,
                     enabled = !state.finished,
+                    // Coach : la quille gagnante est surlignée.
+                    highlighted = state.coach?.let { setOf(it.needed) }.orEmpty(),
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -425,6 +470,7 @@ private fun InputArea(state: GameUiState, actions: GameActions, modifier: Modifi
 private fun GameTopBar(
     state: GameUiState,
     actions: GameActions,
+    anchors: GuideAnchors,
     onOpenScores: () -> Unit,
     onOpenLog: () -> Unit,
     onOpenPlayers: () -> Unit,
@@ -436,7 +482,11 @@ private fun GameTopBar(
         TextButton(onClick = onOpenScores, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
             Text(stringResource(R.string.game_scores_button), style = MaterialTheme.typography.titleMedium)
         }
-        IconButton(onClick = actions.onUndo, enabled = state.canUndo, modifier = Modifier.size(MBDimens.MinTouch)) {
+        IconButton(
+            onClick = actions.onUndo,
+            enabled = state.canUndo,
+            modifier = Modifier.size(MBDimens.MinTouch).guideAnchor(anchors, GUIDE_UNDO),
+        ) {
             Icon(MBIcons.Undo, contentDescription = stringResource(R.string.game_undo))
         }
         Box {
@@ -467,119 +517,6 @@ private fun GameTopBar(
                         menu = false
                         actions.onAbandon()
                     },
-                )
-            }
-        }
-    }
-}
-
-/**
- * Bandeau des autres joueurs et de leur score (jamais tronqués), avec une poignée qui invite à le tirer vers
- * le haut : on ouvre ainsi le tableau des scores, ou d'un simple tap (et par l'action TalkBack équivalente).
- * Les équipes hors jeu glissent en fin de bandeau.
- */
-@Composable
-private fun ScoresStrip(state: GameUiState, onOpen: () -> Unit) {
-    val colors = MolkkyBoardTheme.colors.teams
-    val openLabel = stringResource(R.string.game_scoreboard_open)
-    val threshold = with(LocalDensity.current) { OPEN_DRAG_THRESHOLD.toPx() }
-    var dragged by remember { mutableFloatStateOf(0f) }
-    val currentOpen by rememberUpdatedState(onOpen)
-    Column(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                // Glissement vertical dans les deux sens : le bandeau est en haut de l'écran, le « tirer vers le
-                // haut » seul n'était pas naturel (retour du test sur téléphone).
-                .draggable(
-                    state = rememberDraggableState { delta -> dragged += delta },
-                    orientation = Orientation.Vertical,
-                    onDragStarted = { dragged = 0f },
-                    onDragStopped = { if (abs(dragged) > threshold) currentOpen() },
-                ).clickable(onClickLabel = openLabel, onClick = onOpen),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(
-            Modifier
-                .padding(top = 2.dp, bottom = 4.dp)
-                .size(width = 40.dp, height = 5.dp)
-                .background(MaterialTheme.colorScheme.outline, CircleShape),
-        )
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = MBDimens.ScreenPadding, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
-        ) {
-            val others = state.teams.filterNot { it.active }
-            (others.filterNot { it.out } + others.filter { it.out }).forEach { team ->
-                PlayerChip(
-                    name = team.name,
-                    color = colors[team.colorIndex % colors.size],
-                    score = team.score,
-                    onClick = onOpen,
-                    // Largeur bornée : dans un bandeau qui défile, le nom s'abrège au lieu de disparaître.
-                    modifier = Modifier.widthIn(max = CHIP_MAX_WIDTH).alpha(if (team.out) OUT_ALPHA else 1f),
-                )
-            }
-        }
-    }
-}
-
-/**
- * Tableau des scores en temps réel : une feuille qui couvre l'écran de saisie, sans la perdre. Classement par
- * score, joueur actif surligné, équipes hors jeu grisées en bas. On la referme en glissant vers le bas, en
- * touchant à l'extérieur ou avec le bouton retour.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ScoreboardSheet(state: GameUiState, onDismiss: () -> Unit) {
-    val colors = MolkkyBoardTheme.colors.teams
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-    ) {
-        Column(
-            Modifier
-                .verticalScroll(rememberScrollState())
-                .navigationBarsPadding()
-                .padding(horizontal = MBDimens.ScreenPadding)
-                .padding(bottom = MBDimens.ScreenPadding),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    stringResource(R.string.game_scoreboard_title),
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.weight(1f).semantics { heading() },
-                )
-                RoundBadge(state.round)
-            }
-            Spacer(Modifier.size(8.dp))
-            var rank = 0
-            var previous: Int? = null
-            state.scoreboard.forEachIndexed { index, team ->
-                // Égalité : même rang (1, 2, 2, 4).
-                if (!team.out && team.score != previous) rank = index + 1
-                previous = team.score
-                ScoreboardRow(
-                    rank = if (team.out) null else rank,
-                    name = team.name,
-                    color = colors[team.colorIndex % colors.size],
-                    score = team.score,
-                    remaining = team.remaining,
-                    misses = team.misses,
-                    missLimit = state.missLimit,
-                    active = team.active,
-                    status =
-                        when {
-                            !team.out -> null
-                            team.eliminated -> stringResource(R.string.game_eliminated_stamp)
-                            else -> stringResource(R.string.game_left)
-                        },
-                    members = team.members,
                 )
             }
         }
@@ -628,7 +565,7 @@ private fun ActiveCard(state: GameUiState, shakeKey: Int) {
                     itemVerticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        team.name,
+                        listOfNotNull(team.avatar, team.name).joinToString(" "),
                         style = MaterialTheme.typography.headlineMedium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -700,50 +637,88 @@ private fun previewColor(kind: PreviewKind) =
         PreviewKind.POINTS -> MaterialTheme.colorScheme.onSurface
     }
 
+/** Message du coach (sans sélection en cours) ; un tap ouvre les règles. */
 @Composable
-private fun PreviewLine(state: GameUiState, actions: GameActions) {
-    val preview = state.preview
-    val text = previewText(state)
-    val color = previewColor(preview.kind)
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(start = MBDimens.ScreenPadding, end = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+private fun CoachLine(coach: Coach, onOpenRules: () -> Unit, modifier: Modifier) {
+    val label = stringResource(R.string.coach_rules)
+    Column(modifier.clickable(onClickLabel = label, onClick = onOpenRules)) {
         Text(
-            text,
-            style =
-                if (preview.kind ==
-                    PreviewKind.NONE
-                ) {
-                    MaterialTheme.typography.titleMedium
-                } else {
-                    MaterialTheme.typography.headlineMedium
-                },
-            fontWeight = if (preview.kind == PreviewKind.NONE) null else FontWeight.ExtraBold,
-            color = color,
-            modifier = Modifier.weight(1f),
-            maxLines = 1,
+            if (coach.needed ==
+                1
+            ) {
+                stringResource(R.string.coach_needed_one)
+            } else {
+                stringResource(R.string.coach_needed, coach.needed)
+            },
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
         )
-        // Bascule discrète entre la grille de quilles et le pavé rapide.
-        val other = if (state.inputMode == InputMode.PINS) InputMode.QUICK else InputMode.PINS
-        TextButton(onClick = { actions.onInputMode(other) }) {
+        if (coach.danger) {
             Text(
-                stringResource(
-                    if (other ==
-                        InputMode.QUICK
-                    ) {
-                        R.string.game_switch_to_quick
-                    } else {
-                        R.string.game_switch_to_pins
-                    },
-                ),
+                coach.resetTo?.let { stringResource(R.string.coach_danger, it) }
+                    ?: stringResource(R.string.coach_danger_no_reset),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MolkkyBoardTheme.colors.coralText,
             )
         }
     }
 }
 
 @Composable
-private fun ActionButtons(state: GameUiState, actions: GameActions) {
+private fun PreviewLine(state: GameUiState, actions: GameActions, onOpenRules: () -> Unit) {
+    val preview = state.preview
+    val coach = state.coach.takeIf { preview.kind == PreviewKind.NONE }
+    val text = previewText(state)
+    val color = previewColor(preview.kind)
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(start = MBDimens.ScreenPadding, end = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (coach != null) {
+            CoachLine(coach, onOpenRules, Modifier.weight(1f))
+        } else {
+            PreviewText(text, preview.kind, color, Modifier.weight(1f))
+        }
+        // Bascule discrète entre la grille de quilles et le pavé rapide.
+        InputModeSwitch(state, actions)
+    }
+}
+
+@Composable
+private fun PreviewText(text: String, kind: PreviewKind, color: Color, modifier: Modifier) {
+    val idle = kind == PreviewKind.NONE
+    Text(
+        text,
+        style = if (idle) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineMedium,
+        fontWeight = if (idle) null else FontWeight.ExtraBold,
+        color = color,
+        modifier = modifier,
+        maxLines = 1,
+    )
+}
+
+@Composable
+private fun InputModeSwitch(state: GameUiState, actions: GameActions) {
+    val other = if (state.inputMode == InputMode.PINS) InputMode.QUICK else InputMode.PINS
+    TextButton(onClick = { actions.onInputMode(other) }) {
+        Text(
+            stringResource(
+                if (other ==
+                    InputMode.QUICK
+                ) {
+                    R.string.game_switch_to_quick
+                } else {
+                    R.string.game_switch_to_pins
+                },
+            ),
+        )
+    }
+}
+
+@Composable
+private fun ActionButtons(state: GameUiState, actions: GameActions, anchors: GuideAnchors) {
     Row(
         modifier =
             Modifier
@@ -767,7 +742,7 @@ private fun ActionButtons(state: GameUiState, actions: GameActions) {
             kind = BigActionKind.Validate,
             icon = MBIcons.Check,
             enabled = state.canValidate,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).guideAnchor(anchors, GUIDE_VALIDATE),
         )
     }
 }
@@ -821,9 +796,6 @@ private fun OvershootSticker(resetTo: Int?, onShown: () -> Unit, modifier: Modif
 }
 
 private const val DOUBLE_VIBRATION_GAP_MS = 180L
-private const val OUT_ALPHA = 0.45f
-private val CHIP_MAX_WIDTH = 200.dp
-private val OPEN_DRAG_THRESHOLD = 24.dp
 private const val TWELVE_PINS_ALPHA = 0.1f
 private const val STICKER_MS = 1_600L
 private const val LOG_MESSAGE_MS = 4_000L

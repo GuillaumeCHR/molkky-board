@@ -18,6 +18,7 @@ import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.RulesMode
 import com.yogistudio.molkkyboard.core.model.TeamOverride
 import com.yogistudio.molkkyboard.core.model.UserSettings
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +30,8 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -117,10 +120,11 @@ class SetupViewModelTest {
             add("Alice")
             add("Bruno")
             vm.setImo(true)
-            var created: String? = null
-            vm.start { created = it }
-            val id = games.observeOngoingGameId().first { it != null }
-            assertEquals(id, created)
+            val created = CompletableDeferred<String>()
+            vm.start { created.complete(it) }
+            // Le rappel arrive après l'écriture : on l'attend avant de comparer.
+            val id = withContext(Dispatchers.Default) { withTimeout(TIMEOUT_MS) { created.await() } }
+            assertEquals(id, games.observeOngoingGameId().first { it != null })
             val game = games.observe(id!!).first()!!
             assertEquals(GameConfig.ImoTournament, game.config)
             assertEquals(listOf("Alice", "Bruno"), game.teams.map { it.name })
@@ -400,3 +404,5 @@ class SetupViewModelTest {
         const val POLL_MS = 50L
     }
 }
+
+private const val TIMEOUT_MS = 5_000L

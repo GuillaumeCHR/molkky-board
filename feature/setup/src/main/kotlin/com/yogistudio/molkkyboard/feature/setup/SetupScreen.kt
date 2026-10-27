@@ -61,7 +61,13 @@ import coil3.compose.AsyncImage
 import com.yogistudio.molkkyboard.core.data.PlayerProfile
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionButton
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionKind
+import com.yogistudio.molkkyboard.core.designsystem.component.GuideBubble
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
+import com.yogistudio.molkkyboard.core.designsystem.component.guideAnchor
+import com.yogistudio.molkkyboard.core.designsystem.component.rememberGuideAnchors
+import com.yogistudio.molkkyboard.core.designsystem.icon.PLAYER_AVATARS
+import com.yogistudio.molkkyboard.core.designsystem.icon.TEAM_EMBLEMS
+import com.yogistudio.molkkyboard.core.designsystem.icon.emblemSymbol
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.GameConfig
@@ -100,6 +106,7 @@ data class SetupActions(
     val onMode: (RulesMode) -> Unit = {},
     val onImo: (Boolean) -> Unit = {},
     val onSetsToWin: (Int) -> Unit = {},
+    val onSkipGuide: () -> Unit = {},
     val onPlayful: (GameConfig) -> Unit = {},
     val onFamily: (TeamId, TeamOverride) -> Unit = { _, _ -> },
     val onStart: () -> Unit = {},
@@ -146,6 +153,7 @@ fun SetupScreen(
                 onMode = viewModel::setMode,
                 onImo = viewModel::setImo,
                 onSetsToWin = viewModel::setSetsToWin,
+                onSkipGuide = viewModel::skipGuide,
                 onPlayful = viewModel::setPlayful,
                 onFamily = viewModel::setFamily,
                 onStart = { viewModel.start(onGameCreated) },
@@ -158,62 +166,75 @@ fun SetupScreen(
 fun SetupContent(state: SetupUiState, actions: SetupActions) {
     var editingPlayful by rememberSaveable { mutableStateOf(false) }
     var avatarFor by remember { mutableStateOf<PlayerId?>(null) }
-    Column(Modifier.fillMaxSize().imePadding()) {
-        MBTopBar(stringResource(R.string.setup_title), actions.onBack)
-        Column(
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = MBDimens.ScreenPadding),
-            verticalArrangement = Arrangement.spacedBy(MBDimens.Gap),
-        ) {
-            Label(R.string.setup_players)
-            PlayModeSelector(state.playMode, actions.onPlayMode)
-            // En équipes, on ajoute les joueurs directement dans chaque équipe (retour du test sur téléphone).
-            if (state.playMode == PlayMode.SOLO) {
-                AddPlayerRow(state, actions)
-                if (state.profiles.isNotEmpty()) KnownProfiles(state.profiles, actions.onAddProfile)
-            } else {
-                Hint(R.string.setup_teams_hint)
-            }
-            when (state.playMode) {
-                PlayMode.SOLO -> SoloOrder(state, actions, onAvatar = { avatarFor = it })
-                PlayMode.TEAMS -> TeamsOrder(state, actions, onAvatar = { avatarFor = it })
-            }
-            if (state.units.size >= 2) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Hint(R.string.setup_order_hint, Modifier.weight(1f))
-                    TextButton(onClick = actions.onShuffle, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
-                        Text(stringResource(R.string.setup_shuffle))
+    val anchors = rememberGuideAnchors()
+    Box(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().imePadding()) {
+            MBTopBar(stringResource(R.string.setup_title), actions.onBack)
+            Column(
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = MBDimens.ScreenPadding),
+                verticalArrangement = Arrangement.spacedBy(MBDimens.Gap),
+            ) {
+                Label(R.string.setup_players)
+                PlayModeSelector(state.playMode, actions.onPlayMode)
+                // En équipes, on ajoute les joueurs directement dans chaque équipe (retour du test sur téléphone).
+                if (state.playMode == PlayMode.SOLO) {
+                    AddPlayerRow(state, actions, Modifier.guideAnchor(anchors, GUIDE_ADD))
+                    if (state.profiles.isNotEmpty()) KnownProfiles(state.profiles, actions.onAddProfile)
+                } else {
+                    Hint(R.string.setup_teams_hint)
+                }
+                when (state.playMode) {
+                    PlayMode.SOLO -> SoloOrder(state, actions, onAvatar = { avatarFor = it })
+                    PlayMode.TEAMS -> TeamsOrder(state, actions, onAvatar = { avatarFor = it })
+                }
+                if (state.units.size >= 2) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Hint(R.string.setup_order_hint, Modifier.weight(1f))
+                        TextButton(onClick = actions.onShuffle, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+                            Text(stringResource(R.string.setup_shuffle))
+                        }
                     }
                 }
+                RulesSection(state, actions, onEditPlayful = { editingPlayful = true })
             }
-            RulesSection(state, actions, onEditPlayful = { editingPlayful = true })
-        }
-        // Le bouton de lancement reste visible en bas et devient évident dès deux joueurs.
-        Column(
-            modifier = Modifier.navigationBarsPadding().padding(MBDimens.ScreenPadding),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            if (!state.canStart) {
-                Hint(
-                    if (state.playMode ==
-                        PlayMode.SOLO
-                    ) {
-                        R.string.setup_need_two
-                    } else {
-                        R.string.setup_need_two_teams
-                    },
+            // Le bouton de lancement reste visible en bas et devient évident dès deux joueurs.
+            Column(
+                modifier = Modifier.navigationBarsPadding().padding(MBDimens.ScreenPadding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                if (!state.canStart) {
+                    Hint(
+                        if (state.playMode ==
+                            PlayMode.SOLO
+                        ) {
+                            R.string.setup_need_two
+                        } else {
+                            R.string.setup_need_two_teams
+                        },
+                    )
+                }
+                BigActionButton(
+                    text = stringResource(R.string.setup_start),
+                    onClick = actions.onStart,
+                    kind = BigActionKind.Primary,
+                    enabled = state.canStart,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
-            BigActionButton(
-                text = stringResource(R.string.setup_start),
-                onClick = actions.onStart,
-                kind = BigActionKind.Primary,
-                enabled = state.canStart,
-                modifier = Modifier.fillMaxWidth(),
+        }
+        // Prise en main, étape 1 sur 4 : tant qu'il manque des joueurs.
+        if (state.guide && !state.canStart) {
+            GuideBubble(
+                text = stringResource(R.string.setup_guide),
+                step = 1,
+                steps = GUIDE_STEPS,
+                anchor = anchors.of(GUIDE_ADD).takeIf { state.playMode == PlayMode.SOLO },
+                onSkip = actions.onSkipGuide,
             )
         }
     }
@@ -237,6 +258,9 @@ fun SetupContent(state: SetupUiState, actions: SetupActions) {
     avatarFor?.let { id -> state.player(id)?.let { AvatarSheet(it, actions, onDismiss = { avatarFor = null }) } }
 }
 
+private const val GUIDE_ADD = "add_player"
+private const val GUIDE_STEPS = 4
+
 @Composable
 private fun PlayModeSelector(mode: PlayMode, onChange: (PlayMode) -> Unit) {
     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -255,8 +279,9 @@ private fun PlayModeSelector(mode: PlayMode, onChange: (PlayMode) -> Unit) {
 }
 
 @Composable
-private fun AddPlayerRow(state: SetupUiState, actions: SetupActions) {
+private fun AddPlayerRow(state: SetupUiState, actions: SetupActions, modifier: Modifier = Modifier) {
     Row(
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
     ) {

@@ -2,6 +2,7 @@ package com.yogistudio.molkkyboard.feature.setup
 
 import com.yogistudio.molkkyboard.core.data.KnownTeam
 import com.yogistudio.molkkyboard.core.data.PlayerProfile
+import com.yogistudio.molkkyboard.core.designsystem.icon.PLAYER_AVATARS
 import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.RulesMode
@@ -64,6 +65,8 @@ data class SetupUiState(
     val family: Map<TeamId, TeamOverride> = emptyMap(),
     /** Format : une manche (1) ou un match en 2 manches gagnantes (belle comprise). */
     val setsToWin: Int = 1,
+    /** Première partie guidée en cours (la bulle « ajoutez les joueurs » s'affiche tant qu'il en manque). */
+    val guide: Boolean = false,
     val creating: Boolean = false,
 ) {
     fun player(id: PlayerId): SetupPlayer? = players.firstOrNull { it.id == id }

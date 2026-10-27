@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.yogistudio.molkkyboard.core.data.KnownTeam
 import com.yogistudio.molkkyboard.core.data.PlayerProfile
+import com.yogistudio.molkkyboard.core.designsystem.icon.PLAYER_AVATARS
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
@@ -61,4 +62,7 @@ class SetupScreenshotTest {
                     ),
             ),
         )
+
+    @Test
+    fun guideAjouterLesJoueurs() = capture("guide_ajouter_joueurs", SetupUiState(guide = true))
 }

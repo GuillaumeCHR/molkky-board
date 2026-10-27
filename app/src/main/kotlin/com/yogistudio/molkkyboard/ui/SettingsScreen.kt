@@ -119,6 +119,11 @@ internal fun SettingsScreen(
                 settings.coach,
                 onChange = viewModel::setCoach,
             )
+            SettingsLink(
+                R.string.settings_guide,
+                if (settings.onboardingDone) R.string.settings_guide_hint else R.string.settings_guide_pending,
+                viewModel::replayGuide,
+            )
             SettingsSwitch(
                 R.string.settings_voice,
                 R.string.settings_voice_hint,

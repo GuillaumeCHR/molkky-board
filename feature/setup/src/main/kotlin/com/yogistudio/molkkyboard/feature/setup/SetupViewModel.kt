@@ -13,6 +13,8 @@ import com.yogistudio.molkkyboard.core.data.PlayerProfile
 import com.yogistudio.molkkyboard.core.data.PlayerRepository
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.data.memberKey
+import com.yogistudio.molkkyboard.core.designsystem.icon.PLAYER_AVATARS
+import com.yogistudio.molkkyboard.core.designsystem.icon.TEAM_EMBLEMS
 import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.RulesMode
@@ -45,7 +47,7 @@ class SetupViewModel
     @Inject
     constructor(
         private val games: GameRepository,
-        settings: SettingsRepository,
+        private val settings: SettingsRepository,
         private val profiles: PlayerRepository,
         private val photos: PhotoStore,
         private val ids: IdGenerator,
@@ -59,10 +61,18 @@ class SetupViewModel
                 mutableState.update { if (it.playfulEdited) it else it.copy(playful = defaults) }
             }
             viewModelScope.launch {
+                settings.settings.collect { prefs -> mutableState.update { it.copy(guide = !prefs.onboardingDone) } }
+            }
+            viewModelScope.launch {
                 profiles.profiles.collect { list ->
                     mutableState.update { it.copy(knownProfiles = list) }
                 }
             }
+        }
+
+        /** « Passer le guide » : la prise en main ne revient que si on la redemande dans les Réglages. */
+        fun skipGuide() {
+            viewModelScope.launch { settings.setOnboardingDone(true) }
         }
 
         fun onNameChange(name: String) = mutableState.update { it.copy(draftName = name.take(SetupUiState.MAX_NAME)) }

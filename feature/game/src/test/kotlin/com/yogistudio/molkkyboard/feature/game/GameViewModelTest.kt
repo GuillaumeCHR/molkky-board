@@ -11,6 +11,7 @@ import com.yogistudio.molkkyboard.core.data.GameTeam
 import com.yogistudio.molkkyboard.core.data.JournalStatsRepository
 import com.yogistudio.molkkyboard.core.data.NewGame
 import com.yogistudio.molkkyboard.core.data.RoomGameRepository
+import com.yogistudio.molkkyboard.core.data.RoomPlayerRepository
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.data.memberKey
 import com.yogistudio.molkkyboard.core.database.MolkkyBoardDatabase
@@ -108,6 +109,7 @@ class GameViewModelTest {
             settings,
             { "ev-${ids.incrementAndGet()}" },
             JournalStatsRepository(games),
+            RoomPlayerRepository(database.playerDao()) { 1L },
         ).also(viewModels::add)
 
     /** Effets visuels seulement : les annonces vocales ont leurs propres tests. */
