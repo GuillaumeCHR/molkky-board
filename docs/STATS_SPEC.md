@@ -93,3 +93,19 @@ victoires ↓ puis total de points ↓.
 | Z2 | une manche à trois équipes au milieu | la série repart après elle |
 | Z3 | une seule manche · manche inconnue | pas de série |
 | Z4 | 1 victoire chacun | le total de points départage |
+
+## 8. Moments partageables (`M`, J6)
+
+Détectés depuis le journal effectif d'une manche, classés par force : record (100), partie parfaite (90),
+remontée (70), strike des 12 quilles (60), victoire (50), « 12 ! » quille seule (40), retour depuis 49 (30),
+élimination (20). L'écran de fin propose le plus fort ; les autres restent accessibles d'un glissement.
+
+| # | Cas | Attendu |
+|---|---|---|
+| M1 | 12, 12, 12, 12, 2 avec record | record, parfaite, victoire (5 lancers, tour 5), quatre « 12 » |
+| M2 | les 12 quilles d'un coup | un « 12 » strike, plus fort qu'une victoire |
+| M3 | à 49, un 12 fait dépasser | pas de « 12 » pour ce lancer ; un « retour depuis 49 » |
+| M4 | mené de 35 points puis victoire | remontée (retard ≥ 15) |
+| M5 | trois ratés | élimination, puis victoire du dernier en lice |
+| M6 | mode Ludique | pas de partie parfaite, la victoire reste |
+| M7 | manche inconnue | aucun moment |
