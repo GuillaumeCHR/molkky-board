@@ -256,7 +256,8 @@ class GameViewModelTest {
             backgroundScope.launchCollect(vm)
             vm.abandon()
             assertTrue(vm.awaitState { it.abandoned }.abandoned)
-            assertNull(games.observeOngoingGameId().first())
+            // La clôture est écrite juste après l'abandon : on l'attend.
+            assertNull(games.observeOngoingGameId().first { it == null })
         }
 
     @Test

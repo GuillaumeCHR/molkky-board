@@ -137,6 +137,7 @@ data class GameActions(
     val onMolkkout: (Set<Int>) -> Unit = {},
     val onMolkkoutUndo: () -> Unit = {},
     val onGuideDone: () -> Unit = {},
+    val onShare: () -> Unit = {},
 )
 
 @Composable
@@ -145,6 +146,7 @@ fun GameScreen(
     onNewGame: () -> Unit,
     onHome: () -> Unit,
     onOpenGame: (String) -> Unit = {},
+    onShare: () -> Unit = {},
     viewModel: GameViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -273,6 +275,7 @@ fun GameScreen(
                 onMolkkout = viewModel::molkkoutThrow,
                 onMolkkoutUndo = viewModel::undoMolkkout,
                 onGuideDone = viewModel::finishGuide,
+                onShare = onShare,
             ),
         logMessage = logMessage,
         snackbar = snackbar,

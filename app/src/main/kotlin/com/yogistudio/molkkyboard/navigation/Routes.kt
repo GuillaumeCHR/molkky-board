@@ -43,6 +43,12 @@ data class GameRoute(
     val gameId: String,
 )
 
+/** Partage d'une partie (vignette, vidéo) ; le nom du paramètre est lu par `ShareViewModel` (`GAME_ID`). */
+@Serializable
+data class ShareRoute(
+    val gameId: String,
+)
+
 /** Hall of Fame › Statistiques des joueurs. */
 @Serializable
 data object StatsRoute

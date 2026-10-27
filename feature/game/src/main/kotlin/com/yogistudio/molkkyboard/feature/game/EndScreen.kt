@@ -338,6 +338,13 @@ private fun EndActions(state: GameUiState, end: EndUi?, actions: GameActions) {
         }
 
         else -> {
+            // Le partage est proposé, jamais imposé : il ne passe pas devant la revanche.
+            BigActionButton(
+                stringResource(R.string.end_share),
+                actions.onShare,
+                BigActionKind.Secondary,
+                Modifier.fillMaxWidth(),
+            )
             RematchButton(actions)
             BigActionButton(
                 stringResource(R.string.game_new_game),

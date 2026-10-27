@@ -27,6 +27,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.yogistudio.molkkyboard.R
 import com.yogistudio.molkkyboard.core.designsystem.component.MolkkyBoardLogotype
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
@@ -35,6 +36,7 @@ import com.yogistudio.molkkyboard.core.model.UserSettings
 import com.yogistudio.molkkyboard.feature.game.GameScreen
 import com.yogistudio.molkkyboard.feature.game.RulesScreen
 import com.yogistudio.molkkyboard.feature.history.HistoryScreen
+import com.yogistudio.molkkyboard.feature.share.ShareScreen
 import com.yogistudio.molkkyboard.feature.intro.IntroScreen
 import com.yogistudio.molkkyboard.feature.setup.PlayfulRulesScreen
 import com.yogistudio.molkkyboard.feature.setup.SetupScreen
@@ -154,6 +156,7 @@ fun MolkkyBoardNavHost(
                     )
                 }
                 composable<StatsRoute> { StatsScreen(onBack = navController::navigateUp) }
+                composable<ShareRoute> { ShareScreen(onBack = navController::navigateUp) }
                 composable<SettingsRoute> {
                     SettingsScreen(
                         onAbout = { navController.navigate(AboutRoute) },
@@ -181,8 +184,10 @@ fun MolkkyBoardNavHost(
                         },
                     )
                 }
-                composable<GameRoute> {
+                composable<GameRoute> { entry ->
+                    val gameId = entry.toRoute<GameRoute>().gameId
                     GameScreen(
+                        onShare = { navController.navigate(ShareRoute(gameId)) },
                         onBack = navController::navigateUp,
                         onNewGame = { navController.navigate(SetupRoute) { popUpTo<HomeRoute>() } },
                         onHome = { navController.popBackStack<HomeRoute>(inclusive = false) },

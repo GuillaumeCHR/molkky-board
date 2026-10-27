@@ -157,6 +157,7 @@
         <item quantity="other">%d ratés</item>
     </plurals>
     <string name="end_rematch">Revanche</string>
+    <string name="end_share">Partager ce moment</string>
     <string name="end_rematch_order">Ordre de passage de la revanche</string>
     <string name="end_order_same">Identique</string>
     <string name="end_order_rotate">Rotation (le 2e commence)</string>

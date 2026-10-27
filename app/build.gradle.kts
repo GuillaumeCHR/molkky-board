@@ -38,6 +38,7 @@ dependencies {
     implementation(projects.feature.game)
     implementation(projects.feature.history)
     implementation(projects.feature.stats)
+    implementation(projects.feature.share)
     implementation(projects.core.data)
 
     implementation(libs.androidx.core.ktx)
