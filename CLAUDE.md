@@ -1172,3 +1172,4 @@ et tiens-la à jour jusqu'à la publication.
 - 2026-10-27 — **« Introduction courte » retirée des Réglages** (jugée inutile) : l'intro complète est toujours jouée.
 
 - 2026-10-27 — Section « Open source » retirée du générique (redondante avec À propos › Bibliothèques open source, qui reste).
+- 2026-10-27 — **Crédits intégrés à « À propos »** dans un bloc à part (plus d'écran dédié ni de défilement automatique ; scintillement final quand on arrive en bas) ; la liste des bibliothèques reste sur son écran. Retirés à la demande : « exit 0 » ; « Cookies » affiche « 0 (pas les crêpes) ». Statistiques : grands chiffres pour les nombres seulement.

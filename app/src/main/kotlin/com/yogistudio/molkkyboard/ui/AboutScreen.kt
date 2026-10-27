@@ -37,18 +37,20 @@ import com.yogistudio.molkkyboard.crash.deviceSummary
 
 /**
  * « À propos » : logotype, version, éditeur, encart « Vie privée » (chaque phrase est vraie et vérifiable), crédits
- * (bibliothèques et polices) et, dans les versions de test, « Envoyer un retour ».
+ * (bloc « Crédits », la liste des bibliothèques sur son propre écran) et, dans les versions de test, « Envoyer un
+ * retour ».
  */
 @Composable
-internal fun AboutScreen(onBack: () -> Unit, onLicenses: () -> Unit, onCredits: () -> Unit) {
+internal fun AboutScreen(onBack: () -> Unit, onLicenses: () -> Unit) {
     val context = LocalContext.current
+    val scroll = rememberScrollState()
     Column(Modifier.fillMaxSize()) {
         MBTopBar(stringResource(R.string.settings_about), onBack)
         Column(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scroll)
                     .navigationBarsPadding()
                     .padding(MBDimens.ScreenPadding),
             verticalArrangement = Arrangement.spacedBy(MBDimens.Gap),
@@ -70,15 +72,6 @@ internal fun AboutScreen(onBack: () -> Unit, onLicenses: () -> Unit, onCredits: 
                     Text(stringResource(it), style = MaterialTheme.typography.bodyLarge)
                 }
             }
-            AboutCard(R.string.about_credits) {
-                Text(stringResource(R.string.about_fonts), style = MaterialTheme.typography.bodyLarge)
-                OutlinedButton(onClick = onCredits, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
-                    Text(stringResource(R.string.credits_open))
-                }
-                OutlinedButton(onClick = onLicenses, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
-                    Text(stringResource(R.string.about_licenses))
-                }
-            }
             if (BuildConfig.FEEDBACK) {
                 val subject = stringResource(R.string.about_feedback_subject)
                 val body = stringResource(R.string.about_feedback_body, deviceSummary())
@@ -90,6 +83,7 @@ internal fun AboutScreen(onBack: () -> Unit, onLicenses: () -> Unit, onCredits: 
                     ) { Text(stringResource(R.string.about_feedback)) }
                 }
             }
+            CreditsSection(scroll, onLicenses)
         }
     }
 }

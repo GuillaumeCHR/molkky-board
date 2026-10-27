@@ -5,6 +5,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,38 +57,29 @@ import kotlin.math.PI
 import kotlin.math.sin
 
 /**
- * Crédits, façon générique de film : défilement automatique lent, arrêté au premier tap ou glissement ; liste
- * statique avec « Réduire les animations ». Ton léger, mais chaque affirmation est vraie (comme l'encart « Vie
- * privée ») ; la version vient de `BuildConfig`. Scène post-générique : le scintillement de l'intro, une seule fois.
+ * Bloc « Crédits » de l'écran À propos. Ton léger, mais chaque affirmation est vraie (comme l'encart « Vie
+ * privée ») ; la version vient de `BuildConfig`. Scène post-générique : le scintillement de l'intro, une seule fois,
+ * quand on arrive en bas de l'écran ([scroll]). La liste des bibliothèques reste sur son propre écran ([onLicenses]).
  */
 @Composable
-internal fun CreditsScreen(onBack: () -> Unit) {
-    val scroll = rememberScrollState()
+internal fun CreditsSection(scroll: ScrollState, onLicenses: () -> Unit) {
     val reduced = MolkkyBoardTheme.reducedMotion
-    var rolling by rememberSaveable { mutableStateOf(!reduced) }
-    LaunchedEffect(rolling, scroll.maxValue) {
-        if (!rolling || scroll.maxValue == 0) return@LaunchedEffect
-        val remaining = scroll.maxValue - scroll.value
-        scroll.animateScrollTo(scroll.maxValue, tween((remaining / ROLL_PX_PER_MS).toInt(), easing = LinearEasing))
-        rolling = false
-    }
     val atEnd by remember { derivedStateOf { scroll.maxValue > 0 && scroll.value >= scroll.maxValue - END_SLACK } }
-    Column(Modifier.fillMaxSize()) {
-        MBTopBar(stringResource(R.string.credits_title), onBack)
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Column(
-            Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        awaitFirstDown(requireUnconsumed = false)
-                        rolling = false
-                    }
-                }.verticalScroll(scroll)
-                .navigationBarsPadding()
-                .padding(MBDimens.ScreenPadding),
+            Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(MBDimens.Gap),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            Text(
+                stringResource(R.string.about_credits),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.fillMaxWidth().semantics { heading() },
+            )
             Terminal()
             Title(stringResource(R.string.app_name))
             Text(
@@ -102,6 +95,9 @@ internal fun CreditsScreen(onBack: () -> Unit) {
             CREDITS.forEach { Credit(it) }
             Heading(R.string.credits_game_title)
             Body(R.string.credits_game)
+            OutlinedButton(onClick = onLicenses, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+                Text(stringResource(R.string.about_licenses))
+            }
             Credit(
                 CreditBlock(R.string.credits_hardware_title, R.string.credits_hardware, R.string.credits_hardware_note),
             )
@@ -109,12 +105,10 @@ internal fun CreditsScreen(onBack: () -> Unit) {
             ProductionStats()
             Heading(R.string.credits_thanks_title)
             listOf(R.string.credits_thanks_players, R.string.credits_thanks_pin12).forEach { Body(it) }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
             Note(stringResource(R.string.credits_outro))
             Note(stringResource(R.string.credits_post_credits))
             Sparkle(play = atEnd && !reduced)
-            Text("exit 0", style = MolkkyBoardTheme.typography.scoreSmall, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(48.dp))
         }
     }
 }
@@ -252,7 +246,15 @@ private fun ProductionStats() {
             rows.forEach { (label, value) ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                    Text(value, style = MolkkyBoardTheme.typography.scoreSmall, textAlign = TextAlign.End)
+                    // Grands chiffres pour les nombres ; une valeur en mots garde la taille du texte.
+                    val numeric = value.all { it.isDigit() }
+                    val style =
+                        if (numeric) MolkkyBoardTheme.typography.scoreSmall else MaterialTheme.typography.titleMedium
+                    Text(
+                        value,
+                        style = style,
+                        textAlign = TextAlign.End,
+                    )
                 }
             }
         }
@@ -283,7 +285,5 @@ private fun Sparkle(play: Boolean) {
     }
 }
 
-/** Vitesse du générique : environ 40 dp par seconde sur un téléphone courant. */
-private const val ROLL_PX_PER_MS = 0.11f
 private const val END_SLACK = 24
 private const val SPARKLE_MS = 700

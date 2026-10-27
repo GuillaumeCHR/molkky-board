@@ -114,7 +114,6 @@
     <string name="about_privacy_local">Everything stays on your phone: the app does not even request Internet access.</string>
     <string name="about_privacy_control">You can back up, export or delete your data at any time, in Settings › Data.</string>
     <string name="about_credits">Credits</string>
-    <string name="about_fonts">Bricolage Grotesque and Inter fonts, under the SIL Open Font License 1.1, bundled with the app.</string>
     <string name="about_licenses">Open source libraries</string>
     <string name="about_feedback_title">Test version</string>
     <string name="about_feedback_hint">A bug, an idea? The message only contains the app version and the phone model.</string>
@@ -128,8 +127,6 @@
     <string name="crash_subject">Molkky Board crash report</string>
 
     <!-- Credits (light-hearted, but every claim is true) -->
-    <string name="credits_title">Credits</string>
-    <string name="credits_open">Roll the credits</string>
     <string name="credits_terminal_pins">Initialising pins</string>
     <string name="credits_terminal_molkky">Calibrating the mölkky</string>
     <string name="credits_terminal_trackers">Searching for trackers</string>
@@ -169,7 +166,7 @@
     <string name="credits_stat_trackers">Trackers</string>
     <string name="credits_stat_analytics">Analytics SDKs</string>
     <string name="credits_stat_cookies">Cookies</string>
-    <string name="credits_stat_cookies_value">0 (crêpes, on the other hand…)</string>
+    <string name="credits_stat_cookies_value">0 (crêpes excepted)</string>
     <string name="credits_stat_sold">Data sold</string>
     <string name="credits_stat_pins">Pins</string>
     <string name="credits_stat_target">Points to win</string>

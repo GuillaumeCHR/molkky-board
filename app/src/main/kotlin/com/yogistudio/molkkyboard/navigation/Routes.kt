@@ -60,7 +60,3 @@ data object PlacementRoute
 /** Licences des bibliothèques open source (À propos › Crédits). */
 @Serializable
 data object LicensesRoute
-
-/** Générique de crédits (À propos). */
-@Serializable
-data object CreditsRoute
