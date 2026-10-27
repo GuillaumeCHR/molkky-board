@@ -1103,7 +1103,8 @@ et tiens-la à jour jusqu'à la publication.
 - **Base de données** : toute modification du schéma Room impose d'augmenter la version, d'écrire la migration (`Migrations.kt`) et un test de migration (`MigrationTest`, schémas exportés dans `core/database/schemas`). Origine : plantage au lancement sur téléphone (2026-10-26, table `game_player` ajoutée au J4 sans migration).
 - Documentation et UI en français ; identifiants de code en anglais.
 
-### Reprise (2026-10-26 au soir)
-- Test sur téléphone de fin de J4 en cours : résultats dans `docs/tests/J4-resultats.md` (sections 1 à 6 faites, 7 corrections livrées et vérifiées). **À reprendre** : sections 7 à 11 du plan (`docs/tests/J4-plan-de-test.md`) ; le glissement du bandeau des scores ne marche toujours pas (le bouton « Scores » suffit : retirer ou revoir le geste).
-- Ensuite : fin du J4 (coach de fin de partie, première partie guidée), tests de performance demandés, avatars sur l'écran de jeu.
-
+### Clôture du J4 (2026-10-27)
+- Test sur téléphone de fin de J4 : sections 1 à 6 jouées, corrections vérifiées le soir même (`docs/tests/J4-resultats.md`). Une partie complète se joue de bout en bout. Sections 7 à 11 non jouées : leurs points (fin de partie, réglages, fiabilité, performance) passent dans le plan de test du J5.
+- Tranché au J4 : « Raté » sélectionne et seul « Valider » enregistre ; le tableau des scores s'ouvre par le bouton « Scores » ou d'un tap sur le bandeau (le geste de glissement ne marche pas sur téléphone : à retirer ou revoir) ; un nouvel ordre demandé en plein tour est mis en attente et appliqué au début du tour suivant ; « + Ajouter un joueur » dans chaque carte d'équipe ; règles du jeu regroupées en parties avec intertitres.
+- 609 tests unitaires verts au moment de la clôture.
+- **Reportés** (non faits, à planifier avec l'utilisateur) : coach de fin de partie, première partie guidée en bulles (test < 30 s), geste du bandeau des scores, intro « strike » (spec du 26), `ARCHITECTURE.md` à mettre à jour (zxing-cpp au lieu de ML Kit, souveraineté), avatars sur l'écran de jeu.
