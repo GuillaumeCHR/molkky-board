@@ -198,12 +198,6 @@
     <string name="guide_validate">« Valider » enregistre le lancer et passe au joueur suivant.</string>
     <string name="guide_undo">Une erreur ? Ce bouton annule le dernier lancer. Le déroulé (⋮) corrige n\'importe quel lancer passé.</string>
 
-    <!-- Coach de fin de partie -->
-    <string name="coach_needed_one">Il te faut 1 : la quille 1 seule</string>
-    <string name="coach_needed">Il te faut %1$d : la quille %1$d seule, ou %1$d quilles</string>
-    <string name="coach_danger">Zone de danger : au-delà, retour à %1$d</string>
-    <string name="coach_danger_no_reset">Zone de danger : attention au dépassement</string>
-    <string name="coach_rules">Voir la règle du dépassement</string>
 
     <!-- Annonces vocales -->
     <string name="announce_round">Tour %1$d</string>
@@ -241,15 +235,10 @@
     <string name="placement_side_description">Vue de côté : la ligne de lancer à gauche, les 4 rangées de quilles serrées à droite, à environ 3,5 mètres.</string>
     <string name="placement_distance">Distance de lancer : environ 3,5 m, soit 4 grands pas d\'adulte. Pour les enfants ou en mode famille, rapprochez la ligne (environ 2 m).</string>
 
-    <!-- Prêts à jouer ? et mode débutant -->
+    <!-- Prêts à jouer ? -->
     <string name="ready_title">Prêts à jouer ?</string>
     <string name="ready_text">Les quilles sont en formation de départ, serrées, à environ 3,5 m de la ligne de lancer ?</string>
     <string name="ready_placement">Voir le placement</string>
     <string name="ready_go">C\'est parti</string>
     <string name="ready_never_again">Ne plus afficher</string>
-    <string name="ready_beginner">Mode débutant</string>
-    <string name="ready_beginner_hint">Un petit rappel après chaque lancer, et une explication des règles au bon moment.</string>
-    <string name="beginner_raise">Relevez les quilles là où elles sont tombées.</string>
-    <string name="beginner_reset">Plus de 50 : le score redescend à 25. Il faut atteindre 50 exactement.</string>
-    <string name="beginner_miss_warning">Deux ratés de suite : encore un et c\'est l\'élimination. Faire tomber une quille remet le compteur à zéro.</string>
 </resources>

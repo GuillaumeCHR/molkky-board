@@ -198,12 +198,6 @@
     <string name="guide_validate">“OK” saves the throw and moves to the next player.</string>
     <string name="guide_undo">A mistake? This button undoes the last throw. The game log (⋮) corrects any past throw.</string>
 
-    <!-- End-of-game coach -->
-    <string name="coach_needed_one">You need 1: pin 1 alone</string>
-    <string name="coach_needed">You need %1$d: pin %1$d alone, or %1$d pins</string>
-    <string name="coach_danger">Danger zone: go over and it\'s back to %1$d</string>
-    <string name="coach_danger_no_reset">Danger zone: watch out for going over</string>
-    <string name="coach_rules">See the going-over rule</string>
 
     <!-- Voice announcements -->
     <string name="announce_round">Round %1$d</string>
@@ -241,15 +235,10 @@
     <string name="placement_side_description">Side view: the throwing line on the left, the 4 tightly packed rows of pins on the right, about 3.5 metres away.</string>
     <string name="placement_distance">Throwing distance: about 3.5 m, or 4 long adult steps. For children or in family mode, move the line closer (about 2 m).</string>
 
-    <!-- Ready to play? and beginner mode -->
+    <!-- Ready to play? -->
     <string name="ready_title">Ready to play?</string>
     <string name="ready_text">Are the pins in the starting formation, tightly packed, about 3.5 m from the throwing line?</string>
     <string name="ready_placement">See the setup</string>
     <string name="ready_go">Let\'s go</string>
     <string name="ready_never_again">Don\'t show again</string>
-    <string name="ready_beginner">Beginner mode</string>
-    <string name="ready_beginner_hint">A short reminder after each throw, and the rules explained at the right moment.</string>
-    <string name="beginner_raise">Stand the pins back up where they fell.</string>
-    <string name="beginner_reset">Over 50: the score drops back to 25. You need exactly 50.</string>
-    <string name="beginner_miss_warning">Two misses in a row: one more and you\'re out. Knocking down a pin resets the count.</string>
 </resources>

@@ -19,7 +19,7 @@ class PlayfulRulesTest {
     @Test
     fun `exceptions par defaut du mode Ludique`() {
         assertEquals(
-            listOf(RuleException.Miss(MissChoice.NONE), RuleException.FaultsIgnored),
+            listOf(RuleException.Miss(MissChoice.NONE)),
             GameConfig.Playful.exceptions,
         )
     }
@@ -76,7 +76,6 @@ class PlayfulRulesTest {
                 RuleException.MissLimit(4),
                 RuleException.Overshoot(OvershootChoice.STAY),
                 RuleException.Target(60),
-                RuleException.FaultsIgnored,
                 RuleException.PlayForPlaces,
                 RuleException.CatchUpReset,
             ),

@@ -32,8 +32,6 @@ sealed interface RuleException {
         val target: Int,
     ) : RuleException
 
-    data object FaultsIgnored : RuleException
-
     data object PlayForPlaces : RuleException
 
     data object CatchUpReset : RuleException
@@ -98,7 +96,10 @@ fun GameConfig.withTarget(target: Int): GameConfig {
 fun GameConfig.withMissLimit(limit: Int): GameConfig =
     copy(missLimit = limit.coerceIn(PlayfulRules.MIN_MISS_LIMIT, PlayfulRules.MAX_MISS_LIMIT))
 
-/** Exceptions actives par rapport aux règles officielles, dans l'ordre de l'éditeur. */
+/**
+ * Exceptions actives par rapport aux règles officielles, dans l'ordre de l'éditeur. La faute de pied n'en fait plus
+ * partie (2026-10-27) : l'app compte les points, le mordu est seulement expliqué dans les règles.
+ */
 val GameConfig.exceptions: List<RuleException>
     get() =
         buildList {
@@ -106,7 +107,6 @@ val GameConfig.exceptions: List<RuleException>
             if (missLimit != GameConfig.Classic.missLimit) add(RuleException.MissLimit(missLimit))
             if (overshootChoice != OvershootChoice.RESET_HALF) add(RuleException.Overshoot(overshootChoice))
             if (targetScore != GameConfig.STANDARD_TARGET) add(RuleException.Target(targetScore))
-            if (!faultsCountAsMiss) add(RuleException.FaultsIgnored)
             if (endCondition == EndCondition.PlayForPlaces) add(RuleException.PlayForPlaces)
             if (catchUpReset) add(RuleException.CatchUpReset)
         }

@@ -55,19 +55,4 @@ class GameGestureTest {
         compose.onNodeWithTag(SCORES_STRIP_TAG).performClick()
         compose.onNodeWithText("Tableau des scores").assertIsDisplayed()
     }
-
-    @Test
-    fun `coach - ce qu'il faut, puis la zone de danger`() {
-        show(playing.copy(coach = Coach(needed = 7, danger = false, resetTo = 25)))
-        compose.onNodeWithText("Il te faut 7 : la quille 7 seule, ou 7 quilles").assertIsDisplayed()
-        compose.onNodeWithText("Zone de danger", substring = true).let { node ->
-            assertTrue(runCatching { node.assertIsDisplayed() }.isFailure)
-        }
-    }
-
-    @Test
-    fun `coach - zone de danger a 2 points`() {
-        show(playing.copy(coach = Coach(needed = 2, danger = true, resetTo = 25)))
-        compose.onNodeWithText("Zone de danger : au-delà, retour à 25").assertIsDisplayed()
-    }
 }

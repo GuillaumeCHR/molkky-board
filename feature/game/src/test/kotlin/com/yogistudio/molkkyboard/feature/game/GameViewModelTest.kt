@@ -15,7 +15,6 @@ import com.yogistudio.molkkyboard.core.data.RoomPlayerRepository
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.data.memberKey
 import com.yogistudio.molkkyboard.core.database.MolkkyBoardDatabase
-import com.yogistudio.molkkyboard.core.model.BeginnerTip
 import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.PlayerId
@@ -153,10 +152,9 @@ class GameViewModelTest {
             val vm = viewModel()
             backgroundScope.launchCollect(vm)
             assertTrue(vm.awaitState { true }.readyCard)
-            vm.startPlaying(neverAgain = false, beginner = true)
+            vm.startPlaying(neverAgain = false)
             assertFalse(vm.awaitState { !it.readyCard }.readyCard)
             assertEquals(1, settings.settings.value.gamesStarted)
-            assertTrue(settings.settings.value.beginnerMode)
             // Après 3 parties, la carte ne s'affiche plus d'office ; « Ne plus afficher » la coupe tout de suite.
             assertTrue(
                 settings.settings.value
@@ -168,9 +166,8 @@ class GameViewModelTest {
                     .copy(gamesStarted = 3, readyCard = true)
                     .showReadyCard,
             )
-            vm.startPlaying(neverAgain = true, beginner = false)
+            vm.startPlaying(neverAgain = true)
             assertEquals(false, settings.settings.value.readyCard)
-            assertFalse(settings.settings.value.beginnerMode)
         }
 
     @Test
@@ -180,52 +177,6 @@ class GameViewModelTest {
             val vm = viewModel()
             backgroundScope.launchCollect(vm)
             assertFalse(vm.awaitState { it.currentTeam?.name == "Bruno" }.readyCard)
-        }
-
-    @Test
-    fun `mode debutant - rappel apres chaque lancer, explications une seule fois`() =
-        runTest {
-            settings.setBeginnerMode(true)
-            listOf(12, 12, 12, 9).forEach {
-                play(it)
-                play(1)
-            }
-            val vm = viewModel()
-            backgroundScope.launchCollect(vm)
-            vm.gameEffects().test {
-                vm.togglePin(9, true)
-                vm.awaitState { it.selection != Selection.None }
-                vm.validate()
-                assertEquals(GameEffect.Validated("Alice", 9, GameTip.RESET), awaitItem())
-                assertEquals(GameEffect.Overshoot(25), awaitItem())
-            }
-            assertTrue(BeginnerTip.RESET in settings.settings.value.beginnerTipsSeen)
-            vm.gameEffects().test {
-                vm.awaitState { it.currentTeam?.name == "Bruno" }
-                vm.togglePin(4, true)
-                vm.awaitState { it.selection != Selection.None }
-                vm.validate()
-                assertEquals(GameEffect.Validated("Bruno", 4, GameTip.RAISE), awaitItem())
-                cancelAndIgnoreRemainingEvents()
-            }
-            // Deux ratés de suite pour Alice : l'explication vient une fois.
-            vm.gameEffects().test {
-                repeat(2) { i ->
-                    vm.awaitState { it.currentTeam?.name == "Alice" }
-                    vm.toggleMiss()
-                    vm.awaitState { it.selection == Selection.Miss }
-                    vm.validate()
-                    val expected = if (i == 1) GameTip.MISS_WARNING else null
-                    assertEquals(GameEffect.Validated("Alice", 0, expected), awaitItem())
-                    vm.awaitState { it.currentTeam?.name == "Bruno" }
-                    vm.togglePin(1, true)
-                    vm.awaitState { it.selection != Selection.None }
-                    vm.validate()
-                    assertEquals(GameEffect.Validated("Bruno", 1, GameTip.RAISE), awaitItem())
-                }
-                cancelAndIgnoreRemainingEvents()
-            }
-            assertTrue(BeginnerTip.MISS_WARNING in settings.settings.value.beginnerTipsSeen)
         }
 
     @Test
@@ -700,8 +651,6 @@ class GameViewModelTest {
 
         override suspend fun setNotificationPrompted() = Unit
 
-        override suspend fun setCoach(enabled: Boolean) = Unit
-
         override suspend fun setShortIntro(enabled: Boolean) = Unit
 
         override suspend fun setOnboardingDone(done: Boolean) = Unit
@@ -715,14 +664,6 @@ class GameViewModelTest {
 
         override suspend fun recordGameStarted() =
             settings.emit(settings.value.copy(gamesStarted = settings.value.gamesStarted + 1))
-
-        override suspend fun setBeginnerMode(enabled: Boolean) =
-            settings.emit(
-                settings.value.copy(beginnerMode = enabled),
-            )
-
-        override suspend fun setBeginnerTipSeen(tip: com.yogistudio.molkkyboard.core.model.BeginnerTip) =
-            settings.emit(settings.value.copy(beginnerTipsSeen = settings.value.beginnerTipsSeen + tip))
 
         override suspend fun recordLaunch() = settings.value
     }

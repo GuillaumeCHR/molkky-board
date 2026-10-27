@@ -51,8 +51,6 @@ class SettingsDataSourceTest {
                 assertTrue(awaitItem().voiceAnnouncements)
                 source.setSounds(true)
                 assertTrue(awaitItem().sounds)
-                source.setCoach(false)
-                assertFalse(awaitItem().coach)
                 source.setShortIntro(true)
                 assertTrue(awaitItem().shortIntro)
                 source.setOnboardingDone(true)

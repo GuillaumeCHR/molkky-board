@@ -53,7 +53,7 @@ private const val BOTTOM = 0.90f
  * passe au safran), un second tap la relève.
  *
  * @param onToggle `null` pour une quille en lecture seule.
- * @param highlighted mise en avant (quille gagnante suggérée par le coach).
+ * @param highlighted mise en avant (quille désignée, par exemple dans le placement).
  */
 @Composable
 fun PinView(

@@ -15,7 +15,6 @@ import com.yogistudio.molkkyboard.core.data.memberKey
 import com.yogistudio.molkkyboard.core.data.toStatsGame
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.designsystem.icon.emblemSymbol
-import com.yogistudio.molkkyboard.core.model.BeginnerTip
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.MissPenalty
 import com.yogistudio.molkkyboard.core.model.Overshoot
@@ -132,7 +131,6 @@ class GameViewModel
                 snapshot.toUiState(prefs, input.selection, input.mode, past, record, faces).copy(
                     pendingOrder = input.pending,
                     readyCard = snapshot.showsReadyCard(prefs, input.readySeen),
-                    beginnerMode = prefs.beginnerMode,
                     sounds = prefs.sounds,
                 )
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), GameUiState())
@@ -152,13 +150,12 @@ class GameViewModel
                 currentSet.replay.effectiveLog.isEmpty() &&
                 currentSet.replay.state.status == SetStatus.IN_PROGRESS
 
-        /** « C'est parti » : la carte se ferme, et ses choix (ne plus afficher, mode débutant) sont retenus. */
-        fun startPlaying(neverAgain: Boolean, beginner: Boolean) {
+        /** « C'est parti » : la carte se ferme ; « Ne plus afficher » est retenu. */
+        fun startPlaying(neverAgain: Boolean) {
             handle[READY_SEEN] = true
             viewModelScope.launch {
                 settings.recordGameStarted()
                 if (neverAgain) settings.setReadyCard(false)
-                settings.setBeginnerMode(beginner)
             }
         }
 
@@ -221,7 +218,7 @@ class GameViewModel
                 }
                 val after = outcome.value.state
                 val points = result.points
-                effects.send(GameEffect.Validated(name, points, beginnerTip(before, after, team, points)))
+                effects.send(GameEffect.Validated(name, points))
                 emitConsequences(before, after, team, result)
                 applyPendingOrder(after)
                 announceNext(
@@ -233,39 +230,6 @@ class GameViewModel
                         ?.replay
                         ?.state ?: after,
                 )
-            }
-        }
-
-        /**
-         * Mode débutant : une explication la première fois qu'on dépasse la cible ou qu'on fait deux ratés de suite
-         * (une seule fois en tout), sinon un rappel « Relevez les quilles » après un lancer qui en fait tomber.
-         */
-        private suspend fun beginnerTip(before: SetState, after: SetState, team: TeamState, points: Int): GameTip? {
-            val prefs = settings.settings.first()
-            if (!prefs.beginnerMode) return null
-            val explained = explanation(before, after, team, points)?.takeIf { it !in prefs.beginnerTipsSeen }
-            explained?.let { settings.setBeginnerTipSeen(it) }
-            return when {
-                explained == BeginnerTip.RESET -> GameTip.RESET
-                explained == BeginnerTip.MISS_WARNING -> GameTip.MISS_WARNING
-                points > 0 -> GameTip.RAISE
-                else -> null
-            }
-        }
-
-        /** Ce que ce lancer mérite d'expliquer : un dépassement de la cible, ou un deuxième raté consécutif. */
-        private fun explanation(before: SetState, after: SetState, team: TeamState, points: Int): BeginnerTip? {
-            val config = before.config
-            val misses = after.team(team.id)?.misses ?: 0
-            return when {
-                points > 0 && team.score + points > config.targetFor(team.id) -> BeginnerTip.RESET
-
-                config.missLimit > 1 &&
-                    misses == config.missLimit - 1 &&
-                    config.onMissLimit != MissPenalty.Nothing &&
-                    !config.isExemptFromMissLimit(team.id) -> BeginnerTip.MISS_WARNING
-
-                else -> null
             }
         }
 
@@ -604,12 +568,6 @@ class GameViewModel
                 end = if (setState.status == SetStatus.FINISHED) endUi(teamsUi, history, record) else null,
                 voice = VoicePrefs(prefs.voiceAnnouncements, prefs.voiceRate, prefs.voiceVolume),
                 guide = guideStep(prefs, setState, replay.effectiveLog, sel),
-                coach =
-                    current?.takeIf { prefs.coach && setState.status == SetStatus.IN_PROGRESS }?.let {
-                        coachFor(
-                            it,
-                        )
-                    },
             )
         }
 
@@ -625,17 +583,6 @@ class GameViewModel
         /** Fin (ou abandon) de la prise en main : elle ne revient que si on la redemande dans les Réglages. */
         fun finishGuide() {
             viewModelScope.launch { settings.setOnboardingDone(true) }
-        }
-
-        /** À 12 points ou moins de la cible (38 pour 50), le coach dit ce qu'il faut et surligne la quille. */
-        private fun GameSnapshot.coachFor(team: TeamState): Coach? {
-            val needed = config.targetFor(team.id) - team.score
-            if (needed !in 1..TWELVE) return null
-            return Coach(
-                needed = needed,
-                danger = needed <= DANGER_NEEDED,
-                resetTo = (config.overshoot as? Overshoot.ResetTo)?.score,
-            )
         }
 
         private fun preview(state: SetState, team: TeamState, sel: Selection): Preview {
@@ -680,9 +627,6 @@ class GameViewModel
 
         companion object {
             private const val TWELVE = 12
-
-            /** Il reste 3 points ou moins : la plupart des lancers feraient dépasser la cible. */
-            private const val DANGER_NEEDED = 3
             private const val PALETTE_SIZE = 8
 
             /** Argument de navigation : identifiant de la partie. */

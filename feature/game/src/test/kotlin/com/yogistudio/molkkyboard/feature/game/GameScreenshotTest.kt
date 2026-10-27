@@ -370,17 +370,6 @@ class GameScreenshotTest {
     fun guideAnnuler() = captureGuide("guide_annuler", idle.copy(guide = GuideStep.UNDO, canUndo = true))
 
     @Test
-    fun coach() =
-        capture(
-            "coach_zone_de_danger",
-            idle.copy(
-                teams = listOf(teams[0].copy(score = 47, remaining = 3)) + teams.drop(1),
-                currentTeam = teams[0].copy(score = 47, remaining = 3),
-                coach = Coach(needed = 3, danger = true, resetTo = 25),
-            ),
-        )
-
-    @Test
     fun victoireExplosion() = captureVictory("victoire_explosion", VICTORY_BURST_MS)
 
     @Test

@@ -7,8 +7,6 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.core.stringSetPreferencesKey
-import com.yogistudio.molkkyboard.core.model.BeginnerTip
 import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.UserSettings
@@ -48,8 +46,6 @@ class SettingsDataSource
 
         suspend fun setSounds(enabled: Boolean) = dataStore.edit { it[Keys.SOUNDS] = enabled }
 
-        suspend fun setCoach(enabled: Boolean) = dataStore.edit { it[Keys.COACH] = enabled }
-
         suspend fun setShortIntro(enabled: Boolean) = dataStore.edit { it[Keys.SHORT_INTRO] = enabled }
 
         suspend fun setOnboardingDone(done: Boolean) = dataStore.edit { it[Keys.ONBOARDING_DONE] = done }
@@ -57,11 +53,6 @@ class SettingsDataSource
         suspend fun setReadyCard(enabled: Boolean) = dataStore.edit { it[Keys.READY_CARD] = enabled }
 
         suspend fun recordGameStarted() = dataStore.edit { it[Keys.GAMES_STARTED] = (it[Keys.GAMES_STARTED] ?: 0) + 1 }
-
-        suspend fun setBeginnerMode(enabled: Boolean) = dataStore.edit { it[Keys.BEGINNER] = enabled }
-
-        suspend fun setBeginnerTipSeen(tip: BeginnerTip) =
-            dataStore.edit { it[Keys.BEGINNER_TIPS] = (it[Keys.BEGINNER_TIPS] ?: emptySet()) + tip.name }
 
         /** Les surcharges par équipe dépendent d'une partie : elles ne font pas partie des valeurs par défaut. */
         suspend fun setPlayfulRules(config: GameConfig) =
@@ -83,22 +74,11 @@ class SettingsDataSource
                 ongoingNotification = this[Keys.ONGOING_NOTIFICATION] ?: true,
                 notificationPrompted = this[Keys.NOTIFICATION_PROMPTED] ?: false,
                 sounds = this[Keys.SOUNDS] ?: false,
-                coach = this[Keys.COACH] ?: true,
                 shortIntro = this[Keys.SHORT_INTRO] ?: false,
                 launchCount = this[Keys.LAUNCH_COUNT] ?: 0,
                 onboardingDone = this[Keys.ONBOARDING_DONE] ?: false,
                 readyCard = this[Keys.READY_CARD],
                 gamesStarted = this[Keys.GAMES_STARTED] ?: 0,
-                beginnerMode = this[Keys.BEGINNER] ?: false,
-                beginnerTipsSeen =
-                    this[Keys.BEGINNER_TIPS]
-                        .orEmpty()
-                        .mapNotNull { name ->
-                            BeginnerTip.entries.firstOrNull {
-                                it.name ==
-                                    name
-                            }
-                        }.toSet(),
                 playfulRules = this[Keys.PLAYFUL_RULES]?.let(::decodeRules) ?: GameConfig.Playful,
             )
 
@@ -126,14 +106,11 @@ class SettingsDataSource
             val ONGOING_NOTIFICATION = booleanPreferencesKey("ongoing_notification")
             val NOTIFICATION_PROMPTED = booleanPreferencesKey("notification_prompted")
             val SOUNDS = booleanPreferencesKey("sounds")
-            val COACH = booleanPreferencesKey("coach")
             val SHORT_INTRO = booleanPreferencesKey("short_intro")
             val LAUNCH_COUNT = intPreferencesKey("launch_count")
             val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
             val PLAYFUL_RULES = stringPreferencesKey("playful_rules")
             val READY_CARD = booleanPreferencesKey("ready_card")
             val GAMES_STARTED = intPreferencesKey("games_started")
-            val BEGINNER = booleanPreferencesKey("beginner_mode")
-            val BEGINNER_TIPS = stringSetPreferencesKey("beginner_tips_seen")
         }
     }

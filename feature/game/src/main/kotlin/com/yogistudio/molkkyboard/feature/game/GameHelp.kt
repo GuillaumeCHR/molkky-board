@@ -132,41 +132,23 @@ internal fun HelpSheets(
     if (placement) {
         PlacementSheet(onDismiss = { onPlacement(false) })
     } else if (state.readyCard) {
-        ReadyCard(state.beginnerMode, onPlacement = { onPlacement(true) }, onStart = actions.onStartPlaying)
+        ReadyCard(onPlacement = { onPlacement(true) }, onStart = actions.onStartPlaying)
     }
 }
 
 /**
  * « Prêts à jouer ? » après « Lancer la partie » (3 premières parties, puis si on l'a réactivée) : revoir le
- * placement des quilles, ou commencer. Propose aussi le mode débutant. Fermer la carte revient à « C'est parti ».
+ * placement des quilles, ou commencer. Fermer la carte revient à « C'est parti ».
  */
 @Composable
-private fun ReadyCard(beginner: Boolean, onPlacement: () -> Unit, onStart: (Boolean, Boolean) -> Unit) {
+private fun ReadyCard(onPlacement: () -> Unit, onStart: (Boolean) -> Unit) {
     var neverAgain by rememberSaveable { mutableStateOf(false) }
-    var beginnerMode by rememberSaveable { mutableStateOf(beginner) }
     AlertDialog(
-        onDismissRequest = { onStart(neverAgain, beginnerMode) },
+        onDismissRequest = { onStart(neverAgain) },
         title = { Text(stringResource(R.string.ready_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(MBDimens.SmallGap)) {
                 Text(stringResource(R.string.ready_text))
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .toggleable(beginnerMode, role = Role.Switch) { beginnerMode = it }
-                        .heightIn(min = MBDimens.MinTouch),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(stringResource(R.string.ready_beginner), style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            stringResource(R.string.ready_beginner_hint),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    Switch(checked = beginnerMode, onCheckedChange = null)
-                }
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -180,7 +162,7 @@ private fun ReadyCard(beginner: Boolean, onPlacement: () -> Unit, onStart: (Bool
             }
         },
         confirmButton = {
-            TextButton(onClick = { onStart(neverAgain, beginnerMode) }) { Text(stringResource(R.string.ready_go)) }
+            TextButton(onClick = { onStart(neverAgain) }) { Text(stringResource(R.string.ready_go)) }
         },
         dismissButton = { TextButton(onClick = onPlacement) { Text(stringResource(R.string.ready_placement)) } },
     )

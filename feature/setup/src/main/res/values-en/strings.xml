@@ -31,8 +31,6 @@
     <string name="playful_overshoot_stay">The throw doesn\'t count</string>
     <string name="playful_overshoot_bounce">Bounce: go back by the excess</string>
     <string name="playful_target">Target score</string>
-    <string name="playful_faults">Foot fault counts as a miss</string>
-    <string name="playful_faults_hint">Off: a foot on the line only loses the throw.</string>
     <string name="playful_places">Play for places</string>
     <string name="playful_places_hint">The game goes on after the first winner, for 2nd and 3rd place.</string>
     <string name="playful_catch_up">Catching a score</string>
@@ -50,7 +48,6 @@
     <string name="playful_ex_overshoot_stay">going over: throw cancelled</string>
     <string name="playful_ex_overshoot_bounce">going over: bounce</string>
     <string name="playful_ex_target">target %1$d</string>
-    <string name="playful_ex_faults">foot faults ignored</string>
     <string name="playful_ex_places">playing for places</string>
     <string name="playful_ex_catch_up">catching a score</string>
     <string name="setup_start">Start the game</string>

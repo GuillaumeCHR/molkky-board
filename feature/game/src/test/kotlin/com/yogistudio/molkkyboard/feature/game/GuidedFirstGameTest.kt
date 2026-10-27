@@ -194,8 +194,6 @@ class GuidedFirstGameTest {
 
         override suspend fun setNotificationPrompted() = Unit
 
-        override suspend fun setCoach(enabled: Boolean) = settings.emit(settings.value.copy(coach = enabled))
-
         override suspend fun setShortIntro(enabled: Boolean) = Unit
 
         override suspend fun setOnboardingDone(done: Boolean) =
@@ -212,14 +210,6 @@ class GuidedFirstGameTest {
 
         override suspend fun recordGameStarted() =
             settings.emit(settings.value.copy(gamesStarted = settings.value.gamesStarted + 1))
-
-        override suspend fun setBeginnerMode(enabled: Boolean) =
-            settings.emit(
-                settings.value.copy(beginnerMode = enabled),
-            )
-
-        override suspend fun setBeginnerTipSeen(tip: com.yogistudio.molkkyboard.core.model.BeginnerTip) =
-            settings.emit(settings.value.copy(beginnerTipsSeen = settings.value.beginnerTipsSeen + tip))
 
         override suspend fun recordLaunch() = settings.value
     }

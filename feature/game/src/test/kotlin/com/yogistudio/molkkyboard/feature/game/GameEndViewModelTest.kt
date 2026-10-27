@@ -254,24 +254,6 @@ class GameEndViewModelTest {
             }
         }
 
-    @Test
-    fun `coach - a 38 points il faut 12, la quille 12 est surlignee, desactivable`() =
-        runTest {
-            listOf(12, 12, 12).forEach {
-                play(it)
-                play(1)
-            }
-            play(2)
-            play(1)
-            val vm = viewModel()
-            backgroundScope.launchCollect(vm)
-            val coach = vm.awaitState { it.coach != null }.coach!!
-            assertEquals(12, coach.needed)
-            assertFalse(coach.danger)
-            settings.setCoach(false)
-            vm.awaitState { it.coach == null }
-        }
-
     private fun CoroutineScope.launchCollect(vm: GameViewModel) =
         launch(
             UnconfinedTestDispatcher(),
@@ -296,8 +278,6 @@ class GameEndViewModelTest {
 
         override suspend fun setNotificationPrompted() = Unit
 
-        override suspend fun setCoach(enabled: Boolean) = settings.emit(settings.value.copy(coach = enabled))
-
         override suspend fun setShortIntro(enabled: Boolean) = Unit
 
         override suspend fun setOnboardingDone(done: Boolean) = Unit
@@ -311,14 +291,6 @@ class GameEndViewModelTest {
 
         override suspend fun recordGameStarted() =
             settings.emit(settings.value.copy(gamesStarted = settings.value.gamesStarted + 1))
-
-        override suspend fun setBeginnerMode(enabled: Boolean) =
-            settings.emit(
-                settings.value.copy(beginnerMode = enabled),
-            )
-
-        override suspend fun setBeginnerTipSeen(tip: com.yogistudio.molkkyboard.core.model.BeginnerTip) =
-            settings.emit(settings.value.copy(beginnerTipsSeen = settings.value.beginnerTipsSeen + tip))
 
         override suspend fun recordLaunch() = settings.value
     }

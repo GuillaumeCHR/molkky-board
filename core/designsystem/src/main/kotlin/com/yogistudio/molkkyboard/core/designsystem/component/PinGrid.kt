@@ -25,7 +25,7 @@ private val MAX_PIN = 92.dp
  * Les 12 quilles dans la formation officielle. La taille des quilles s'adapte à la place disponible (largeur et
  * hauteur) : la grille tient toujours sans défilement, avec des cibles tactiles aussi grandes que possible.
  *
- * @param highlighted quilles mises en avant (coach de fin de partie).
+ * @param highlighted quilles mises en avant.
  * @param visible quilles affichées (`null` : toutes) ; les autres gardent leur place, invisibles (placement pas à pas).
  * @param pinModifier modificateur propre à chaque quille (description TalkBack de sa position, par exemple).
  */

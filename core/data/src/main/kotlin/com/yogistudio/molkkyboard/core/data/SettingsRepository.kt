@@ -1,7 +1,6 @@
 package com.yogistudio.molkkyboard.core.data
 
 import com.yogistudio.molkkyboard.core.datastore.SettingsDataSource
-import com.yogistudio.molkkyboard.core.model.BeginnerTip
 import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.UserSettings
@@ -28,8 +27,6 @@ interface SettingsRepository {
 
     suspend fun setNotificationPrompted()
 
-    suspend fun setCoach(enabled: Boolean)
-
     suspend fun setShortIntro(enabled: Boolean)
 
     suspend fun setOnboardingDone(done: Boolean)
@@ -39,10 +36,6 @@ interface SettingsRepository {
     suspend fun setReadyCard(enabled: Boolean)
 
     suspend fun recordGameStarted()
-
-    suspend fun setBeginnerMode(enabled: Boolean)
-
-    suspend fun setBeginnerTipSeen(tip: BeginnerTip)
 
     suspend fun recordLaunch(): UserSettings
 }
@@ -87,10 +80,6 @@ class DataStoreSettingsRepository
             source.setNotificationPrompted()
         }
 
-        override suspend fun setCoach(enabled: Boolean) {
-            source.setCoach(enabled)
-        }
-
         override suspend fun setShortIntro(enabled: Boolean) {
             source.setShortIntro(enabled)
         }
@@ -109,14 +98,6 @@ class DataStoreSettingsRepository
 
         override suspend fun recordGameStarted() {
             source.recordGameStarted()
-        }
-
-        override suspend fun setBeginnerMode(enabled: Boolean) {
-            source.setBeginnerMode(enabled)
-        }
-
-        override suspend fun setBeginnerTipSeen(tip: BeginnerTip) {
-            source.setBeginnerTipSeen(tip)
         }
 
         override suspend fun recordLaunch(): UserSettings = source.recordLaunch()

@@ -40,8 +40,6 @@
     <string name="settings_input_pins">Pins</string>
     <string name="settings_input_quick">Quick</string>
     <string name="settings_input_hint">Pins: tap the ones that fell (per-pin statistics). Quick: keypad from 0 to 12.</string>
-    <string name="settings_coach">End-of-game coach</string>
-    <string name="settings_coach_hint">From 38 points, what you need to win</string>
     <string name="settings_voice">Voice announcements</string>
     <string name="settings_sounds">Sounds</string>
     <string name="settings_voice_hint">“Round 4”, “Léa to throw, needs 7”, “Back to 25!”… using the phone\'s text-to-speech. Silent in silent mode and with TalkBack.</string>
@@ -70,8 +68,6 @@
 
     <string name="settings_ready_card">“Ready to play?” card</string>
     <string name="settings_ready_card_hint">At the start of each game, a reminder of how to set up the pins (shown automatically for the first 3 games).</string>
-    <string name="settings_beginner">Beginner mode</string>
-    <string name="settings_beginner_hint">A reminder after each throw, and an explanation the first time you go back to 25 or miss twice in a row.</string>
 
     <!-- Data -->
     <string name="settings_data">Data</string>

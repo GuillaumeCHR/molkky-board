@@ -92,12 +92,6 @@ fun PlayfulRulesEditor(
             )
         }
         SwitchCard(
-            title = stringResource(R.string.playful_faults),
-            hint = stringResource(R.string.playful_faults_hint),
-            checked = config.faultsCountAsMiss,
-            onChange = { onChange(config.copy(faultsCountAsMiss = it)) },
-        )
-        SwitchCard(
             title = stringResource(R.string.playful_places),
             hint = stringResource(R.string.playful_places_hint),
             checked = config.endCondition == EndCondition.PlayForPlaces,
@@ -151,10 +145,6 @@ private fun exceptionLabel(
 
         is RuleException.Target -> {
             stringResource(R.string.playful_ex_target, exception.target)
-        }
-
-        RuleException.FaultsIgnored -> {
-            stringResource(R.string.playful_ex_faults)
         }
 
         RuleException.PlayForPlaces -> {

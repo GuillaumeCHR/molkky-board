@@ -42,8 +42,6 @@
     <string name="settings_input_pins">Quilles</string>
     <string name="settings_input_quick">Rapide</string>
     <string name="settings_input_hint">Quilles : on touche celles qui sont tombées (statistiques par quille). Rapide : pavé de 0 à 12.</string>
-    <string name="settings_coach">Coach de fin de partie</string>
-    <string name="settings_coach_hint">À partir de 38 points, ce qu\'il faut pour gagner</string>
     <string name="settings_voice">Annonces vocales</string>
     <string name="settings_sounds">Sons</string>
     <string name="settings_voice_hint">« Tour 4 », « Au tour de Léa, il lui faut 7 », « Retour à 25 ! »… par la synthèse vocale du téléphone. Muettes en silencieux et avec TalkBack.</string>
@@ -72,8 +70,6 @@
 
     <string name="settings_ready_card">Carte « Prêts à jouer ? »</string>
     <string name="settings_ready_card_hint">Au début de chaque partie, un rappel du placement des quilles (affichée d\'office aux 3 premières parties).</string>
-    <string name="settings_beginner">Mode débutant</string>
-    <string name="settings_beginner_hint">Un rappel après chaque lancer, et une explication au premier retour à 25 ou au premier deuxième raté.</string>
 
     <!-- Données -->
     <string name="settings_data">Données</string>

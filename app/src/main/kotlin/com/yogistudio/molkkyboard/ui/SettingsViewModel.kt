@@ -65,8 +65,6 @@ class SettingsViewModel
 
         fun setInputMode(mode: InputMode) = launch { repository.setInputMode(mode) }
 
-        fun setCoach(enabled: Boolean) = launch { repository.setCoach(enabled) }
-
         fun setVoiceAnnouncements(enabled: Boolean) = launch { repository.setVoiceAnnouncements(enabled) }
 
         fun setVoiceRate(rate: Float) = launch { repository.setVoiceRate(rate) }
@@ -79,8 +77,6 @@ class SettingsViewModel
         fun replayGuide() = launch { repository.setOnboardingDone(false) }
 
         fun setReadyCard(enabled: Boolean) = launch { repository.setReadyCard(enabled) }
-
-        fun setBeginnerMode(enabled: Boolean) = launch { repository.setBeginnerMode(enabled) }
 
         fun setSounds(enabled: Boolean) = launch { repository.setSounds(enabled) }
 

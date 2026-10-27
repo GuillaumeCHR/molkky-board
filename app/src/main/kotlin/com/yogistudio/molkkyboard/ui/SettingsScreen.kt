@@ -138,22 +138,10 @@ internal fun SettingsScreen(
             SettingsLink(R.string.settings_rules, R.string.settings_rules_hint, onRules)
             SettingsLink(R.string.settings_playful_rules, R.string.settings_playful_rules_hint, onPlayfulRules)
             SettingsSwitch(
-                R.string.settings_coach,
-                R.string.settings_coach_hint,
-                settings.coach,
-                onChange = viewModel::setCoach,
-            )
-            SettingsSwitch(
                 R.string.settings_ready_card,
                 R.string.settings_ready_card_hint,
                 settings.showReadyCard,
                 onChange = viewModel::setReadyCard,
-            )
-            SettingsSwitch(
-                R.string.settings_beginner,
-                R.string.settings_beginner_hint,
-                settings.beginnerMode,
-                onChange = viewModel::setBeginnerMode,
             )
             SettingsLink(
                 R.string.settings_guide,

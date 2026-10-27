@@ -145,7 +145,7 @@ data class GameActions(
     val onMolkkoutUndo: () -> Unit = {},
     val onGuideDone: () -> Unit = {},
     val onShare: () -> Unit = {},
-    val onStartPlaying: (neverAgain: Boolean, beginner: Boolean) -> Unit = { _, _ -> },
+    val onStartPlaying: (neverAgain: Boolean) -> Unit = {},
 )
 
 @Composable
@@ -318,26 +318,12 @@ private suspend fun showValidated(
         } else {
             context.getString(R.string.game_validated_points, effect.points)
         }
-    val validated = context.getString(R.string.game_validated, effect.name, what)
-    // Mode débutant : rappel ou explication sous le résultat ; une explication reste plus longtemps.
-    val tip =
-        when (effect.tip) {
-            GameTip.RAISE -> context.getString(R.string.beginner_raise)
-            GameTip.RESET -> context.getString(R.string.beginner_reset)
-            GameTip.MISS_WARNING -> context.getString(R.string.beginner_miss_warning)
-            null -> null
-        }
     snackbar.currentSnackbarData?.dismiss()
     val result =
         snackbar.showSnackbar(
-            message = if (tip == null) validated else "$validated\n$tip",
+            message = context.getString(R.string.game_validated, effect.name, what),
             actionLabel = context.getString(R.string.game_undo_action),
-            duration =
-                if (effect.tip == GameTip.RESET || effect.tip == GameTip.MISS_WARNING) {
-                    SnackbarDuration.Long
-                } else {
-                    SnackbarDuration.Short
-                },
+            duration = SnackbarDuration.Short,
         )
     if (result == SnackbarResult.ActionPerformed) onUndo()
 }
@@ -409,7 +395,7 @@ fun GameContent(
                 if (state.loading) return@Column
                 ScoresStrip(state, onOpen = { showScoreboard = true })
                 ActiveCard(state, shakeKey)
-                PreviewLine(state, actions, onOpenRules = { showRules = true })
+                PreviewLine(state, actions)
                 // Pendant « 12 ! », les quilles de la grille s'effacent (elles s'envolent) puis reviennent en fondu.
                 val pinsAlpha by animateFloatAsState(if (twelve != null) TWELVE_PINS_ALPHA else 1f, label = "pins")
                 Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -482,8 +468,6 @@ private fun InputArea(state: GameUiState, actions: GameActions, modifier: Modifi
                     knocked = (state.selection as? Selection.Pins)?.pins.orEmpty(),
                     onToggle = actions.onTogglePin,
                     enabled = !state.finished,
-                    // Coach : la quille gagnante est surlignée.
-                    highlighted = state.coach?.let { setOf(it.needed) }.orEmpty(),
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -680,50 +664,16 @@ private fun previewColor(kind: PreviewKind) =
         PreviewKind.POINTS -> MaterialTheme.colorScheme.onSurface
     }
 
-/** Message du coach (sans sélection en cours) ; un tap ouvre les règles. */
 @Composable
-private fun CoachLine(coach: Coach, onOpenRules: () -> Unit, modifier: Modifier) {
-    val label = stringResource(R.string.coach_rules)
-    Column(modifier.clickable(onClickLabel = label, onClick = onOpenRules)) {
-        Text(
-            if (coach.needed ==
-                1
-            ) {
-                stringResource(R.string.coach_needed_one)
-            } else {
-                stringResource(R.string.coach_needed, coach.needed)
-            },
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        if (coach.danger) {
-            Text(
-                coach.resetTo?.let { stringResource(R.string.coach_danger, it) }
-                    ?: stringResource(R.string.coach_danger_no_reset),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = MolkkyBoardTheme.colors.coralText,
-            )
-        }
-    }
-}
-
-@Composable
-private fun PreviewLine(state: GameUiState, actions: GameActions, onOpenRules: () -> Unit) {
+private fun PreviewLine(state: GameUiState, actions: GameActions) {
     val preview = state.preview
-    val coach = state.coach.takeIf { preview.kind == PreviewKind.NONE }
     val text = previewText(state)
     val color = previewColor(preview.kind)
     Row(
         modifier = Modifier.fillMaxWidth().padding(start = MBDimens.ScreenPadding, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (coach != null) {
-            CoachLine(coach, onOpenRules, Modifier.weight(1f))
-        } else {
-            PreviewText(text, preview.kind, color, Modifier.weight(1f))
-        }
+        PreviewText(text, preview.kind, color, Modifier.weight(1f))
         // Bascule discrète entre la grille de quilles et le pavé rapide.
         InputModeSwitch(state, actions)
     }

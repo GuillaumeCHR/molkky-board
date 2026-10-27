@@ -31,8 +31,6 @@
     <string name="playful_overshoot_stay">Le lancer ne compte pas</string>
     <string name="playful_overshoot_bounce">Rebond : on recule de l\'excédent</string>
     <string name="playful_target">Score à atteindre</string>
-    <string name="playful_faults">Mordu compté comme raté</string>
-    <string name="playful_faults_hint">Désactivé : un pied sur la ligne fait seulement perdre le lancer.</string>
     <string name="playful_places">Jouer les places</string>
     <string name="playful_places_hint">La partie continue après le premier vainqueur, pour la 2e et la 3e place.</string>
     <string name="playful_catch_up">Rejoindre un score</string>
@@ -50,7 +48,6 @@
     <string name="playful_ex_overshoot_stay">dépassement : lancer annulé</string>
     <string name="playful_ex_overshoot_bounce">dépassement : rebond</string>
     <string name="playful_ex_target">cible %1$d</string>
-    <string name="playful_ex_faults">mordu ignoré</string>
     <string name="playful_ex_places">on joue les places</string>
     <string name="playful_ex_catch_up">rejoindre un score</string>
     <string name="setup_start">Lancer la partie</string>

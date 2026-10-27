@@ -116,15 +116,12 @@ data class GameUiState(
     /** Fin de la manche (vainqueur, statistiques, match, série) ; `null` tant qu'elle se joue. */
     val end: EndUi? = null,
     val voice: VoicePrefs = VoicePrefs(),
-    /** Coach de fin de partie : ce qu'il faut pour gagner, quand la victoire est à portée d'un lancer. */
-    val coach: Coach? = null,
     /** Première partie guidée : bulle à montrer, ou `null`. */
     val guide: GuideStep? = null,
     /** Carte « Prêts à jouer ? » à afficher au début de la partie. */
     val readyCard: Boolean = false,
     /** Réglage « Sons » (désactivé par défaut). */
     val sounds: Boolean = false,
-    val beginnerMode: Boolean = false,
 ) {
     /** Le déroulé se modifie tant que la partie n'est pas abandonnée (même terminée : la victoire peut changer). */
     val canEditLog: Boolean get() = !abandoned
@@ -136,16 +133,6 @@ data class GameUiState(
         teams.filterNot { it.out }.sortedByDescending { it.score } +
             teams.filter { it.out }
 }
-
-/**
- * Coach : il faut [needed] points pour gagner (la quille [needed] seule, ou [needed] quilles).
- * [danger] : peu de points à faire, beaucoup de lancers feraient dépasser la cible (retour à [resetTo]).
- */
-data class Coach(
-    val needed: Int,
-    val danger: Boolean,
-    val resetTo: Int?,
-)
 
 /** Étapes de la prise en main sur l'écran de jeu (la 1re, « ajouter les joueurs », est à la création). */
 enum class GuideStep {
@@ -175,16 +162,11 @@ data class VoicePrefs(
     val volume: Float = 1f,
 )
 
-/** Rappels du mode débutant après un lancer. */
-enum class GameTip { RAISE, RESET, MISS_WARNING }
-
 /** Effets ponctuels d'une validation (animations, vibrations, snackbar). */
 sealed interface GameEffect {
     data class Validated(
         val name: String,
         val points: Int,
-        /** Mode débutant : rappel ou explication à joindre au message. */
-        val tip: GameTip? = null,
     ) : GameEffect
 
     /** Dépassement de la cible : retour au score [resetTo]. */
