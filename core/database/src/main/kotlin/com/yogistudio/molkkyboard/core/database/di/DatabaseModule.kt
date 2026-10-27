@@ -3,6 +3,7 @@ package com.yogistudio.molkkyboard.core.database.di
 import android.content.Context
 import androidx.room.Room
 import com.yogistudio.molkkyboard.core.database.MolkkyBoardDatabase
+import com.yogistudio.molkkyboard.core.database.dao.BackupDao
 import com.yogistudio.molkkyboard.core.database.dao.GameDao
 import com.yogistudio.molkkyboard.core.database.dao.PlayerDao
 import dagger.Module
@@ -30,4 +31,7 @@ object DatabaseModule {
 
     @Provides
     fun playerDao(database: MolkkyBoardDatabase): PlayerDao = database.playerDao()
+
+    @Provides
+    fun backupDao(database: MolkkyBoardDatabase): BackupDao = database.backupDao()
 }

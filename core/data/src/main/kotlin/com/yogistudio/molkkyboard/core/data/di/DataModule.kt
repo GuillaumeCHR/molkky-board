@@ -1,10 +1,12 @@
 package com.yogistudio.molkkyboard.core.data.di
 
+import com.yogistudio.molkkyboard.core.data.BackupRepository
 import com.yogistudio.molkkyboard.core.data.DataStoreSettingsRepository
 import com.yogistudio.molkkyboard.core.data.GameRepository
 import com.yogistudio.molkkyboard.core.data.IdGenerator
 import com.yogistudio.molkkyboard.core.data.JournalStatsRepository
 import com.yogistudio.molkkyboard.core.data.PlayerRepository
+import com.yogistudio.molkkyboard.core.data.RoomBackupRepository
 import com.yogistudio.molkkyboard.core.data.RoomGameRepository
 import com.yogistudio.molkkyboard.core.data.RoomPlayerRepository
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
@@ -28,6 +30,9 @@ abstract class DataModule {
 
     @Binds
     abstract fun statsRepository(impl: JournalStatsRepository): StatsRepository
+
+    @Binds
+    abstract fun backupRepository(impl: RoomBackupRepository): BackupRepository
 
     @Binds
     abstract fun settingsRepository(impl: DataStoreSettingsRepository): SettingsRepository

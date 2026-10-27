@@ -1,5 +1,7 @@
 package com.yogistudio.molkkyboard.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
@@ -14,7 +16,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedButton
@@ -24,6 +28,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,17 +36,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yogistudio.molkkyboard.R
+import com.yogistudio.molkkyboard.core.data.RestoreError
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.model.InputMode
+import java.time.LocalDate
 
 /** Langues proposées : celle du téléphone, ou une langue imposée à l'application. */
 private enum class AppLanguage(
@@ -152,6 +164,9 @@ internal fun SettingsScreen(
                 onChange = viewModel::setSounds,
             )
 
+            SectionTitle(R.string.settings_data)
+            DataSection(viewModel)
+
             SectionTitle(R.string.settings_startup)
             SettingsSwitch(
                 title = R.string.settings_short_intro,
@@ -173,6 +188,133 @@ internal fun SettingsScreen(
         }
     }
 }
+
+/**
+ * Sauvegarde et restauration par fichier (sélecteur de documents Android : aucune permission de stockage), et
+ * suppression de toutes les données, avec confirmation.
+ */
+@Composable
+private fun DataSection(viewModel: SettingsViewModel) {
+    val data by viewModel.data.collectAsStateWithLifecycle()
+    var confirmDelete by remember { mutableStateOf(false) }
+    val fileName = stringResource(R.string.settings_backup_file, LocalDate.now().toString())
+    val create =
+        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(BACKUP_MIME)) { uri ->
+            uri?.let(viewModel::backupTo)
+        }
+    val open =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let(viewModel::restoreFrom)
+        }
+    SettingsLink(
+        R.string.settings_backup,
+        R.string.settings_backup_hint,
+        { create.launch(fileName) },
+        enabled = !data.busy,
+    )
+    SettingsLink(
+        R.string.settings_restore,
+        R.string.settings_restore_hint,
+        { open.launch(arrayOf(BACKUP_MIME, "text/plain", "application/octet-stream")) },
+        enabled = !data.busy,
+    )
+    SettingsLink(
+        R.string.settings_delete_all,
+        R.string.settings_delete_all_hint,
+        { confirmDelete = true },
+        enabled = !data.busy,
+        danger = true,
+    )
+    if (data.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+    data.message?.let { message ->
+        Text(
+            dataMessage(message),
+            style = MaterialTheme.typography.bodyMedium,
+            color =
+                if (message is DataMessage.BackupFailed || message is DataMessage.RestoreFailed) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+        )
+    }
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text(stringResource(R.string.settings_delete_all_title)) },
+            text = { Text(stringResource(R.string.settings_delete_all_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDelete = false
+                    viewModel.deleteAll()
+                }) {
+                    Text(
+                        stringResource(R.string.settings_delete_all_confirm),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.settings_cancel)) }
+            },
+        )
+    }
+}
+
+@Composable
+private fun dataMessage(message: DataMessage): String =
+    when (message) {
+        DataMessage.BackupDone -> {
+            stringResource(R.string.settings_backup_done)
+        }
+
+        DataMessage.BackupFailed -> {
+            stringResource(R.string.settings_backup_failed)
+        }
+
+        DataMessage.Deleted -> {
+            stringResource(R.string.settings_delete_all_done)
+        }
+
+        is DataMessage.RestoreFailed -> {
+            stringResource(
+                when (message.error) {
+                    RestoreError.NOT_A_BACKUP -> R.string.settings_restore_not_backup
+                    RestoreError.NEWER_VERSION -> R.string.settings_restore_newer
+                    RestoreError.TOO_LARGE -> R.string.settings_restore_too_large
+                    RestoreError.UNREADABLE -> R.string.settings_restore_unreadable
+                },
+            )
+        }
+
+        is DataMessage.Restored -> {
+            val report = message.report
+            buildList {
+                add(pluralStringResource(R.plurals.settings_restore_added, report.gamesAdded, report.gamesAdded))
+                if (report.gamesAlreadyThere > 0) {
+                    add(
+                        pluralStringResource(
+                            R.plurals.settings_restore_present,
+                            report.gamesAlreadyThere,
+                            report.gamesAlreadyThere,
+                        ),
+                    )
+                }
+                if (report.gamesInvalid > 0) {
+                    add(
+                        pluralStringResource(
+                            R.plurals.settings_restore_invalid,
+                            report.gamesInvalid,
+                            report.gamesInvalid,
+                        ),
+                    )
+                }
+            }.joinToString(" · ")
+        }
+    }
+
+private const val BACKUP_MIME = "application/json"
 
 /** Langue de l'application (Android 13+ : la même que dans les réglages système de l'app). */
 @Composable
@@ -281,18 +423,25 @@ private fun SettingsLink(
     @StringRes title: Int,
     @StringRes hint: Int?,
     onClick: () -> Unit,
+    enabled: Boolean = true,
+    danger: Boolean = false,
 ) {
     SettingsCard {
         Row(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = onClick)
+                    .clickable(enabled = enabled, onClick = onClick)
                     .heightIn(min = 72.dp)
                     .padding(horizontal = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            SettingsLabel(title, hint, Modifier.weight(1f))
+            SettingsLabel(
+                title,
+                hint,
+                Modifier.weight(1f),
+                if (danger) MaterialTheme.colorScheme.error else Color.Unspecified,
+            )
             Icon(MBIcons.ChevronRight, contentDescription = null)
         }
     }
@@ -303,9 +452,10 @@ private fun SettingsLabel(
     @StringRes title: Int,
     @StringRes hint: Int?,
     modifier: Modifier,
+    color: Color = Color.Unspecified,
 ) {
     Column(modifier.padding(vertical = 12.dp)) {
-        Text(stringResource(title), style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(title), style = MaterialTheme.typography.titleMedium, color = color)
         if (hint != null) Hint(hint)
     }
 }
