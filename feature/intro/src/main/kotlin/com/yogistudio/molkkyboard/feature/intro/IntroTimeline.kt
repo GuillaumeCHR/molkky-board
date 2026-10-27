@@ -14,7 +14,7 @@ internal object IntroTimeline {
     /** 3a. Image d'impact figée (≈ 100 ms) : aplat safran, éclat radial, quilles en silhouettes. */
     const val FREEZE_END = 1_200L
 
-    /** 3b. L'envol : quilles intactes projetées hors champ, bulle « 12 ! », le mölkky retombe. */
+    /** 3b. L'envol : quilles intactes projetées hors champ, le mölkky retombe. */
     const val STRIKE_END = 2_400L
 
     /** 4. La signature Yogi Studio ; on y reste tant que le chargement n'est pas fini. */
