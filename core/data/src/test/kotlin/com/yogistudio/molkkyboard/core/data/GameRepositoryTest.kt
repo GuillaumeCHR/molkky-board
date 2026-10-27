@@ -13,6 +13,9 @@ import com.yogistudio.molkkyboard.core.scoring.Correct
 import com.yogistudio.molkkyboard.core.scoring.Delete
 import com.yogistudio.molkkyboard.core.scoring.EventId
 import com.yogistudio.molkkyboard.core.scoring.MatchConfig
+import com.yogistudio.molkkyboard.core.scoring.MatchStatus
+import com.yogistudio.molkkyboard.core.scoring.MolkkoutThrow
+import com.yogistudio.molkkyboard.core.scoring.NextStarter
 import com.yogistudio.molkkyboard.core.scoring.Outcome
 import com.yogistudio.molkkyboard.core.scoring.ScoringError
 import com.yogistudio.molkkyboard.core.scoring.SetStatus
@@ -276,5 +279,80 @@ class GameRepositoryTest {
                 repository.addParticipant(id, again, GamePlayer(chloe, "X"), team.copy(id = TeamId("D"))).errorOrNull(),
             )
             assertNull(repository.observe(id).first()!!.team(TeamId("D")))
+        }
+
+    /** Alice gagne en 5 lancers (Bruno fait 1 à chaque fois). */
+    private suspend fun playPerfect(id: String) {
+        listOf(12, 1, 12, 1, 12, 1, 12, 1, 2).forEach { repository.append(id, pins(it)) }
+    }
+
+    @Test
+    fun `l'historique liste les parties closes, la plus recente d'abord`() =
+        runTest {
+            val first = repository.create(newGame)
+            playPerfect(first)
+            repository.close(first)
+            val ongoing = repository.create(newGame)
+            repository.append(ongoing, pins(3))
+            val second = repository.create(newGame)
+            repository.close(second)
+            val history = repository.observeHistory().first()
+            assertEquals(listOf(second, first), history.map { it.id })
+            assertEquals(
+                SetStatus.FINISHED,
+                history[1]
+                    .currentSet.replay.state.status,
+            )
+            val stats = JournalStatsRepository(repository).summaries.first()
+            assertEquals(memberKey(listOf(alice)), stats.single { it.gameId == first }.winner)
+        }
+
+    @Test
+    fun `revanche - memes equipes, le vainqueur joue en dernier`() =
+        runTest {
+            val id = repository.create(newGame)
+            playPerfect(id)
+            val rematch = repository.createRematch(id, NextStarter.WinnerLast)!!
+            val snapshot = repository.observe(rematch).first()!!
+            assertEquals(listOf("B", "A"), snapshot.currentSet.lineup.map { it.id.value })
+            assertEquals(listOf("Alice", "Bruno"), snapshot.teams.map { it.name }.sorted())
+            assertEquals(GameConfig.Classic, snapshot.config)
+            assertNotEquals(id, rematch)
+        }
+
+    @Test
+    fun `match - Molkkout exige a 1-1 et a egalite de points, puis designe qui commence la belle`() =
+        runTest {
+            val id = repository.create(newGame.copy(matchConfig = MatchConfig.Classic))
+            playPerfect(id)
+            assertEquals(
+                MatchStatus.NextSet(2, listOf(TeamId("B"), TeamId("A"))),
+                repository.observe(id).first()!!.match,
+            )
+            repository.startNextSet(
+                id,
+                listOf(TeamLineup(TeamId("B"), listOf(bruno)), TeamLineup(TeamId("A"), listOf(alice))),
+            )
+            // Bruno gagne la 2e manche 50 à 4 : 54 points partout, il faut un Mölkkout.
+            playPerfect(id)
+            val tied = repository.observe(id).first()!!
+            assertEquals(MatchStatus.MolkkoutRequired(3), tied.match)
+            val teams = tied.molkkoutTeams()!!
+            // Série réglementaire en solo : 3 lancers chacun, A BB AA BB A.
+            val order = listOf("A", "B", "B", "A", "A", "B")
+            order.forEach { team ->
+                val player = if (team == "A") alice else bruno
+                val pins = if (team == "A") listOf(12) else listOf(4)
+                assertEquals(
+                    true,
+                    repository.appendMolkkout(id, MolkkoutThrow(TeamId(team), player, pins)) is Outcome.Ok,
+                )
+            }
+            val decided = repository.observe(id).first()!!
+            assertEquals(TeamId("A"), decided.molkkoutState?.winner)
+            assertEquals(MatchStatus.NextSet(3, listOf(TeamId("A"), TeamId("B"))), decided.match)
+            repository.undoMolkkout(id)
+            assertEquals(MatchStatus.MolkkoutRequired(3), repository.observe(id).first()!!.match)
+            assertEquals(teams, repository.observe(id).first()!!.molkkoutTeams())
         }
 }

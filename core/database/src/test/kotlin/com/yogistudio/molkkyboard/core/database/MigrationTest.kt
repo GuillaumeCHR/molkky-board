@@ -53,7 +53,29 @@ class MigrationTest {
         helper.runMigrationsAndValidate(DB_RECENT, 2, true, MIGRATION_1_2).close()
     }
 
+    @Test
+    fun `une base du J4 garde ses parties apres l'ajout du Molkkout`() =
+        runTest {
+            helper.createDatabase(DB_J4, 2).apply {
+                execSQL("INSERT INTO game VALUES ('g1', 1, 1, '{}', '{}', NULL, NULL)")
+                close()
+            }
+            helper.runMigrationsAndValidate(DB_J4, 3, true, MIGRATION_2_3).close()
+            val database = openMigrated(DB_J4)
+            assertEquals(
+                "g1",
+                database
+                    .gameDao()
+                    .observeOngoing()
+                    .first()
+                    ?.id,
+            )
+            assertEquals(emptyList<Any>(), database.gameDao().molkkoutThrows("g1"))
+            database.close()
+        }
+
     private companion object {
+        const val DB_J4 = "migration-j4.db"
         const val DB = "migration-test.db"
         const val DB_RECENT = "migration-recent.db"
     }

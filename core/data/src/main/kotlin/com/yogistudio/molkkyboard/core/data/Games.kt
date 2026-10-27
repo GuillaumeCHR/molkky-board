@@ -5,8 +5,17 @@ import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.TeamLineup
 import com.yogistudio.molkkyboard.core.scoring.MatchConfig
+import com.yogistudio.molkkyboard.core.scoring.MatchStatus
+import com.yogistudio.molkkyboard.core.scoring.Molkkout
+import com.yogistudio.molkkyboard.core.scoring.MolkkoutState
+import com.yogistudio.molkkyboard.core.scoring.MolkkoutThrow
 import com.yogistudio.molkkyboard.core.scoring.ReplayResult
 import com.yogistudio.molkkyboard.core.scoring.SetEvent
+import com.yogistudio.molkkyboard.core.scoring.SetResult
+import com.yogistudio.molkkyboard.core.scoring.SetStatus
+import com.yogistudio.molkkyboard.core.scoring.getOrNull
+import com.yogistudio.molkkyboard.core.scoring.matchStatus
+import com.yogistudio.molkkyboard.core.scoring.toResult
 import java.security.MessageDigest
 
 /** Apparence d'une équipe dans une partie. */
@@ -54,8 +63,44 @@ data class GameSnapshot(
     val sets: List<GameSetSnapshot>,
     val place: String?,
     val players: List<GamePlayer> = emptyList(),
+    /** Lancers du Mölkkout éventuel (départage avant la belle). */
+    val molkkout: List<MolkkoutThrow> = emptyList(),
 ) {
     val currentSet: GameSetSnapshot get() = sets.last()
+
+    val abandoned: Boolean get() = sets.any { it.replay.state.status == SetStatus.ABANDONED }
+
+    /** Manches terminées, dans l'ordre : base du match. */
+    private val results: List<SetResult> get() = sets.mapNotNull { it.replay.state.toResult() }
+
+    /** Ordre de passage de la 1re manche : référence du match. */
+    private val firstOrder: List<TeamId> get() = sets.first().lineup.map { it.id }
+
+    /** État du Mölkkout (seulement si un match l'exige). */
+    val molkkoutState: MolkkoutState?
+        get() = molkkoutTeams()?.let { Molkkout.replay(it, molkkout).getOrNull() }
+
+    /**
+     * Où en est le match, une fois la manche en cours terminée : `null` tant qu'elle se joue (ou si elle est
+     * abandonnée). Une partie d'une seule manche est un match en 1 manche gagnante.
+     */
+    val match: MatchStatus?
+        get() {
+            if (currentSet.replay.state.status != SetStatus.FINISHED) return null
+            return matchStatus(matchConfig, firstOrder, results, molkkoutState?.winner)
+        }
+
+    /** Équipes du Mölkkout, dans l'ordre de la 1re manche, quand le match en demande un. */
+    fun molkkoutTeams(): List<TeamLineup>? {
+        if (currentSet.replay.state.status != SetStatus.FINISHED) return null
+        val status = matchStatus(matchConfig, firstOrder, results)
+        if (status !is MatchStatus.MolkkoutRequired) return null
+        val last = currentSet.replay.state
+        return firstOrder.map { id -> TeamLineup(id, last.team(id)?.players.orEmpty()) }
+    }
+
+    /** Victoires de manche de chaque équipe dans le match. */
+    val setWins: Map<TeamId, Int> get() = results.groupingBy { it.winner }.eachCount()
 
     private val playerNames by lazy { players.associate { it.id to it.name } }
     private val teamsById by lazy { teams.associateBy { it.id } }

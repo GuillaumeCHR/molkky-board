@@ -18,3 +18,15 @@ val MIGRATION_1_2 =
             )
         }
     }
+
+/** 2 → 3 : lancers du Mölkkout (J5). */
+val MIGRATION_2_3 =
+    object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `molkkout_throw` (`gameId` TEXT NOT NULL, `seq` INTEGER NOT NULL, " +
+                    "`payloadJson` TEXT NOT NULL, PRIMARY KEY(`gameId`, `seq`), " +
+                    "FOREIGN KEY(`gameId`) REFERENCES `game`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+            )
+        }
+    }

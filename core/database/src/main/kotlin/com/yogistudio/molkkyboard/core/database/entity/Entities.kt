@@ -139,3 +139,25 @@ data class GamePlayerEntity(
     val name: String,
     val profileId: String?,
 )
+
+/**
+ * Lancer de Mölkkout (départage avant la belle d'un match). Journal en ajout seul, comme les manches ; [seq]
+ * donne l'ordre, la dernière ligne s'annule en la supprimant.
+ */
+@Entity(
+    tableName = "molkkout_throw",
+    primaryKeys = ["gameId", "seq"],
+    foreignKeys = [
+        ForeignKey(
+            entity = GameEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["gameId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+)
+data class MolkkoutThrowEntity(
+    val gameId: String,
+    val seq: Int,
+    val payloadJson: String,
+)

@@ -10,6 +10,7 @@ import com.yogistudio.molkkyboard.core.database.entity.GameEventEntity
 import com.yogistudio.molkkyboard.core.database.entity.GamePlayerEntity
 import com.yogistudio.molkkyboard.core.database.entity.GameSetEntity
 import com.yogistudio.molkkyboard.core.database.entity.GameTeamEntity
+import com.yogistudio.molkkyboard.core.database.entity.MolkkoutThrowEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -99,4 +100,37 @@ interface GameDao {
 
     @Query("DELETE FROM game WHERE id = :gameId")
     suspend fun deleteGame(gameId: String)
+
+    // Historique et statistiques : toutes les parties closes, en quelques requêtes (pas une par partie).
+
+    @Query("SELECT s.* FROM game_set s JOIN game g ON g.id = s.gameId WHERE g.closedAt IS NOT NULL ORDER BY s.setIndex")
+    fun observeClosedSets(): Flow<List<GameSetEntity>>
+
+    @Query("SELECT t.* FROM game_team t JOIN game g ON g.id = t.gameId WHERE g.closedAt IS NOT NULL")
+    fun observeClosedTeams(): Flow<List<GameTeamEntity>>
+
+    @Query("SELECT p.* FROM game_player p JOIN game g ON g.id = p.gameId WHERE g.closedAt IS NOT NULL")
+    fun observeClosedPlayers(): Flow<List<GamePlayerEntity>>
+
+    @Query(
+        "SELECT e.* FROM game_event e JOIN game g ON g.id = e.gameId WHERE g.closedAt IS NOT NULL " +
+            "ORDER BY e.setIndex, e.localSeq",
+    )
+    fun observeClosedEvents(): Flow<List<GameEventEntity>>
+
+    // Mölkkout
+
+    @Query("SELECT * FROM molkkout_throw WHERE gameId = :gameId ORDER BY seq")
+    fun observeMolkkout(gameId: String): Flow<List<MolkkoutThrowEntity>>
+
+    @Query("SELECT * FROM molkkout_throw WHERE gameId = :gameId ORDER BY seq")
+    suspend fun molkkoutThrows(gameId: String): List<MolkkoutThrowEntity>
+
+    @Insert
+    suspend fun insertMolkkoutThrow(entity: MolkkoutThrowEntity)
+
+    @Query(
+        "DELETE FROM molkkout_throw WHERE gameId = :gameId AND seq = (SELECT MAX(seq) FROM molkkout_throw WHERE gameId = :gameId)",
+    )
+    suspend fun deleteLastMolkkoutThrow(gameId: String)
 }

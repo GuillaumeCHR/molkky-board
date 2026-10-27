@@ -9,6 +9,7 @@ import com.yogistudio.molkkyboard.core.database.entity.GameEventEntity
 import com.yogistudio.molkkyboard.core.database.entity.GamePlayerEntity
 import com.yogistudio.molkkyboard.core.database.entity.GameSetEntity
 import com.yogistudio.molkkyboard.core.database.entity.GameTeamEntity
+import com.yogistudio.molkkyboard.core.database.entity.MolkkoutThrowEntity
 import com.yogistudio.molkkyboard.core.database.entity.PlayerProfileEntity
 import com.yogistudio.molkkyboard.core.database.entity.TeamEntity
 
@@ -21,8 +22,9 @@ import com.yogistudio.molkkyboard.core.database.entity.TeamEntity
         GameTeamEntity::class,
         GamePlayerEntity::class,
         GameEventEntity::class,
+        MolkkoutThrowEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class MolkkyBoardDatabase : RoomDatabase() {
@@ -34,6 +36,6 @@ abstract class MolkkyBoardDatabase : RoomDatabase() {
         const val NAME = "molkkyboard.db"
 
         /** Toutes les migrations, dans l'ordre : toute modification du schéma impose une version et une migration. */
-        val MIGRATIONS = arrayOf(MIGRATION_1_2)
+        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
     }
 }

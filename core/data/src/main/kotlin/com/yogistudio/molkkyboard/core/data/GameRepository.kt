@@ -6,12 +6,18 @@ import com.yogistudio.molkkyboard.core.database.entity.GameEventEntity
 import com.yogistudio.molkkyboard.core.database.entity.GamePlayerEntity
 import com.yogistudio.molkkyboard.core.database.entity.GameSetEntity
 import com.yogistudio.molkkyboard.core.database.entity.GameTeamEntity
+import com.yogistudio.molkkyboard.core.database.entity.MolkkoutThrowEntity
 import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.TeamLineup
 import com.yogistudio.molkkyboard.core.scoring.AddPlayer
 import com.yogistudio.molkkyboard.core.scoring.MatchConfig
+import com.yogistudio.molkkyboard.core.scoring.MatchStatus
+import com.yogistudio.molkkyboard.core.scoring.Molkkout
+import com.yogistudio.molkkyboard.core.scoring.MolkkoutState
+import com.yogistudio.molkkyboard.core.scoring.MolkkoutThrow
+import com.yogistudio.molkkyboard.core.scoring.NextStarter
 import com.yogistudio.molkkyboard.core.scoring.Outcome
 import com.yogistudio.molkkyboard.core.scoring.PlayEvent
 import com.yogistudio.molkkyboard.core.scoring.ReplayResult
@@ -19,7 +25,9 @@ import com.yogistudio.molkkyboard.core.scoring.ScoringError
 import com.yogistudio.molkkyboard.core.scoring.SetEvent
 import com.yogistudio.molkkyboard.core.scoring.checkInput
 import com.yogistudio.molkkyboard.core.scoring.getOrThrow
+import com.yogistudio.molkkyboard.core.scoring.matchStatus
 import com.yogistudio.molkkyboard.core.scoring.replay
+import com.yogistudio.molkkyboard.core.scoring.toResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -54,6 +62,21 @@ interface GameRepository {
         player: GamePlayer,
         team: GameTeam,
     ): Outcome<ReplayResult>
+
+    /** Parties closes (terminées ou abandonnées), la plus récente d'abord : historique et statistiques. */
+    fun observeHistory(): Flow<List<GameSnapshot>>
+
+    /** Ajoute un lancer de Mölkkout, validé par le moteur ; rien n'est écrit s'il est refusé. */
+    suspend fun appendMolkkout(gameId: String, throwEvent: MolkkoutThrow): Outcome<MolkkoutState>
+
+    /** Annule le dernier lancer de Mölkkout. */
+    suspend fun undoMolkkout(gameId: String)
+
+    /**
+     * Revanche : nouvelle partie avec les mêmes équipes, joueurs et règles. L'ordre de passage découle de la
+     * dernière manche selon [order]. Renvoie l'identifiant de la nouvelle partie.
+     */
+    suspend fun createRematch(gameId: String, order: NextStarter): String?
 
     /** Identifiant de la partie en cours la plus récente, à proposer en reprise. */
     fun observeOngoingGameId(): Flow<String?>
@@ -98,37 +121,71 @@ class RoomGameRepository
 
         override fun observe(gameId: String): Flow<GameSnapshot?> =
             combine(
-                dao.observeGame(gameId),
-                dao.observeSets(gameId),
-                dao.observeTeams(gameId),
+                combine(dao.observeGame(gameId), dao.observeSets(gameId), dao.observeTeams(gameId), ::Triple),
                 dao.observePlayers(gameId),
                 dao.observeEvents(gameId),
-            ) { game, sets, teams, players, events ->
+                dao.observeMolkkout(gameId),
+            ) { (game, sets, teams), players, events, molkkout ->
                 game ?: return@combine null
-                val config = json.decodeFromString<GameConfig>(game.configJson)
-                val bySet = events.groupBy { it.setIndex }
-                GameSnapshot(
-                    id = game.id,
-                    createdAt = game.createdAt,
-                    closedAt = game.closedAt,
-                    config = config,
-                    matchConfig = json.decodeFromString<MatchConfig>(game.matchConfigJson),
-                    teams = teams.map { GameTeam(TeamId(it.teamId), it.name, it.colorIndex, it.emblem, it.memberKey) },
-                    sets =
-                        sets.map { set ->
-                            val lineup = json.decodeFromString<List<TeamLineup>>(set.lineupJson)
-                            val log =
-                                bySet[set.setIndex].orEmpty().map {
-                                    json.decodeFromString<SetEvent>(
-                                        it.payloadJson,
-                                    )
-                                }
-                            GameSetSnapshot(set.setIndex, lineup, log, replay(config, lineup, log).getOrThrow())
-                        },
-                    place = game.place,
-                    players = players.map { GamePlayer(PlayerId(it.playerId), it.name, it.profileId) },
-                )
+                snapshot(game, sets, teams, players, events, molkkout)
             }
+
+        override fun observeHistory(): Flow<List<GameSnapshot>> =
+            combine(
+                dao.observeClosed(),
+                dao.observeClosedSets(),
+                dao.observeClosedTeams(),
+                dao.observeClosedPlayers(),
+                dao.observeClosedEvents(),
+            ) { games, sets, teams, players, events ->
+                val setsBy = sets.groupBy { it.gameId }
+                val teamsBy = teams.groupBy { it.gameId }
+                val playersBy = players.groupBy { it.gameId }
+                val eventsBy = events.groupBy { it.gameId }
+                games.mapNotNull { game ->
+                    val gameSets = setsBy[game.id] ?: return@mapNotNull null
+                    // Le Mölkkout ne sert qu'à l'ordre de la belle : inutile à l'historique.
+                    runCatching {
+                        snapshot(
+                            game,
+                            gameSets,
+                            teamsBy[game.id].orEmpty(),
+                            playersBy[game.id].orEmpty(),
+                            eventsBy[game.id].orEmpty(),
+                            emptyList(),
+                        )
+                    }.getOrNull()
+                }
+            }
+
+        private fun snapshot(
+            game: GameEntity,
+            sets: List<GameSetEntity>,
+            teams: List<GameTeamEntity>,
+            players: List<GamePlayerEntity>,
+            events: List<GameEventEntity>,
+            molkkout: List<MolkkoutThrowEntity>,
+        ): GameSnapshot {
+            val config = json.decodeFromString<GameConfig>(game.configJson)
+            val bySet = events.groupBy { it.setIndex }
+            return GameSnapshot(
+                id = game.id,
+                createdAt = game.createdAt,
+                closedAt = game.closedAt,
+                config = config,
+                matchConfig = json.decodeFromString<MatchConfig>(game.matchConfigJson),
+                teams = teams.map { GameTeam(TeamId(it.teamId), it.name, it.colorIndex, it.emblem, it.memberKey) },
+                sets =
+                    sets.map { set ->
+                        val lineup = json.decodeFromString<List<TeamLineup>>(set.lineupJson)
+                        val log = bySet[set.setIndex].orEmpty().map { json.decodeFromString<SetEvent>(it.payloadJson) }
+                        GameSetSnapshot(set.setIndex, lineup, log, replay(config, lineup, log).getOrThrow())
+                    },
+                place = game.place,
+                players = players.map { GamePlayer(PlayerId(it.playerId), it.name, it.profileId) },
+                molkkout = molkkout.map { json.decodeFromString<MolkkoutThrow>(it.payloadJson) },
+            )
+        }
 
         override suspend fun append(gameId: String, event: SetEvent): Outcome<ReplayResult> =
             writes.withLock {
@@ -194,6 +251,52 @@ class RoomGameRepository
                 dao.upsertPlayer(GamePlayerEntity(gameId, player.id.value, player.name, player.profileId))
             }
             return outcome
+        }
+
+        override suspend fun appendMolkkout(gameId: String, throwEvent: MolkkoutThrow): Outcome<MolkkoutState> =
+            writes.withLock {
+                val snapshot = observe(gameId).first() ?: return Outcome.Err(ScoringError.UNKNOWN_EVENT)
+                val teams = snapshot.molkkoutTeams() ?: return Outcome.Err(ScoringError.INVALID_CONFIG)
+                val after =
+                    when (val before = Molkkout.replay(teams, snapshot.molkkout)) {
+                        is Outcome.Ok -> Molkkout.reduce(before.value, throwEvent)
+                        is Outcome.Err -> before
+                    }
+                if (after is Outcome.Ok) {
+                    dao.insertMolkkoutThrow(
+                        MolkkoutThrowEntity(gameId, snapshot.molkkout.size + 1, json.encodeToString(throwEvent)),
+                    )
+                }
+                after
+            }
+
+        override suspend fun undoMolkkout(gameId: String) = writes.withLock { dao.deleteLastMolkkoutThrow(gameId) }
+
+        override suspend fun createRematch(gameId: String, order: NextStarter): String? {
+            val snapshot = observe(gameId).first() ?: return null
+            val last = snapshot.currentSet.replay.state
+            val result = last.toResult()
+            val remaining = last.teams.filterNot { it.left }
+            val ids = remaining.map { it.id }
+            val nextIds =
+                if (result == null) {
+                    ids
+                } else {
+                    val next = matchStatus(MatchConfig(setsToWin = 2, nextStarter = order), ids, listOf(result))
+                    (next as? MatchStatus.NextSet)?.order ?: ids
+                }
+            val lineup = nextIds.map { id -> TeamLineup(id, remaining.first { it.id == id }.players) }
+            val playerIds = lineup.flatMap { it.players }.toSet()
+            return create(
+                NewGame(
+                    config = snapshot.config,
+                    matchConfig = snapshot.matchConfig,
+                    lineup = lineup,
+                    teams = snapshot.teams.filter { team -> team.id in nextIds },
+                    players = snapshot.players.filter { it.id in playerIds },
+                    place = snapshot.place,
+                ),
+            )
         }
 
         override fun observeOngoingGameId(): Flow<String?> = dao.observeOngoing().map { it?.id }

@@ -10,6 +10,7 @@ android {
 
 dependencies {
     api(projects.core.scoring)
+    api(projects.core.stats)
     api(projects.core.datastore)
     implementation(projects.core.database)
     implementation(libs.kotlinx.coroutines.core)
