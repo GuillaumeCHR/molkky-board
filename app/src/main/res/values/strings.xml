@@ -117,6 +117,7 @@
     <string name="about_privacy_control">Vous pouvez sauvegarder, exporter ou supprimer vos données à tout moment, dans Réglages › Données.</string>
     <string name="about_credits">Crédits</string>
     <string name="about_licenses">Bibliothèques open source</string>
+    <string name="about_licenses_list">Liste des bibliothèques</string>
     <string name="about_feedback_title">Version de test</string>
     <string name="about_feedback_hint">Un bug, une idée ? Le message contient seulement la version de l\'app et le modèle du téléphone.</string>
     <string name="about_feedback">Envoyer un retour</string>

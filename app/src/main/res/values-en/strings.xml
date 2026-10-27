@@ -115,6 +115,7 @@
     <string name="about_privacy_control">You can back up, export or delete your data at any time, in Settings › Data.</string>
     <string name="about_credits">Credits</string>
     <string name="about_licenses">Open source libraries</string>
+    <string name="about_licenses_list">List of libraries</string>
     <string name="about_feedback_title">Test version</string>
     <string name="about_feedback_hint">A bug, an idea? The message only contains the app version and the phone model.</string>
     <string name="about_feedback">Send feedback</string>

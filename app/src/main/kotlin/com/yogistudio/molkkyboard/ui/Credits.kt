@@ -95,8 +95,9 @@ internal fun CreditsSection(scroll: ScrollState, onLicenses: () -> Unit) {
             CREDITS.forEach { Credit(it) }
             Heading(R.string.credits_game_title)
             Body(R.string.credits_game)
+            Heading(R.string.about_licenses)
             OutlinedButton(onClick = onLicenses, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
-                Text(stringResource(R.string.about_licenses))
+                Text(stringResource(R.string.about_licenses_list))
             }
             Credit(
                 CreditBlock(R.string.credits_hardware_title, R.string.credits_hardware, R.string.credits_hardware_note),
