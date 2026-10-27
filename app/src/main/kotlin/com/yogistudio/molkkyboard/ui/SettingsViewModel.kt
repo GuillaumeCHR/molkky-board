@@ -84,8 +84,6 @@ class SettingsViewModel
 
         fun setSounds(enabled: Boolean) = launch { repository.setSounds(enabled) }
 
-        fun setShortIntro(enabled: Boolean) = launch { repository.setShortIntro(enabled) }
-
         /** Écrit la sauvegarde dans le fichier choisi par l'utilisateur (sélecteur de documents Android). */
         fun backupTo(uri: Uri) =
             dataOperation {

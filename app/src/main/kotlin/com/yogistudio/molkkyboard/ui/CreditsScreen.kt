@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
 import com.yogistudio.molkkyboard.BuildConfig
 import com.yogistudio.molkkyboard.R
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
@@ -60,8 +61,9 @@ import kotlin.math.sin
  * privée ») ; la version vient de `BuildConfig`. Scène post-générique : le scintillement de l'intro, une seule fois.
  */
 @Composable
-internal fun CreditsScreen(onBack: () -> Unit, onLicenses: () -> Unit) {
+internal fun CreditsScreen(onBack: () -> Unit) {
     val scroll = rememberScrollState()
+    val libraries by produceLibraries(R.raw.aboutlibraries)
     val reduced = MolkkyBoardTheme.reducedMotion
     var rolling by rememberSaveable { mutableStateOf(!reduced) }
     LaunchedEffect(rolling, scroll.maxValue) {
@@ -105,8 +107,21 @@ internal fun CreditsScreen(onBack: () -> Unit, onLicenses: () -> Unit) {
             Heading(R.string.credits_oss_title)
             Body(R.string.credits_oss)
             Note(stringResource(R.string.credits_oss_thanks))
-            OutlinedButton(onClick = onLicenses, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
-                Text(stringResource(R.string.about_licenses))
+            // La liste complète, générée au build par AboutLibraries, défile avec le générique.
+            libraries?.libraries?.forEach { library ->
+                Text(
+                    library.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    textAlign = TextAlign.Center,
+                )
+                library.licenses.joinToString { it.name }.takeIf { it.isNotBlank() }?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
             Credit(
                 CreditBlock(R.string.credits_hardware_title, R.string.credits_hardware, R.string.credits_hardware_note),
@@ -202,8 +217,9 @@ private fun Terminal() {
     val summary = stringResource(R.string.credits_terminal_description)
     Surface(
         shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary,
+        // Vert forêt et texte bouleau dans les deux thèmes (le primaire du thème sombre est un vert clair).
+        color = TERMINAL_FOREST,
+        contentColor = TERMINAL_BIRCH,
         modifier = Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = summary },
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -232,6 +248,8 @@ private fun TerminalLine(label: String, value: String) {
 }
 
 private val DOTS = "…".repeat(40)
+private val TERMINAL_FOREST = Color(0xFF1F4D3A)
+private val TERMINAL_BIRCH = Color(0xFFF4EBDD)
 
 /** Les chiffres qui comptent. Les zéros sont vrais : aucune pub, aucun traceur, aucun SDK d'analytics, aucun cookie. */
 @Composable

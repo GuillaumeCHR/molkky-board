@@ -57,7 +57,8 @@ class StartupLoader
                         val current = settings.recordLaunch()
                         mutableState.update {
                             it.copy(
-                                shortIntro = current.shortIntro && current.canChooseShortIntro,
+                                // Intro courte retirée des Réglages (2026-10-27) : toujours l'intro complète.
+                                shortIntro = false,
                                 sounds = current.sounds,
                             )
                         }

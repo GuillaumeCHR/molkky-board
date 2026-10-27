@@ -165,14 +165,12 @@ fun MolkkyBoardNavHost(
                     AboutScreen(
                         onBack = navController::navigateUp,
                         onLicenses = { navController.navigate(LicensesRoute) },
+                        onCredits = { navController.navigate(CreditsRoute) },
                     )
                 }
                 composable<LicensesRoute> { LicensesScreen(onBack = navController::navigateUp) }
                 composable<CreditsRoute> {
-                    CreditsScreen(
-                        onBack = navController::navigateUp,
-                        onLicenses = { navController.navigate(LicensesRoute) },
-                    )
+                    CreditsScreen(onBack = navController::navigateUp)
                 }
                 composable<PlayfulRulesRoute> { PlayfulRulesScreen(onBack = navController::navigateUp) }
                 composable<RulesRoute> { RulesScreen(onBack = navController::navigateUp) }

@@ -191,20 +191,6 @@ internal fun SettingsScreen(
             SectionTitle(R.string.settings_data)
             DataSection(viewModel)
 
-            SectionTitle(R.string.settings_startup)
-            SettingsSwitch(
-                title = R.string.settings_short_intro,
-                hint =
-                    if (settings.canChooseShortIntro) {
-                        R.string.settings_short_intro_hint
-                    } else {
-                        R.string.settings_short_intro_locked
-                    },
-                checked = settings.shortIntro,
-                enabled = settings.canChooseShortIntro,
-                onChange = viewModel::setShortIntro,
-            )
-
             SettingsLink(R.string.settings_about, null, onAbout)
         }
     }

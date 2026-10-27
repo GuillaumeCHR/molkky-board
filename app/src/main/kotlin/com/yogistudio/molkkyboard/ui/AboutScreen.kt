@@ -40,7 +40,7 @@ import com.yogistudio.molkkyboard.crash.deviceSummary
  * (bibliothèques et polices) et, dans les versions de test, « Envoyer un retour ».
  */
 @Composable
-internal fun AboutScreen(onBack: () -> Unit, onLicenses: () -> Unit, onCredits: () -> Unit = {}) {
+internal fun AboutScreen(onBack: () -> Unit, onLicenses: () -> Unit, onCredits: () -> Unit) {
     val context = LocalContext.current
     Column(Modifier.fillMaxSize()) {
         MBTopBar(stringResource(R.string.settings_about), onBack)
