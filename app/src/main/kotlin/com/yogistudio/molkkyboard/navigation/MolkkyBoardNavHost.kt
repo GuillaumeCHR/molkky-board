@@ -36,10 +36,10 @@ import com.yogistudio.molkkyboard.core.model.UserSettings
 import com.yogistudio.molkkyboard.feature.game.GameScreen
 import com.yogistudio.molkkyboard.feature.game.RulesScreen
 import com.yogistudio.molkkyboard.feature.history.HistoryScreen
-import com.yogistudio.molkkyboard.feature.share.ShareScreen
 import com.yogistudio.molkkyboard.feature.intro.IntroScreen
 import com.yogistudio.molkkyboard.feature.setup.PlayfulRulesScreen
 import com.yogistudio.molkkyboard.feature.setup.SetupScreen
+import com.yogistudio.molkkyboard.feature.share.ShareScreen
 import com.yogistudio.molkkyboard.feature.stats.HallOfFameScreen
 import com.yogistudio.molkkyboard.feature.stats.StatsScreen
 import com.yogistudio.molkkyboard.notification.NotificationPermissionPrompt

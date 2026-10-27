@@ -32,7 +32,8 @@ style:
   MagicNumber:
     # Valeurs du jeu (12 quilles, 50 points…) : lisibles telles quelles dans les tests et les constantes.
     # Le design system et l'intro animée sont faits de valeurs de design (tailles, proportions, couleurs,
-    # timings) : on ne les nomme pas toutes.
-    excludes: ['**/test/**', '**/*Test.kt', '**/designsystem/**', '**/feature/intro/**']
+    # timings) : on ne les nomme pas toutes. Même chose pour le dessin du mini-clip de partage, et pour
+    # l'encodeur GIF dont les octets sont imposés par le format (GIF89a).
+    excludes: ['**/test/**', '**/*Test.kt', '**/designsystem/**', '**/feature/intro/**', '**/ReelRenderer.kt', '**/GifEncoder.kt']
     ignoreAnnotated: ['Composable', 'Preview']
     ignorePropertyDeclaration: true

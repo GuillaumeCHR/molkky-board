@@ -50,4 +50,12 @@
     <string name="share_text_strike">💥 Strike : les 12 quilles d\'un coup pour %1$s ! Molkky Board #molkky</string>
     <string name="share_text_reset">😅 %1$s à 49… retour à 25. C\'est ça, le Mölkky ! Molkky Board #molkky</string>
     <string name="share_text_eliminated">😅 Trois ratés pour %1$s : hors jeu. Partie comptée avec Molkky Board #molkky</string>
+    <string name="reel_video">Créer une vidéo</string>
+    <string name="reel_gif">GIF (sans vidéo)</string>
+    <string name="reel_progress">Création en cours… %1$d %%</string>
+    <string name="reel_cancel">Annuler</string>
+    <string name="reel_failed">La création n\'a pas abouti. Réessayez, ou partagez l\'image.</string>
+    <string name="reel_round">Tour %1$d</string>
+    <string name="reel_reset">Retour à 25 !</string>
+    <string name="reel_eliminated">Éliminé</string>
 </resources>

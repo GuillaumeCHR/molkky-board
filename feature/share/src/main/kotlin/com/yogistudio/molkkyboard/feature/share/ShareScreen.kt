@@ -26,6 +26,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -145,6 +146,24 @@ fun ShareContentScreen(state: ShareUiState, actions: ShareActions) {
                 label = { Text(stringResource(R.string.share_text_label)) },
                 modifier = Modifier.fillMaxWidth(),
             )
+            val title = momentLabel(moment)
+            val key = keyFigure(content)
+            val reel =
+                remember(content, title, key) {
+                    snapshot.reelData(
+                        content,
+                        title,
+                        key,
+                        ReelLabels(
+                            round = { context.getString(R.string.reel_round, it) },
+                            reset = context.getString(R.string.reel_reset),
+                            eliminated = context.getString(R.string.reel_eliminated),
+                            scan = context.getString(R.string.card_scan),
+                            hashtag = context.getString(R.string.card_hashtag),
+                        ),
+                    )
+                }
+            ReelSection(reel, text)
         }
         ShareButtons(context, layer, text, onSaved = {})
     }
