@@ -1173,3 +1173,9 @@ et tiens-la à jour jusqu'à la publication.
 
 - 2026-10-27 — Section « Open source » retirée du générique (redondante avec À propos › Bibliothèques open source, qui reste).
 - 2026-10-27 — **Crédits intégrés à « À propos »** dans un bloc à part (plus d'écran dédié ni de défilement automatique ; scintillement final quand on arrive en bas) ; la liste des bibliothèques reste sur son écran. Retirés à la demande : « exit 0 » ; « Cookies » affiche « 0 (pas les crêpes) ». Statistiques : grands chiffres pour les nombres seulement.
+
+### Test de rattrapage J4 → 0.5.0 (2026-10-27, `docs/tests/rattrapage-J4-0.5-resultats.md`)
+- Validés sur téléphone : intro, accueil, raccourcis, bouton « Quilles », victoire, revanche, match, historique, Hall of Fame, autres records, badges, partage (moment, vidéo < 10 s, GIF), notification, données (sauvegarde, restauration, suppression), anglais, règles, fluidité, reprise, grande police.
+- Décisions : **masquage des noms au partage retiré** (écart volontaire à la spec « Vie privée ») ; **QR code retiré des vignettes** (écart volontaire à la boucle virale) ; « open source » = construite avec des bibliothèques open source, code privé ; voix et sons coupés **en silencieux seulement** ; écran bloqué en portrait ; placement en vue globale (pas à pas et vue de côté retirés) ; geste du bandeau des scores retiré au profit d'une icône podium ; avatars emoji jugés enfantins (à remplacer) ; « Mordu compté comme raté » retiré des règles Ludique.
+- Corrections C1–C16 et nouvelles fonctions N1 (photo du moment) et N2 (petite animation à chaque lancer) : voir le compte rendu.
+

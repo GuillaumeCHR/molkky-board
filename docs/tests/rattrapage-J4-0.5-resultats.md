@@ -83,7 +83,7 @@ qui s'envolent à chaque lancer (N2) ; vérifier le contrôle du JSON importé (
 - **N1** Photo du moment : photo prise sur le terrain (appareil photo système ou galerie), score, badge ou moment incrusté, sans EXIF ni conservation après le partage. Maquette avant le code.
 - **N2** Petite animation à chaque lancer : les quilles touchées s'envolent (≈ 0,4 s), le « 12 » gardant sa bulle.
 
-## Décisions en attente
-- **D1** Masquer un nom avant le partage (exigé par la spec « Vie privée ») : retirer, ou garder en plus discret.
-- **D2** « Open source » : le code est privé ; l'écrire suppose de publier le code sous licence libre.
-- **D3** Voix et sons coupés seulement en mode silencieux (C9) : à confirmer.
+## Décisions (2026-10-27)
+- **D1** Masquage des noms avant le partage : **retiré complètement** (écart volontaire à la spec « Vie privée »).
+- **D2** À propos : « construite avec des bibliothèques open source » ; le code reste privé (publication à étudier en P3).
+- **D3** Voix et sons coupés **en mode silencieux seulement** (ils jouent en vibreur, au volume média).
