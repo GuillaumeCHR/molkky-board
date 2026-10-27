@@ -29,6 +29,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -74,7 +75,11 @@ internal fun EndPanel(state: GameUiState, actions: GameActions, onOpenLog: () ->
             }
             EndActions(state, end, actions)
             Row(horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap)) {
-                if (state.finished) TextButton(onClick = actions.onUndo) { Text(stringResource(R.string.game_undo)) }
+                // Pendant un Mölkkout, seule son annulation est proposée (deux « Annuler » prêteraient à confusion).
+                val molkkoutStarted = (end?.match?.molkkout?.throws ?: 0) > 0
+                if (state.finished && !molkkoutStarted) {
+                    TextButton(onClick = actions.onUndo) { Text(stringResource(R.string.game_undo)) }
+                }
                 TextButton(onClick = onOpenLog) { Text(stringResource(R.string.game_menu_log)) }
             }
         }
@@ -176,7 +181,12 @@ private fun RankingCard(state: GameUiState, end: EndUi?) {
                 }
                 stats[team.id]?.let { line ->
                     Text(
-                        stringResource(R.string.end_stats_line, line.throws, line.misses, line.average.oneDecimal()),
+                        stringResource(
+                            R.string.end_stats_line,
+                            pluralStringResource(R.plurals.end_throws, line.throws, line.throws),
+                            pluralStringResource(R.plurals.end_misses, line.misses, line.misses),
+                            line.average.oneDecimal(),
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 22.dp),
@@ -235,8 +245,14 @@ private fun MolkkoutCard(molkkout: MolkkoutUi, actions: GameActions) {
                 style = MaterialTheme.typography.titleMedium,
             )
         } else {
+            val player = molkkout.nextPlayer.orEmpty()
+            val team = molkkout.nextTeam.orEmpty()
             Text(
-                stringResource(R.string.molkkout_turn, molkkout.nextPlayer.orEmpty(), molkkout.nextTeam.orEmpty()),
+                if (player == team) {
+                    stringResource(R.string.molkkout_turn_solo, player)
+                } else {
+                    stringResource(R.string.molkkout_turn, player, team)
+                },
                 style = MaterialTheme.typography.titleMedium,
             )
             // Alignement réglementaire, vu du lanceur : 6, 4, 12, 10, 8.

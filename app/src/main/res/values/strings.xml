@@ -21,8 +21,6 @@
 
     <!-- Écrans à venir -->
     <string name="coming_soon">Bientôt disponible</string>
-    <string name="history_empty">Vos parties terminées apparaîtront ici, avec leur déroulé.</string>
-    <string name="hall_of_fame_empty">Les records et les palmarès apparaîtront ici après vos premières parties.</string>
     <string name="join_title">Rejoindre une partie</string>
     <string name="join_empty">Saisie du code à 6 caractères ou scan du QR code : arrive avec les parties partagées.</string>
 
@@ -44,6 +42,20 @@
     <string name="settings_coach_hint">À partir de 38 points, ce qu\'il faut pour gagner</string>
     <string name="settings_voice">Annonces vocales</string>
     <string name="settings_sounds">Sons</string>
+    <string name="settings_voice_hint">« Tour 4 », « Au tour de Léa, il lui faut 7 », « Retour à 25 ! »… par la synthèse vocale du téléphone. Muettes en silencieux et avec TalkBack.</string>
+    <string name="settings_voice_rate">Débit de la voix</string>
+    <string name="settings_voice_volume">Volume de la voix</string>
+    <string name="settings_notification">Notification de partie en cours</string>
+    <string name="settings_notification_hint">Le tour, qui doit lancer et les scores, avec « Saisir le lancer ».</string>
+    <string name="notification_channel_name">Partie en cours</string>
+    <string name="notification_channel_description">Tour, joueur à qui c\'est le tour et scores de la partie en cours.</string>
+    <string name="notification_title">Tour %1$d · au tour de %2$s</string>
+    <string name="notification_title_finished">Manche terminée</string>
+    <string name="notification_action_throw">Saisir le lancer</string>
+    <string name="notification_permission_title">Afficher la partie en cours ?</string>
+    <string name="notification_permission_text">Une notification discrète montre le tour, qui doit lancer et les scores, pour revenir à la partie en un geste. Tout reste sur le téléphone.</string>
+    <string name="notification_permission_allow">Continuer</string>
+    <string name="notification_permission_later">Plus tard</string>
     <string name="settings_coming_hint">Arrive avec l\'écran de jeu</string>
     <string name="settings_startup">Démarrage</string>
     <string name="settings_short_intro">Introduction courte</string>

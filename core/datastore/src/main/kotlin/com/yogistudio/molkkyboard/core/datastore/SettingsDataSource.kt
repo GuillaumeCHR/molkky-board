@@ -36,7 +36,12 @@ class SettingsDataSource
 
         suspend fun setVoiceVolume(volume: Float) = dataStore.edit { it[Keys.VOICE_VOLUME] = volume }
 
-        suspend fun setOngoingNotification(enabled: Boolean) = dataStore.edit { it[Keys.ONGOING_NOTIFICATION] = enabled }
+        suspend fun setOngoingNotification(enabled: Boolean) =
+            dataStore.edit {
+                it[Keys.ONGOING_NOTIFICATION] = enabled
+            }
+
+        suspend fun setNotificationPrompted() = dataStore.edit { it[Keys.NOTIFICATION_PROMPTED] = true }
 
         suspend fun setSounds(enabled: Boolean) = dataStore.edit { it[Keys.SOUNDS] = enabled }
 
@@ -56,14 +61,13 @@ class SettingsDataSource
 
         private fun Preferences.toSettings() =
             UserSettings(
-                inputMode =
-                    this[Keys.INPUT_MODE]?.let { name -> InputMode.entries.firstOrNull { it.name == name } }
-                        ?: InputMode.PINS,
+                inputMode = decodeInputMode(this[Keys.INPUT_MODE]),
                 sunlight = this[Keys.SUNLIGHT] ?: false,
                 voiceAnnouncements = this[Keys.VOICE] ?: false,
                 voiceRate = this[Keys.VOICE_RATE] ?: 1f,
                 voiceVolume = this[Keys.VOICE_VOLUME] ?: 1f,
                 ongoingNotification = this[Keys.ONGOING_NOTIFICATION] ?: true,
+                notificationPrompted = this[Keys.NOTIFICATION_PROMPTED] ?: false,
                 sounds = this[Keys.SOUNDS] ?: false,
                 coach = this[Keys.COACH] ?: true,
                 shortIntro = this[Keys.SHORT_INTRO] ?: false,
@@ -71,6 +75,9 @@ class SettingsDataSource
                 onboardingDone = this[Keys.ONBOARDING_DONE] ?: false,
                 playfulRules = this[Keys.PLAYFUL_RULES]?.let(::decodeRules) ?: GameConfig.Playful,
             )
+
+        private fun decodeInputMode(name: String?): InputMode =
+            InputMode.entries.firstOrNull { it.name == name } ?: InputMode.PINS
 
         /** Une valeur illisible (version future, fichier abîmé) redonne les exceptions par défaut. */
         private fun decodeRules(encoded: String): GameConfig? =
@@ -91,6 +98,7 @@ class SettingsDataSource
             val VOICE_RATE = floatPreferencesKey("voice_rate")
             val VOICE_VOLUME = floatPreferencesKey("voice_volume")
             val ONGOING_NOTIFICATION = booleanPreferencesKey("ongoing_notification")
+            val NOTIFICATION_PROMPTED = booleanPreferencesKey("notification_prompted")
             val SOUNDS = booleanPreferencesKey("sounds")
             val COACH = booleanPreferencesKey("coach")
             val SHORT_INTRO = booleanPreferencesKey("short_intro")

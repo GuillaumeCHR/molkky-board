@@ -29,6 +29,12 @@ class SettingsViewModel
 
         fun setVoiceAnnouncements(enabled: Boolean) = launch { repository.setVoiceAnnouncements(enabled) }
 
+        fun setVoiceRate(rate: Float) = launch { repository.setVoiceRate(rate) }
+
+        fun setVoiceVolume(volume: Float) = launch { repository.setVoiceVolume(volume) }
+
+        fun setOngoingNotification(enabled: Boolean) = launch { repository.setOngoingNotification(enabled) }
+
         fun setSounds(enabled: Boolean) = launch { repository.setSounds(enabled) }
 
         fun setShortIntro(enabled: Boolean) = launch { repository.setShortIntro(enabled) }

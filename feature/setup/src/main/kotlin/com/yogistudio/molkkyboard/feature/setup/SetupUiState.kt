@@ -62,6 +62,8 @@ data class SetupUiState(
     val playfulEdited: Boolean = false,
     /** Mode famille (Ludique seulement) : score de départ, cible et exemption par joueur ou par équipe. */
     val family: Map<TeamId, TeamOverride> = emptyMap(),
+    /** Format : une manche (1) ou un match en 2 manches gagnantes (belle comprise). */
+    val setsToWin: Int = 1,
     val creating: Boolean = false,
 ) {
     fun player(id: PlayerId): SetupPlayer? = players.firstOrNull { it.id == id }

@@ -36,6 +36,8 @@ dependencies {
     implementation(projects.feature.intro)
     implementation(projects.feature.setup)
     implementation(projects.feature.game)
+    implementation(projects.feature.history)
+    implementation(projects.feature.stats)
     implementation(projects.core.data)
 
     implementation(libs.androidx.core.ktx)

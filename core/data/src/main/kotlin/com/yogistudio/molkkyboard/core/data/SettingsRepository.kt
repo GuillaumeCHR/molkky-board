@@ -25,6 +25,8 @@ interface SettingsRepository {
 
     suspend fun setOngoingNotification(enabled: Boolean)
 
+    suspend fun setNotificationPrompted()
+
     suspend fun setCoach(enabled: Boolean)
 
     suspend fun setShortIntro(enabled: Boolean)
@@ -70,6 +72,10 @@ class DataStoreSettingsRepository
 
         override suspend fun setOngoingNotification(enabled: Boolean) {
             source.setOngoingNotification(enabled)
+        }
+
+        override suspend fun setNotificationPrompted() {
+            source.setNotificationPrompted()
         }
 
         override suspend fun setCoach(enabled: Boolean) {

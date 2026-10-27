@@ -612,6 +612,8 @@ class GameViewModelTest {
 
         override suspend fun setOngoingNotification(enabled: Boolean) = Unit
 
+        override suspend fun setNotificationPrompted() = Unit
+
         override suspend fun setCoach(enabled: Boolean) = Unit
 
         override suspend fun setShortIntro(enabled: Boolean) = Unit

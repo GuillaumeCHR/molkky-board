@@ -147,7 +147,15 @@
     <string name="end_key_figure_target">%1$d en %2$d lancers · tour %3$d</string>
     <string name="end_ranking">Classement</string>
     <string name="end_stats">Statistiques de la manche</string>
-    <string name="end_stats_line">%1$d lancers · %2$d ratés · %3$s pts / lancer</string>
+    <string name="end_stats_line">%1$s · %2$s · %3$s pts / lancer</string>
+    <plurals name="end_throws">
+        <item quantity="one">%d lancer</item>
+        <item quantity="other">%d lancers</item>
+    </plurals>
+    <plurals name="end_misses">
+        <item quantity="one">%d raté</item>
+        <item quantity="other">%d ratés</item>
+    </plurals>
     <string name="end_rematch">Revanche</string>
     <string name="end_rematch_order">Ordre de passage de la revanche</string>
     <string name="end_order_same">Identique</string>
@@ -167,6 +175,7 @@
     <string name="molkkout_title">Mölkkout</string>
     <string name="molkkout_explain">Égalité de points avant la belle : le Mölkkout désigne qui commence. Quilles 6, 4, 12, 10 et 8 alignées, remises en place après chaque lancer.</string>
     <string name="molkkout_turn">À %1$s (%2$s)</string>
+    <string name="molkkout_turn_solo">À %1$s</string>
     <string name="molkkout_winner">%1$s commencera la belle.</string>
     <string name="molkkout_validate">Valider le lancer</string>
     <string name="molkkout_undo">Annuler le dernier lancer</string>
@@ -182,9 +191,4 @@
     <string name="announce_victory_team">Victoire de l\'équipe %1$s</string>
     <string name="announce_twelve">Douze !</string>
 
-    <!-- Notification de partie en cours -->
-    <string name="notification_permission_title">Afficher la partie en cours ?</string>
-    <string name="notification_permission_text">Une notification discrète montre le tour, qui doit lancer et les scores, pour revenir à la partie en un geste. Rien n\'est envoyé ailleurs.</string>
-    <string name="notification_permission_allow">Activer</string>
-    <string name="notification_permission_later">Plus tard</string>
 </resources>

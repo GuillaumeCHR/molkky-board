@@ -20,6 +20,8 @@ data class UserSettings(
     val voiceVolume: Float = 1f,
     /** Notification persistante de la partie en cours. */
     val ongoingNotification: Boolean = true,
+    /** L'autorisation d'afficher les notifications a déjà été proposée (on ne la redemande pas à chaque partie). */
+    val notificationPrompted: Boolean = false,
     val sounds: Boolean = false,
     val coach: Boolean = true,
     /** Intro courte (≈ 1,5 s), proposée à partir du deuxième lancement. */

@@ -14,6 +14,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -30,11 +31,16 @@ import com.yogistudio.molkkyboard.R
 import com.yogistudio.molkkyboard.core.designsystem.component.MolkkyBoardLogotype
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
+import com.yogistudio.molkkyboard.core.model.UserSettings
 import com.yogistudio.molkkyboard.feature.game.GameScreen
 import com.yogistudio.molkkyboard.feature.game.RulesScreen
+import com.yogistudio.molkkyboard.feature.history.HistoryScreen
 import com.yogistudio.molkkyboard.feature.intro.IntroScreen
 import com.yogistudio.molkkyboard.feature.setup.PlayfulRulesScreen
 import com.yogistudio.molkkyboard.feature.setup.SetupScreen
+import com.yogistudio.molkkyboard.feature.stats.HallOfFameScreen
+import com.yogistudio.molkkyboard.feature.stats.StatsScreen
+import com.yogistudio.molkkyboard.notification.NotificationPermissionPrompt
 import com.yogistudio.molkkyboard.startup.StartupState
 import com.yogistudio.molkkyboard.ui.AboutScreen
 import com.yogistudio.molkkyboard.ui.EmptyStateScreen
@@ -57,15 +63,31 @@ private enum class TopLevel(
 }
 
 @Composable
-fun MolkkyBoardNavHost(startup: StartupState) {
+fun MolkkyBoardNavHost(
+    startup: StartupState,
+    gameToOpen: String? = null,
+    onGameOpened: () -> Unit = {},
+    settings: UserSettings? = null,
+    onNotificationPrompted: () -> Unit = {},
+) {
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val destination = backStack?.destination
+    // « Saisir le lancer » depuis la notification : on ouvre la partie une fois l'intro passée.
+    LaunchedEffect(gameToOpen, destination) {
+        val id = gameToOpen ?: return@LaunchedEffect
+        if (destination == null || destination.hasRoute(IntroRoute::class)) return@LaunchedEffect
+        navController.navigate(GameRoute(id)) {
+            popUpTo<HomeRoute>()
+            launchSingleTop = true
+        }
+        onGameOpened()
+    }
     // L'écran de jeu et la vitrine sont en plein écran : pas de barre du bas.
     val showBar =
         destination?.let { d ->
             TopLevel.entries.any { d.hasRoute(it.routeClass) } || d.hasRoute(AboutRoute::class) ||
-                d.hasRoute(PlayfulRulesRoute::class) || d.hasRoute(RulesRoute::class)
+                d.hasRoute(PlayfulRulesRoute::class) || d.hasRoute(RulesRoute::class) || d.hasRoute(StatsRoute::class)
         }
             ?: true
 
@@ -124,8 +146,14 @@ fun MolkkyBoardNavHost(startup: StartupState) {
                         logotypeModifier = with(shared) { sharedLogotype(this@composable) },
                     )
                 }
-                composable<HistoryRoute> { EmptyStateScreen(R.string.nav_history, R.string.history_empty) }
-                composable<HallOfFameRoute> { EmptyStateScreen(R.string.nav_hall_of_fame, R.string.hall_of_fame_empty) }
+                composable<HistoryRoute> { HistoryScreen(onOpenGame = { navController.navigate(GameRoute(it)) }) }
+                composable<HallOfFameRoute> {
+                    HallOfFameScreen(
+                        onOpenGame = { navController.navigate(GameRoute(it)) },
+                        onOpenStats = { navController.navigate(StatsRoute) },
+                    )
+                }
+                composable<StatsRoute> { StatsScreen(onBack = navController::navigateUp) }
                 composable<SettingsRoute> {
                     SettingsScreen(
                         onAbout = { navController.navigate(AboutRoute) },
@@ -158,6 +186,15 @@ fun MolkkyBoardNavHost(startup: StartupState) {
                         onBack = navController::navigateUp,
                         onNewGame = { navController.navigate(SetupRoute) { popUpTo<HomeRoute>() } },
                         onHome = { navController.popBackStack<HomeRoute>(inclusive = false) },
+                        // Revanche : la nouvelle partie remplace l'ancienne dans la pile.
+                        onOpenGame = { id ->
+                            navController.navigate(GameRoute(id)) { popUpTo<GameRoute> { inclusive = true } }
+                        },
+                    )
+                    NotificationPermissionPrompt(
+                        prompted = settings?.notificationPrompted,
+                        enabled = settings?.ongoingNotification == true,
+                        onPrompted = onNotificationPrompted,
                     )
                 }
                 composable<ShowcaseRoute> { ShowcaseScreen(onBack = navController::navigateUp) }

@@ -124,6 +124,40 @@ object MBIcons {
         }
     }
 
+    /** Corbeille : suppression d'une partie. */
+    val Delete: ImageVector by lazy {
+        stroke("delete") {
+            moveTo(4.5f, 7f)
+            lineTo(19.5f, 7f)
+            moveTo(9.5f, 7f)
+            lineTo(10f, 4.5f)
+            lineTo(14f, 4.5f)
+            lineTo(14.5f, 7f)
+            moveTo(6.5f, 7f)
+            lineTo(7.5f, 19.5f)
+            lineTo(16.5f, 19.5f)
+            lineTo(17.5f, 7f)
+            moveTo(10.5f, 11f)
+            lineTo(10.5f, 16f)
+            moveTo(13.5f, 11f)
+            lineTo(13.5f, 16f)
+        }
+    }
+
+    /** Barres : statistiques. */
+    val Chart: ImageVector by lazy {
+        stroke("chart") {
+            moveTo(5f, 19.5f)
+            lineTo(19.5f, 19.5f)
+            moveTo(7.5f, 16.5f)
+            lineTo(7.5f, 12f)
+            moveTo(12f, 16.5f)
+            lineTo(12f, 6.5f)
+            moveTo(16.5f, 16.5f)
+            lineTo(16.5f, 9.5f)
+        }
+    }
+
     private fun androidx.compose.ui.graphics.vector.PathBuilder.circle(cx: Float, cy: Float, r: Float) {
         moveTo(cx - r, cy)
         arcTo(r, r, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = cx + r, y1 = cy)

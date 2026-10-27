@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Notification de la partie en cours (demandée au moment de l'usage, l'app fonctionne sans). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".MolkkyBoardApp"
         android:allowBackup="true"

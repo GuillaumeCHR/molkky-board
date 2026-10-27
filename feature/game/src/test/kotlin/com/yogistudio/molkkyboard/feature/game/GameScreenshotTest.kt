@@ -251,8 +251,83 @@ class GameScreenshotTest {
     @Test
     fun derouleEditeur() = captureLog("deroule_editeur", editing = log[1].items[3])
 
+    private val winner = teams.first().copy(score = 50, remaining = 0, active = false)
+    private val ranked = listOf(winner, teams[1].copy(active = false), teams[2])
+    private val end =
+        EndUi(
+            winner = winner,
+            winnerThrows = 7,
+            newRecord = true,
+            teamStats =
+                listOf(
+                    TeamStatsUi(ranked[0], 7, 0, 7.1f),
+                    TeamStatsUi(ranked[1], 7, 1, 3.9f),
+                    TeamStatsUi(ranked[2], 6, 2, 2f),
+                ),
+            series =
+                SeriesUi(
+                    sets = 3,
+                    rows =
+                        listOf(
+                            SeriesRowUi("Alice", 0, 2, listOf(50, 31, 50), 131),
+                            SeriesRowUi("Bruno", 1, 1, listOf(22, 50, 27), 99),
+                            SeriesRowUi("Chloé", 2, 0, listOf(18, 40, 12), 70),
+                        ),
+                ),
+        )
+    private val finished =
+        playing.copy(finished = true, winnerName = "Alice", ranking = ranked, teams = ranked, round = 7, end = end)
+
     @Test
-    fun finDePartie() = capture("fin_de_partie", playing.copy(finished = true, winnerName = "Alice", ranking = teams))
+    fun finDePartie() = capture("fin_de_partie", finished)
+
+    @Test
+    fun finDePartieSombre() = capture("fin_de_partie_sombre", finished, dark = true)
+
+    @Test
+    fun finDePartiePolice200() = capture("fin_de_partie_police_200", finished, fontScale = 2f)
+
+    @Test
+    fun finDeMancheMolkkout() {
+        val duo = ranked.take(2)
+        val match =
+            MatchUi(
+                setsToWin = 2,
+                wins = duo.map { it to 1 },
+                winner = null,
+                nextSet = null,
+                molkkout = MolkkoutUi(duo.map { it to 18 }, "Bruno", "Bruno", null, 3),
+            )
+        capture(
+            "fin_de_manche_molkkout",
+            finished.copy(ranking = duo, teams = duo, end = end.copy(match = match, series = null, newRecord = false)),
+        )
+    }
+
+    /** Image de l'animation de victoire à [frameMs] : le « 50 » qui explose, puis la pluie de quilles et le nom. */
+    private fun captureVictory(name: String, frameMs: Long) {
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            MolkkyBoardTheme(reducedMotion = false) {
+                GameContent(
+                    finished,
+                    GameActions(),
+                    victory = VictoryShow("Alice", 0, 50, newRecord = true, perfect = false, key = 1),
+                )
+            }
+        }
+        compose.mainClock.advanceTimeBy(frameMs)
+        compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
+    }
+
+    @Test
+    fun victoireExplosion() = captureVictory("victoire_explosion", VICTORY_BURST_MS)
+
+    @Test
+    fun victoireConfettis() = captureVictory("victoire_confettis", VICTORY_NAME_MS)
 }
+
+private const val VICTORY_BURST_MS = 350L
+private const val VICTORY_NAME_MS = 1_600L
 
 private const val STRIKE_FRAME_MS = 260L

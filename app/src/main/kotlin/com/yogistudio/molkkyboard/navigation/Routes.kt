@@ -43,6 +43,10 @@ data class GameRoute(
     val gameId: String,
 )
 
+/** Hall of Fame › Statistiques des joueurs. */
+@Serializable
+data object StatsRoute
+
 /** Vitrine du design system (build debug uniquement). */
 @Serializable
 data object ShowcaseRoute

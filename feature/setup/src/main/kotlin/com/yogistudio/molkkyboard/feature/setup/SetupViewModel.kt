@@ -344,6 +344,8 @@ class SetupViewModel
 
         fun setImo(enabled: Boolean) = mutableState.update { it.copy(imo = enabled) }
 
+        fun setSetsToWin(sets: Int) = mutableState.update { it.copy(setsToWin = sets.coerceIn(1, MAX_SETS_TO_WIN)) }
+
         /** Exceptions modifiées pour cette partie seulement (les Réglages ne changent pas). */
         fun setPlayful(config: GameConfig) = mutableState.update { it.copy(playful = config, playfulEdited = true) }
 
@@ -381,7 +383,16 @@ class SetupViewModel
         private fun SetupUiState.toNewGame() =
             NewGame(
                 config = config,
-                matchConfig = MatchConfig(setsToWin = 1),
+                matchConfig =
+                    when {
+                        setsToWin <= 1 -> MatchConfig(setsToWin = 1)
+
+                        // Tournoi IMO : alternance simple, sans Mölkkout.
+                        // Sinon : belle aux points, Mölkkout en cas d'égalité.
+                        mode == RulesMode.OFFICIAL && imo -> MatchConfig.ImoTournament.copy(setsToWin = setsToWin)
+
+                        else -> MatchConfig.Classic.copy(setsToWin = setsToWin)
+                    },
                 lineup = lineup,
                 teams =
                     units.map { unit ->
@@ -437,5 +448,6 @@ class SetupViewModel
 
         private companion object {
             const val MAX_TEAM_NAME = 30
+            const val MAX_SETS_TO_WIN = 2
         }
     }

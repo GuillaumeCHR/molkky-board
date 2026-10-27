@@ -99,6 +99,7 @@ data class SetupActions(
     val onDismissKnown: (TeamId) -> Unit = {},
     val onMode: (RulesMode) -> Unit = {},
     val onImo: (Boolean) -> Unit = {},
+    val onSetsToWin: (Int) -> Unit = {},
     val onPlayful: (GameConfig) -> Unit = {},
     val onFamily: (TeamId, TeamOverride) -> Unit = { _, _ -> },
     val onStart: () -> Unit = {},
@@ -144,6 +145,7 @@ fun SetupScreen(
                 onDismissKnown = viewModel::dismissKnownTeam,
                 onMode = viewModel::setMode,
                 onImo = viewModel::setImo,
+                onSetsToWin = viewModel::setSetsToWin,
                 onPlayful = viewModel::setPlayful,
                 onFamily = viewModel::setFamily,
                 onStart = { viewModel.start(onGameCreated) },
@@ -717,6 +719,38 @@ private fun RulesSection(state: SetupUiState, actions: SetupActions, onEditPlayf
             Text(stringResource(R.string.setup_rules_playful_edit))
         }
         FamilySection(state, actions)
+    }
+    FormatSection(state, actions)
+}
+
+/** Une manche, ou un match en 2 manches gagnantes : la belle se départage aux points (Mölkkout si égalité). */
+@Composable
+private fun FormatSection(state: SetupUiState, actions: SetupActions) {
+    Label(R.string.setup_format)
+    val options = listOf(1 to R.string.setup_format_single, 2 to R.string.setup_format_match)
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+        options.forEachIndexed { index, (sets, label) ->
+            SegmentedButton(
+                selected = state.setsToWin == sets,
+                onClick = { actions.onSetsToWin(sets) },
+                shape = SegmentedButtonDefaults.itemShape(index, options.size),
+                modifier = Modifier.heightIn(min = MBDimens.MinTouch),
+                icon = {},
+            ) { Text(stringResource(label)) }
+        }
+    }
+    if (state.setsToWin >
+        1
+    ) {
+        Hint(
+            if (state.mode == RulesMode.OFFICIAL &&
+                state.imo
+            ) {
+                R.string.setup_format_match_imo_hint
+            } else {
+                R.string.setup_format_match_hint
+            },
+        )
     }
 }
 

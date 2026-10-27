@@ -20,6 +20,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -120,9 +121,24 @@ internal fun SettingsScreen(
             )
             SettingsSwitch(
                 R.string.settings_voice,
-                R.string.settings_coming_hint,
+                R.string.settings_voice_hint,
                 settings.voiceAnnouncements,
                 onChange = viewModel::setVoiceAnnouncements,
+            )
+            if (settings.voiceAnnouncements) {
+                SettingsSlider(R.string.settings_voice_rate, settings.voiceRate, VOICE_RATES, viewModel::setVoiceRate)
+                SettingsSlider(
+                    R.string.settings_voice_volume,
+                    settings.voiceVolume,
+                    VOICE_VOLUMES,
+                    viewModel::setVoiceVolume,
+                )
+            }
+            SettingsSwitch(
+                R.string.settings_notification,
+                R.string.settings_notification_hint,
+                settings.ongoingNotification,
+                onChange = viewModel::setOngoingNotification,
             )
             SettingsSwitch(
                 R.string.settings_sounds,
@@ -229,6 +245,31 @@ private fun SettingsSwitch(
         }
     }
 }
+
+/** Curseur réglé au relâchement (pas d'écriture DataStore à chaque pixel). */
+@Composable
+private fun SettingsSlider(
+    @StringRes title: Int,
+    value: Float,
+    range: ClosedFloatingPointRange<Float>,
+    onChange: (Float) -> Unit,
+) {
+    var current by remember(value) { mutableStateOf(value) }
+    SettingsCard {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp)) {
+            Text(stringResource(title), style = MaterialTheme.typography.titleMedium)
+            Slider(
+                value = current,
+                onValueChange = { current = it },
+                onValueChangeFinished = { onChange(current) },
+                valueRange = range,
+            )
+        }
+    }
+}
+
+private val VOICE_RATES = 0.5f..2f
+private val VOICE_VOLUMES = 0.1f..1f
 
 @Composable
 private fun SettingsLink(
