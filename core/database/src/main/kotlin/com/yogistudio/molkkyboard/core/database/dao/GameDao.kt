@@ -13,6 +13,8 @@ import com.yogistudio.molkkyboard.core.database.entity.GameTeamEntity
 import com.yogistudio.molkkyboard.core.database.entity.MolkkoutThrowEntity
 import kotlinx.coroutines.flow.Flow
 
+// Une requête par besoin (partie, historique, Mölkkout) : les regrouper rendrait les requêtes moins lisibles.
+@Suppress("TooManyFunctions")
 @Dao
 interface GameDao {
     @Insert
@@ -130,7 +132,8 @@ interface GameDao {
     suspend fun insertMolkkoutThrow(entity: MolkkoutThrowEntity)
 
     @Query(
-        "DELETE FROM molkkout_throw WHERE gameId = :gameId AND seq = (SELECT MAX(seq) FROM molkkout_throw WHERE gameId = :gameId)",
+        "DELETE FROM molkkout_throw WHERE gameId = :gameId " +
+            "AND seq = (SELECT MAX(seq) FROM molkkout_throw WHERE gameId = :gameId)",
     )
     suspend fun deleteLastMolkkoutThrow(gameId: String)
 }
