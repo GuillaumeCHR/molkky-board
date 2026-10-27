@@ -46,7 +46,6 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
 import com.yogistudio.molkkyboard.BuildConfig
 import com.yogistudio.molkkyboard.R
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
@@ -63,7 +62,6 @@ import kotlin.math.sin
 @Composable
 internal fun CreditsScreen(onBack: () -> Unit) {
     val scroll = rememberScrollState()
-    val libraries by produceLibraries(R.raw.aboutlibraries)
     val reduced = MolkkyBoardTheme.reducedMotion
     var rolling by rememberSaveable { mutableStateOf(!reduced) }
     LaunchedEffect(rolling, scroll.maxValue) {
@@ -104,25 +102,6 @@ internal fun CreditsScreen(onBack: () -> Unit) {
             CREDITS.forEach { Credit(it) }
             Heading(R.string.credits_game_title)
             Body(R.string.credits_game)
-            Heading(R.string.credits_oss_title)
-            Body(R.string.credits_oss)
-            Note(stringResource(R.string.credits_oss_thanks))
-            // La liste complète, générée au build par AboutLibraries, défile avec le générique.
-            libraries?.libraries?.forEach { library ->
-                Text(
-                    library.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    textAlign = TextAlign.Center,
-                )
-                library.licenses.joinToString { it.name }.takeIf { it.isNotBlank() }?.let {
-                    Text(
-                        it,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-            }
             Credit(
                 CreditBlock(R.string.credits_hardware_title, R.string.credits_hardware, R.string.credits_hardware_note),
             )

@@ -161,9 +161,6 @@
     <string name="credits_fonts_note">Tabular figures on: the scores don\'t jump, only the pins fall.</string>
     <string name="credits_game_title">The game</string>
     <string name="credits_game">Mölkky was invented in Finland in 1996. Kiitos!\nThe rules shown in the app are reworded from the official rules.\nMölkky® is a trademark of Tactic Games Oy. Molkky Board is an independent app, neither affiliated with nor endorsed by the trademark owner.</string>
-    <string name="credits_oss_title">Open source</string>
-    <string name="credits_oss">Molkky Board stands up thanks to the open source libraries listed below.</string>
-    <string name="credits_oss_thanks">Thanks to their maintainers, who have been standing other people\'s pins back up for years.</string>
     <string name="credits_hardware_title">Test hardware</string>
     <string name="credits_hardware">A valiant laptop running Zorin OS and its Android emulator</string>
     <string name="credits_hardware_note">Fans in “take-off” mode during every Gradle build. No laptop was harmed. Almost.</string>

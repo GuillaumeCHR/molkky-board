@@ -163,9 +163,6 @@
     <string name="credits_fonts_note">Chiffres tabulaires activés : les scores ne sautent pas, seules les quilles tombent.</string>
     <string name="credits_game_title">Le jeu</string>
     <string name="credits_game">Le Mölkky a été inventé en Finlande en 1996. Kiitos !\nLes règles présentées dans l\'app sont reformulées à partir des règles officielles.\nMölkky® est une marque de Tactic Games Oy. Molkky Board est une application indépendante, ni affiliée ni approuvée par le détenteur de la marque.</string>
-    <string name="credits_oss_title">Open source</string>
-    <string name="credits_oss">Molkky Board tient debout grâce aux bibliothèques open source listées ci-dessous.</string>
-    <string name="credits_oss_thanks">Merci à leurs mainteneurs, qui relèvent les quilles des autres depuis des années.</string>
     <string name="credits_hardware_title">Matériel de test</string>
     <string name="credits_hardware">Un PC portable vaillant sous Zorin OS et son émulateur Android</string>
     <string name="credits_hardware_note">Ventilateurs en régime « décollage » pendant chaque build Gradle. Aucun PC n\'a été blessé. Presque.</string>
