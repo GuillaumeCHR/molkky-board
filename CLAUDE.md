@@ -1108,3 +1108,17 @@ et tiens-la à jour jusqu'à la publication.
 - Tranché au J4 : « Raté » sélectionne et seul « Valider » enregistre ; le tableau des scores s'ouvre par le bouton « Scores » ou d'un tap sur le bandeau (le geste de glissement ne marche pas sur téléphone : à retirer ou revoir) ; un nouvel ordre demandé en plein tour est mis en attente et appliqué au début du tour suivant ; « + Ajouter un joueur » dans chaque carte d'équipe ; règles du jeu regroupées en parties avec intertitres.
 - 609 tests unitaires verts au moment de la clôture.
 - **Reportés** (non faits, à planifier avec l'utilisateur) : coach de fin de partie, première partie guidée en bulles (test < 30 s), geste du bandeau des scores, intro « strike » (spec du 26), `ARCHITECTURE.md` à mettre à jour (zxing-cpp au lieu de ML Kit, souveraineté), avatars sur l'écran de jeu.
+
+### Fin de partie et mémoire (J5 — 2026-10-27)
+- `core:stats` (Kotlin pur) : résumés de manche, victoires, victoire la plus rapide, « Nouveau record », série, statistiques de joueur ; tout est recalculé depuis les journaux (`docs/STATS_SPEC.md`, 27 cas). « Nouveau record » seulement si un record existait déjà (la toute première victoire n'est pas annoncée).
+- Base Room en **version 3** : table `molkkout_throw` (journal du Mölkkout), migration 2 → 3 et son test.
+- Une partie en plusieurs manches **reste ouverte** jusqu'à la fin du match (reprise depuis l'accueil) ; une partie close = match fini ou abandonné. Création : « Une manche » (défaut) ou « Match en 2 manches » (belle aux points, Mölkkout si égalité ; en IMO, alternance sans Mölkkout).
+- Revanche : mêmes équipes et règles, ordre au choix sur l'écran de fin (rotation par défaut, identique, le dernier commence, le vainqueur joue en dernier) ; la série des mêmes équipes s'affiche dès deux manches consécutives.
+- Victoire : « 50 » qui explose dans la couleur de l'équipe, confettis-quilles en Canvas (graine fixe), nom et trophée, double vibration, bandeaux « Partie parfaite » et « Nouveau record » ; fondu si « Réduire les animations ».
+- Historique (`feature:history`), Hall of Fame et statistiques (`feature:stats`, Vico 3.3.1) ; statistiques limitées aux joueurs habituels (profils locaux).
+- Notification de partie en cours : locale (aucun push), permission `POST_NOTIFICATIONS` proposée une fois avec explication, intention explicite vers l'activité (pas de lien profond), identifiant de partie validé (UUID). Réglage pour la désactiver.
+- Annonces vocales : TTS du téléphone, muettes en silencieux/vibreur et sous TalkBack ; débit et volume réglables. Formulation neutre « Léa est hors jeu » (pas d'accord en genre deviné).
+- L'APK ne déclare pas la permission `INTERNET` : aucune requête réseau possible en mode local.
+- Plan de test : `docs/tests/J5-plan-de-test.md` (15 questions en QCM).
+- Non fait au J5 : son de victoire (optionnel, désactivé par défaut) ; le réglage « Sons » reste sans effet.
+

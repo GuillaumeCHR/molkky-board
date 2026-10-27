@@ -231,7 +231,7 @@ exposition que Google) ; l'auto-hébergement est la porte de sortie.
 | J1b | Moteur v2 ✅ | attribution par position, saisie rapide, `Delete`, joueurs en cours de partie, `modifiedAfterFinish`, ordre de la manche suivante, stratégie `ScoringRules` (§ 15 de la spec) | rapport de tests |
 | J3 | Données locales ✅ | Room (journal écrit à chaque événement, reprise automatique + test instrumenté), DataStore (réglages, **sélecteur de langue**, compteur de lancements → intro courte), repositories | — |
 | J4 | Jouer ✅ (restes reportés, voir ci-dessus) | création de partie (profils avec avatar emoji/mascotte ou photo, équipes nommées 🎲, glisser-déposer, règles avancées, mode famille), écran de jeu adaptatif (quilles ou pavé rapide, « Valider » obligatoire, undo + snackbar, déroulé modifiable, gestion des joueurs, coach, règles consultables, haptique, shake/retour à 25, keepScreenOn), prise en main en 3–4 bulles (test < 30 s), captures à 1,0 / 1,5 / 2,0 | démo APK |
-| J5 | Fin de partie et mémoire | animation de victoire, fin de partie, revanche et ordre de la manche suivante, **tableau récapitulatif de série** (mêmes équipes), historique complet (suppression), stats (Vico), `core:stats` + Hall of Fame local, match et Mölkkout, notification de partie en cours, annonces vocales (TTS) | APK |
+| J5 | Fin de partie et mémoire ✅ (test sur téléphone à faire) | animation de victoire, fin de partie, revanche et ordre de la manche suivante, **tableau récapitulatif de série** (mêmes équipes), historique complet (suppression), stats (Vico), `core:stats` + Hall of Fame local, match et Mölkkout, notification de partie en cours, annonces vocales (TTS) | APK |
 | J6 | Partage social | moments détectés, vignettes (3 formats, 3–4 modèles), mini-vidéo et GIF, feuille de partage, vie privée (noms masquables, sans EXIF), tests de rendu et d'encodage | captures + vidéo |
 | J7 | Confiance et langues | export JSON, sauvegarde/restauration fichier, **traduction anglaise complète** | APK — **fin de la V1 locale (Phase 3)** |
 | J8 | Backend | Supabase UE, migrations, RLS, RPC, pgTAP | revue SQL / RLS |
@@ -278,7 +278,7 @@ exposition que Google) ; l'auto-hébergement est la porte de sortie.
 - Filtres : périmètre (local / groupe), période (tout / année / mois, en fuseau local), taille d'équipe.
 - « 🏆 Nouveau record ! » : à la fin de la manche, comparaison des classements avant et après
   l'ajout de la partie.
-- Tests : une table de cas dans `docs/STATS_SPEC.md` (à écrire au J5), y compris les égalités et
+- Tests : une table de cas dans `docs/STATS_SPEC.md` (écrite au J5), y compris les égalités et
   l'exclusion des parties corrigées ou abandonnées.
 
 ### Animation de victoire
