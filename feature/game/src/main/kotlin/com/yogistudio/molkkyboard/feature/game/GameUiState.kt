@@ -111,6 +111,9 @@ data class GameUiState(
     val ranking: List<TeamUi> = emptyList(),
     /** Déroulé chronologique, groupé par tour. */
     val log: List<LogRound> = emptyList(),
+    /** Fin de la manche (vainqueur, statistiques, match, série) ; `null` tant qu'elle se joue. */
+    val end: EndUi? = null,
+    val voice: VoicePrefs = VoicePrefs(),
 ) {
     /** Le déroulé se modifie tant que la partie n'est pas abandonnée (même terminée : la victoire peut changer). */
     val canEditLog: Boolean get() = !abandoned
@@ -122,6 +125,13 @@ data class GameUiState(
         teams.filterNot { it.out }.sortedByDescending { it.score } +
             teams.filter { it.out }
 }
+
+/** Réglages des annonces vocales. */
+data class VoicePrefs(
+    val enabled: Boolean = false,
+    val rate: Float = 1f,
+    val volume: Float = 1f,
+)
 
 /** Effets ponctuels d'une validation (animations, vibrations, snackbar). */
 sealed interface GameEffect {
@@ -179,5 +189,47 @@ sealed interface GameEffect {
 
     data class Won(
         val name: String,
+        val colorIndex: Int,
+        val target: Int,
+        val newRecord: Boolean,
+        val perfect: Boolean,
     ) : GameEffect
+
+    /** Une nouvelle partie a été créée (revanche) : l'écran s'y rend. */
+    data class OpenGame(
+        val gameId: String,
+    ) : GameEffect
+
+    /** Une annonce vocale (si elles sont activées). */
+    data class Announce(
+        val text: Announcement,
+    ) : GameEffect
+}
+
+/** Annonces vocales, traduites par l'écran (chaînes externalisées). */
+sealed interface Announcement {
+    data class Round(
+        val round: Int,
+    ) : Announcement
+
+    /** « Au tour de Léa », avec ce qu'il lui faut quand la victoire est à portée d'un lancer. */
+    data class Turn(
+        val name: String,
+        val needed: Int?,
+    ) : Announcement
+
+    data class Reset(
+        val score: Int,
+    ) : Announcement
+
+    data class Eliminated(
+        val name: String,
+    ) : Announcement
+
+    data class Victory(
+        val name: String,
+        val team: Boolean,
+    ) : Announcement
+
+    data object Twelve : Announcement
 }

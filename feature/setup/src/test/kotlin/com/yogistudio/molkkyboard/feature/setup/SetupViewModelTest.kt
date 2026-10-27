@@ -325,6 +325,12 @@ class SetupViewModelTest {
 
         override suspend fun setSounds(enabled: Boolean) = Unit
 
+        override suspend fun setVoiceRate(rate: Float) = Unit
+
+        override suspend fun setVoiceVolume(volume: Float) = Unit
+
+        override suspend fun setOngoingNotification(enabled: Boolean) = Unit
+
         override suspend fun setCoach(enabled: Boolean) = Unit
 
         override suspend fun setShortIntro(enabled: Boolean) = Unit

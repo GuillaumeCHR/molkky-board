@@ -99,6 +99,7 @@ import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.scoring.EventId
+import com.yogistudio.molkkyboard.core.scoring.NextStarter
 import com.yogistudio.molkkyboard.core.scoring.ScoringError
 import com.yogistudio.molkkyboard.core.scoring.ThrowResult
 import kotlinx.coroutines.delay
@@ -124,6 +125,10 @@ data class GameActions(
     val onAddPlayer: (String) -> Unit = {},
     val onRemovePlayer: (PlayerId) -> Unit = {},
     val onCancelPendingOrder: () -> Unit = {},
+    val onRematch: (NextStarter) -> Unit = {},
+    val onNextSet: () -> Unit = {},
+    val onMolkkout: (Set<Int>) -> Unit = {},
+    val onMolkkoutUndo: () -> Unit = {},
 )
 
 @Composable
@@ -131,6 +136,7 @@ fun GameScreen(
     onBack: () -> Unit,
     onNewGame: () -> Unit,
     onHome: () -> Unit,
+    onOpenGame: (String) -> Unit = {},
     viewModel: GameViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -142,6 +148,11 @@ fun GameScreen(
     var shakeKey by remember { mutableIntStateOf(0) }
     var twelve by remember { mutableStateOf<TwelveShow?>(null) }
     var elimination by remember { mutableStateOf<EliminationShow?>(null) }
+    var victory by remember { mutableStateOf<VictoryShow?>(null) }
+    val voice = state.voice
+    val announcer = rememberVoiceAnnouncer(voice.enabled)
+    val currentAnnouncer by rememberUpdatedState(announcer)
+    val currentVoice by rememberUpdatedState(voice)
     var animationKey by remember { mutableIntStateOf(0) }
     var logMessage by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(logMessage) {
@@ -156,22 +167,7 @@ fun GameScreen(
             sheetMessage(context, effect)?.let { logMessage = it }
             when (effect) {
                 is GameEffect.Validated -> {
-                    scope.launch {
-                        val what =
-                            if (effect.points == 0) {
-                                context.getString(R.string.game_validated_miss)
-                            } else {
-                                context.getString(R.string.game_validated_points, effect.points)
-                            }
-                        snackbar.currentSnackbarData?.dismiss()
-                        val result =
-                            snackbar.showSnackbar(
-                                message = context.getString(R.string.game_validated, effect.name, what),
-                                actionLabel = context.getString(R.string.game_undo_action),
-                                duration = SnackbarDuration.Short,
-                            )
-                        if (result == SnackbarResult.ActionPerformed) viewModel.undo()
-                    }
+                    scope.launch { showValidated(snackbar, context, effect, viewModel::undo) }
                 }
 
                 is GameEffect.Overshoot -> {
@@ -216,7 +212,29 @@ fun GameScreen(
                 }
 
                 is GameEffect.Won -> {
-                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                    victory =
+                        VictoryShow(
+                            effect.name,
+                            effect.colorIndex,
+                            effect.target,
+                            effect.newRecord,
+                            effect.perfect,
+                            ++animationKey,
+                        )
+                    scope.launch {
+                        // Double vibration de célébration.
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                        delay(DOUBLE_VIBRATION_GAP_MS)
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                    }
+                }
+
+                is GameEffect.OpenGame -> {
+                    onOpenGame(effect.gameId)
+                }
+
+                is GameEffect.Announce -> {
+                    currentAnnouncer?.speak(effect.text.text(context), currentVoice.rate, currentVoice.volume)
                 }
             }
         }
@@ -242,6 +260,10 @@ fun GameScreen(
                 onAddPlayer = viewModel::addLatePlayer,
                 onRemovePlayer = viewModel::removePlayer,
                 onCancelPendingOrder = viewModel::cancelPendingOrder,
+                onRematch = viewModel::rematch,
+                onNextSet = viewModel::nextSet,
+                onMolkkout = viewModel::molkkoutThrow,
+                onMolkkoutUndo = viewModel::undoMolkkout,
             ),
         logMessage = logMessage,
         snackbar = snackbar,
@@ -252,7 +274,32 @@ fun GameScreen(
         onTwelveDone = { twelve = null },
         elimination = elimination,
         onEliminationDone = { elimination = null },
+        victory = victory,
+        onVictoryDone = { victory = null },
     )
+}
+
+/** Snackbar « Alice : 7 points », avec « Annuler » pour revenir en arrière d'un tap. */
+private suspend fun showValidated(
+    snackbar: SnackbarHostState,
+    context: Context,
+    effect: GameEffect.Validated,
+    onUndo: () -> Unit,
+) {
+    val what =
+        if (effect.points == 0) {
+            context.getString(R.string.game_validated_miss)
+        } else {
+            context.getString(R.string.game_validated_points, effect.points)
+        }
+    snackbar.currentSnackbarData?.dismiss()
+    val result =
+        snackbar.showSnackbar(
+            message = context.getString(R.string.game_validated, effect.name, what),
+            actionLabel = context.getString(R.string.game_undo_action),
+            duration = SnackbarDuration.Short,
+        )
+    if (result == SnackbarResult.ActionPerformed) onUndo()
 }
 
 /** Retour affiché dans le déroulé ou la gestion des joueurs, pour les effets qui en ont un. */
@@ -296,6 +343,8 @@ fun GameContent(
     onTwelveDone: () -> Unit = {},
     elimination: EliminationShow? = null,
     onEliminationDone: () -> Unit = {},
+    victory: VictoryShow? = null,
+    onVictoryDone: () -> Unit = {},
     scoreboardOpen: Boolean = false,
     logOpen: Boolean = false,
     playersOpen: Boolean = false,
@@ -330,11 +379,12 @@ fun GameContent(
             }
             SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp))
             OvershootSticker(overshoot, onOvershootShown, Modifier.align(Alignment.Center))
-            // Un 12 gagnant claque d'abord ; l'écran de fin suit.
+            // Un 12 gagnant claque d'abord, puis la victoire ; l'écran de fin suit.
             if ((state.finished || state.abandoned) && twelve == null) {
-                FinishPanel(state, actions, onOpenLog = { showLog = true })
+                EndPanel(state, actions, onOpenLog = { showLog = true })
             }
             EliminationOverlay(elimination, onEliminationDone)
+            if (twelve == null) VictoryOverlay(victory, onVictoryDone)
         }
     }
     if (showScoreboard && !state.loading) ScoreboardSheet(state, onDismiss = { showScoreboard = false })
@@ -766,60 +816,6 @@ private fun OvershootSticker(resetTo: Int?, onShown: () -> Unit, modifier: Modif
                     style = MaterialTheme.typography.titleLarge,
                 )
             }
-        }
-    }
-}
-
-/** Fin de partie (version simple ; l'animation de victoire et le classement détaillé arrivent au J5). */
-@Composable
-private fun FinishPanel(state: GameUiState, actions: GameActions, onOpenLog: () -> Unit) {
-    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background.copy(alpha = 0.97f)) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .navigationBarsPadding()
-                .padding(MBDimens.ScreenPadding),
-            verticalArrangement = Arrangement.spacedBy(MBDimens.Gap, Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                if (state.abandoned) {
-                    stringResource(
-                        R.string.game_abandoned,
-                    )
-                } else {
-                    stringResource(R.string.game_winner, state.winnerName.orEmpty())
-                },
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            state.ranking.forEachIndexed { index, team ->
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        stringResource(R.string.game_ranking_line, index + 1, team.name),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Text(team.score.toString(), style = MolkkyBoardTheme.typography.scoreSmall)
-                }
-            }
-            Spacer(Modifier.size(12.dp))
-            BigActionButton(
-                stringResource(R.string.game_new_game),
-                actions.onNewGame,
-                BigActionKind.Primary,
-                Modifier.fillMaxWidth(),
-            )
-            BigActionButton(
-                stringResource(R.string.game_home),
-                actions.onHome,
-                BigActionKind.Secondary,
-                Modifier.fillMaxWidth(),
-            )
-            if (state.finished) {
-                TextButton(onClick = actions.onUndo) { Text(stringResource(R.string.game_undo)) }
-            }
-            TextButton(onClick = onOpenLog) { Text(stringResource(R.string.game_menu_log)) }
         }
     }
 }

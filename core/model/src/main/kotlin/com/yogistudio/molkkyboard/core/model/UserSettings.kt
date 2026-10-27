@@ -14,6 +14,12 @@ data class UserSettings(
     val inputMode: InputMode = InputMode.PINS,
     val sunlight: Boolean = false,
     val voiceAnnouncements: Boolean = false,
+    /** Débit des annonces vocales (1 = normal). */
+    val voiceRate: Float = 1f,
+    /** Volume des annonces vocales, de 0 à 1 (relatif au volume « média » du téléphone). */
+    val voiceVolume: Float = 1f,
+    /** Notification persistante de la partie en cours. */
+    val ongoingNotification: Boolean = true,
     val sounds: Boolean = false,
     val coach: Boolean = true,
     /** Intro courte (≈ 1,5 s), proposée à partir du deuxième lancement. */

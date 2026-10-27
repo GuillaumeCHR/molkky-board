@@ -2,11 +2,13 @@ package com.yogistudio.molkkyboard.feature.game
 
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import app.cash.turbine.test
 import com.yogistudio.molkkyboard.core.data.GamePlayer
 import com.yogistudio.molkkyboard.core.data.GameTeam
+import com.yogistudio.molkkyboard.core.data.JournalStatsRepository
 import com.yogistudio.molkkyboard.core.data.NewGame
 import com.yogistudio.molkkyboard.core.data.RoomGameRepository
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
@@ -20,13 +22,18 @@ import com.yogistudio.molkkyboard.core.model.TeamLineup
 import com.yogistudio.molkkyboard.core.model.UserSettings
 import com.yogistudio.molkkyboard.core.scoring.EventId
 import com.yogistudio.molkkyboard.core.scoring.MatchConfig
+import com.yogistudio.molkkyboard.core.scoring.NextStarter
 import com.yogistudio.molkkyboard.core.scoring.ScoringError
 import com.yogistudio.molkkyboard.core.scoring.Throw
 import com.yogistudio.molkkyboard.core.scoring.ThrowResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -36,6 +43,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -43,6 +51,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -52,6 +61,7 @@ class GameViewModelTest {
     private lateinit var games: RoomGameRepository
     private val settings = FakeSettings()
     private lateinit var gameId: String
+    private val clock = AtomicLong()
 
     private val alice = PlayerId("alice")
     private val bruno = PlayerId("bruno")
@@ -63,7 +73,8 @@ class GameViewModelTest {
             val context: Context = ApplicationProvider.getApplicationContext()
             database =
                 Room.inMemoryDatabaseBuilder(context, MolkkyBoardDatabase::class.java).allowMainThreadQueries().build()
-            games = RoomGameRepository(database.gameDao(), { 1L }, { "id-${ids.incrementAndGet()}" })
+            games =
+                RoomGameRepository(database.gameDao(), { clock.incrementAndGet() }, { "id-${ids.incrementAndGet()}" })
             gameId =
                 games.create(
                     NewGame(
@@ -82,14 +93,25 @@ class GameViewModelTest {
 
     @After
     fun tearDown() {
+        // Les coroutines des ViewModels (annonces, record) se terminent avant la fermeture de la base.
+        runBlocking { viewModels.forEach { it.viewModelScope.coroutineContext[Job]?.cancelAndJoin() } }
         database.close()
         Dispatchers.resetMain()
     }
 
+    private val viewModels = mutableListOf<GameViewModel>()
+
     private fun viewModel() =
-        GameViewModel(SavedStateHandle(mapOf(GameViewModel.GAME_ID to gameId)), games, settings, {
-            "ev-${ids.incrementAndGet()}"
-        })
+        GameViewModel(
+            SavedStateHandle(mapOf(GameViewModel.GAME_ID to gameId)),
+            games,
+            settings,
+            { "ev-${ids.incrementAndGet()}" },
+            JournalStatsRepository(games),
+        ).also(viewModels::add)
+
+    /** Effets visuels seulement : les annonces vocales ont leurs propres tests. */
+    private fun GameViewModel.gameEffects() = effectFlow.filterNot { it is GameEffect.Announce }
 
     private suspend fun play(vararg pins: Int) =
         games.append(
@@ -113,7 +135,7 @@ class GameViewModelTest {
             val preview = vm.awaitState { it.selection != Selection.None }
             assertEquals(Preview(PreviewKind.POINTS, 7, 7), preview.preview)
             assertTrue(preview.canValidate)
-            vm.effectFlow.test {
+            vm.gameEffects().test {
                 vm.validate()
                 assertEquals(GameEffect.Validated("Alice", 7), awaitItem())
             }
@@ -169,7 +191,7 @@ class GameViewModelTest {
             backgroundScope.launchCollect(vm)
             vm.togglePin(9, true)
             assertEquals(PreviewKind.OVERSHOOT, vm.awaitState { it.selection != Selection.None }.preview.kind)
-            vm.effectFlow.test {
+            vm.gameEffects().test {
                 vm.validate()
                 assertEquals(GameEffect.Validated("Alice", 9), awaitItem())
                 assertEquals(GameEffect.Overshoot(25), awaitItem())
@@ -187,17 +209,18 @@ class GameViewModelTest {
             backgroundScope.launchCollect(vm)
             vm.togglePin(5, true)
             assertEquals(PreviewKind.WIN, vm.awaitState { it.selection != Selection.None }.preview.kind)
-            vm.effectFlow.test {
+            vm.gameEffects().test {
                 vm.validate()
                 assertEquals(GameEffect.Validated("Alice", 5), awaitItem())
-                assertEquals(GameEffect.Won("Alice"), awaitItem())
+                assertEquals("Alice", (awaitItem() as GameEffect.Won).name)
             }
             val finished = vm.awaitState { it.finished }
             assertEquals("Alice", finished.winnerName)
             assertNull(games.observeOngoingGameId().first())
             vm.undo()
             vm.awaitState { !it.finished }
-            assertEquals(gameId, games.observeOngoingGameId().first())
+            // La réouverture est écrite juste après l'annulation : on attend qu'elle arrive.
+            assertEquals(gameId, games.observeOngoingGameId().first { it == gameId })
         }
 
     @Test
@@ -256,7 +279,7 @@ class GameViewModelTest {
         runTest {
             val vm = viewModel()
             backgroundScope.launchCollect(vm)
-            vm.effectFlow.test {
+            vm.gameEffects().test {
                 vm.togglePin(12, true)
                 vm.awaitState { it.selection != Selection.None }
                 vm.validate()
@@ -282,13 +305,13 @@ class GameViewModelTest {
             play(1)
             val vm = viewModel()
             backgroundScope.launchCollect(vm)
-            vm.effectFlow.test {
+            vm.gameEffects().test {
                 vm.togglePin(12, true)
                 vm.awaitState { it.selection != Selection.None }
                 vm.validate()
                 assertEquals(GameEffect.Validated("Alice", 12), awaitItem())
                 assertEquals(GameEffect.Twelve(strike = false), awaitItem())
-                assertEquals(GameEffect.Won("Alice"), awaitItem())
+                assertEquals("Alice", (awaitItem() as GameEffect.Won).name)
                 vm.undo()
                 vm.awaitState { !it.finished }
                 play(1, 2, 3, 4, 5, 6, 7)
@@ -312,7 +335,7 @@ class GameViewModelTest {
             play(1)
             val vm = viewModel()
             backgroundScope.launchCollect(vm)
-            vm.effectFlow.test {
+            vm.gameEffects().test {
                 vm.toggleMiss()
                 assertEquals(PreviewKind.ELIMINATION, vm.awaitState { it.selection == Selection.Miss }.preview.kind)
                 vm.validate()
@@ -321,7 +344,7 @@ class GameViewModelTest {
                 assertEquals("Alice", eliminated.team.name)
                 assertEquals(3, eliminated.missLimit)
                 // Il ne reste que Bruno : l'élimination s'enchaîne avec sa victoire.
-                assertEquals(GameEffect.Won("Bruno"), awaitItem())
+                assertEquals("Bruno", (awaitItem() as GameEffect.Won).name)
                 vm.awaitState { it.finished }
                 vm.undo()
                 val cancelled = awaitItem() as GameEffect.EliminationCancelled
@@ -423,7 +446,7 @@ class GameViewModelTest {
                     .first()
                     .score,
             )
-            vm.effectFlow.test {
+            vm.gameEffects().test {
                 // 45 + 5 = 50 : Alice aurait gagné, et le lancer de Bruno qui suit n'aurait pas eu lieu.
                 vm.correct(overshoot, ThrowResult.Pins(listOf(5)))
                 assertEquals(GameEffect.EditRefused(ScoringError.CORRECTION_INVALIDATES_LOG), awaitItem())
@@ -452,10 +475,10 @@ class GameViewModelTest {
             backgroundScope.launchCollect(vm)
             vm.togglePin(5, true)
             vm.awaitState { it.selection != Selection.None }
-            vm.effectFlow.test {
+            vm.gameEffects().test {
                 vm.validate()
                 assertEquals(GameEffect.Validated("Alice", 5), awaitItem())
-                assertEquals(GameEffect.Won("Alice"), awaitItem())
+                assertEquals("Alice", (awaitItem() as GameEffect.Won).name)
                 val finished = vm.awaitState { it.finished }
                 // La partie est close juste après la victoire.
                 assertNull(games.observeOngoingGameId().first { it == null })
@@ -484,7 +507,7 @@ class GameViewModelTest {
             backgroundScope.launchCollect(vm)
             vm.awaitState { it.finished }
             games.close(gameId)
-            vm.effectFlow.test {
+            vm.gameEffects().test {
                 vm.correct(firstMiss, ThrowResult.Pins(listOf(3)))
                 assertEquals("Alice", (awaitItem() as GameEffect.EliminationCancelled).team.name)
                 assertEquals(GameEffect.Edited, awaitItem())
@@ -500,7 +523,7 @@ class GameViewModelTest {
             val vm = viewModel()
             backgroundScope.launchCollect(vm)
             assertTrue(vm.awaitState { true }.betweenRounds)
-            vm.effectFlow.test {
+            vm.gameEffects().test {
                 vm.reorder(listOf(TeamId("B"), TeamId("A")))
                 assertEquals(GameEffect.OrderChanged, awaitItem())
                 assertEquals("Bruno", vm.awaitState { it.currentTeam?.name == "Bruno" }.currentTeam?.name)
@@ -527,7 +550,7 @@ class GameViewModelTest {
             val vm = viewModel()
             backgroundScope.launchCollect(vm)
             vm.awaitState { it.currentTeam?.name == "Bruno" }
-            vm.effectFlow.test {
+            vm.gameEffects().test {
                 vm.addLatePlayer("  Chloé ")
                 assertEquals(GameEffect.PlayerJoined("Chloé"), awaitItem())
             }
@@ -546,7 +569,7 @@ class GameViewModelTest {
             val vm = viewModel()
             backgroundScope.launchCollect(vm)
             val state = vm.awaitState { true }
-            vm.effectFlow.test {
+            vm.gameEffects().test {
                 vm.removePlayer(
                     state.teams
                         .last()
@@ -554,7 +577,7 @@ class GameViewModelTest {
                         .single(),
                 )
                 assertEquals(GameEffect.PlayerLeft("Bruno"), awaitItem())
-                assertEquals(GameEffect.Won("Alice"), awaitItem())
+                assertEquals("Alice", (awaitItem() as GameEffect.Won).name)
             }
             assertEquals(listOf("Alice", "Bruno"), vm.awaitState { it.finished }.ranking.map { it.name })
             assertNull(games.observeOngoingGameId().first { it == null })
@@ -582,6 +605,12 @@ class GameViewModelTest {
         override suspend fun setVoiceAnnouncements(enabled: Boolean) = Unit
 
         override suspend fun setSounds(enabled: Boolean) = Unit
+
+        override suspend fun setVoiceRate(rate: Float) = Unit
+
+        override suspend fun setVoiceVolume(volume: Float) = Unit
+
+        override suspend fun setOngoingNotification(enabled: Boolean) = Unit
 
         override suspend fun setCoach(enabled: Boolean) = Unit
 

@@ -19,6 +19,12 @@ interface SettingsRepository {
 
     suspend fun setSounds(enabled: Boolean)
 
+    suspend fun setVoiceRate(rate: Float)
+
+    suspend fun setVoiceVolume(volume: Float)
+
+    suspend fun setOngoingNotification(enabled: Boolean)
+
     suspend fun setCoach(enabled: Boolean)
 
     suspend fun setShortIntro(enabled: Boolean)
@@ -52,6 +58,18 @@ class DataStoreSettingsRepository
 
         override suspend fun setSounds(enabled: Boolean) {
             source.setSounds(enabled)
+        }
+
+        override suspend fun setVoiceRate(rate: Float) {
+            source.setVoiceRate(rate)
+        }
+
+        override suspend fun setVoiceVolume(volume: Float) {
+            source.setVoiceVolume(volume)
+        }
+
+        override suspend fun setOngoingNotification(enabled: Boolean) {
+            source.setOngoingNotification(enabled)
         }
 
         override suspend fun setCoach(enabled: Boolean) {

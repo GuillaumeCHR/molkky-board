@@ -137,4 +137,54 @@
     <string name="rules_faq_foot_a">C\'est un « mordu » : le lancer ne compte pas et vaut un raté (sauf si le mode Ludique ignore les mordus).</string>
     <string name="rules_faq_moved_q">Une quille est bougée par autre chose que le mölkky (le vent, un chien…) ?</string>
     <string name="rules_faq_moved_a">Remettez-la à sa place : elle ne compte pas.</string>
+
+    <!-- Victoire et fin de partie (J5) -->
+    <string name="victory_title">Victoire de %1$s !</string>
+    <string name="victory_perfect">✨ Partie parfaite : 50 en 5 lancers</string>
+    <string name="victory_new_record">🏆 Nouveau record !</string>
+    <string name="end_set_winner">Manche gagnée par %1$s</string>
+    <string name="end_key_figure">50 en %1$d lancers · tour %2$d</string>
+    <string name="end_key_figure_target">%1$d en %2$d lancers · tour %3$d</string>
+    <string name="end_ranking">Classement</string>
+    <string name="end_stats">Statistiques de la manche</string>
+    <string name="end_stats_line">%1$d lancers · %2$d ratés · %3$s pts / lancer</string>
+    <string name="end_rematch">Revanche</string>
+    <string name="end_rematch_order">Ordre de passage de la revanche</string>
+    <string name="end_order_same">Identique</string>
+    <string name="end_order_rotate">Rotation (le 2e commence)</string>
+    <string name="end_order_loser_first">Le dernier commence</string>
+    <string name="end_order_winner_last">Le vainqueur joue en dernier</string>
+    <string name="end_replace_pins">Replacez les quilles en formation de départ.</string>
+    <string name="end_series_title">Série · %1$d manches</string>
+    <string name="end_series_wins">%1$d V</string>
+    <string name="end_series_total">Total %1$d</string>
+    <string name="end_match_title">Match en %1$d manches gagnantes</string>
+    <string name="end_match_score">%1$s : %2$d</string>
+    <string name="end_match_winner">%1$s remporte le match !</string>
+    <string name="end_next_set">Manche %1$d</string>
+    <string name="end_status_eliminated">éliminé</string>
+    <string name="end_status_left">parti</string>
+    <string name="molkkout_title">Mölkkout</string>
+    <string name="molkkout_explain">Égalité de points avant la belle : le Mölkkout désigne qui commence. Quilles 6, 4, 12, 10 et 8 alignées, remises en place après chaque lancer.</string>
+    <string name="molkkout_turn">À %1$s (%2$s)</string>
+    <string name="molkkout_winner">%1$s commencera la belle.</string>
+    <string name="molkkout_validate">Valider le lancer</string>
+    <string name="molkkout_undo">Annuler le dernier lancer</string>
+    <string name="molkkout_pin">Quille %1$d</string>
+
+    <!-- Annonces vocales -->
+    <string name="announce_round">Tour %1$d</string>
+    <string name="announce_turn">Au tour de %1$s</string>
+    <string name="announce_turn_needed">Au tour de %1$s, il lui faut %2$d</string>
+    <string name="announce_reset">Retour à %1$d !</string>
+    <string name="announce_eliminated">%1$s est hors jeu</string>
+    <string name="announce_victory">Victoire de %1$s</string>
+    <string name="announce_victory_team">Victoire de l\'équipe %1$s</string>
+    <string name="announce_twelve">Douze !</string>
+
+    <!-- Notification de partie en cours -->
+    <string name="notification_permission_title">Afficher la partie en cours ?</string>
+    <string name="notification_permission_text">Une notification discrète montre le tour, qui doit lancer et les scores, pour revenir à la partie en un geste. Rien n\'est envoyé ailleurs.</string>
+    <string name="notification_permission_allow">Activer</string>
+    <string name="notification_permission_later">Plus tard</string>
 </resources>

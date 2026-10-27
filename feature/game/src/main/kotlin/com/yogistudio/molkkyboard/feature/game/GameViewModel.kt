@@ -9,12 +9,15 @@ import com.yogistudio.molkkyboard.core.data.GameSnapshot
 import com.yogistudio.molkkyboard.core.data.GameTeam
 import com.yogistudio.molkkyboard.core.data.IdGenerator
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
+import com.yogistudio.molkkyboard.core.data.StatsRepository
 import com.yogistudio.molkkyboard.core.data.memberKey
+import com.yogistudio.molkkyboard.core.data.toStatsGame
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.MissPenalty
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
+import com.yogistudio.molkkyboard.core.model.TeamLineup
 import com.yogistudio.molkkyboard.core.model.UserSettings
 import com.yogistudio.molkkyboard.core.model.isExemptFromMissLimit
 import com.yogistudio.molkkyboard.core.model.targetFor
@@ -25,6 +28,9 @@ import com.yogistudio.molkkyboard.core.scoring.Delete
 import com.yogistudio.molkkyboard.core.scoring.EventId
 import com.yogistudio.molkkyboard.core.scoring.Fault
 import com.yogistudio.molkkyboard.core.scoring.LogEntry
+import com.yogistudio.molkkyboard.core.scoring.MatchStatus
+import com.yogistudio.molkkyboard.core.scoring.MolkkoutThrow
+import com.yogistudio.molkkyboard.core.scoring.NextStarter
 import com.yogistudio.molkkyboard.core.scoring.Outcome
 import com.yogistudio.molkkyboard.core.scoring.PointsKind
 import com.yogistudio.molkkyboard.core.scoring.RemovePlayer
@@ -42,15 +48,24 @@ import com.yogistudio.molkkyboard.core.scoring.describe
 import com.yogistudio.molkkyboard.core.scoring.getOrNull
 import com.yogistudio.molkkyboard.core.scoring.points
 import com.yogistudio.molkkyboard.core.scoring.start
+import com.yogistudio.molkkyboard.core.stats.PERFECT_GAME_THROWS
+import com.yogistudio.molkkyboard.core.stats.SetSummary
+import com.yogistudio.molkkyboard.core.stats.isNewRecord
+import com.yogistudio.molkkyboard.core.stats.summarize
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -67,6 +82,7 @@ class GameViewModel
         private val games: GameRepository,
         private val settings: SettingsRepository,
         private val ids: IdGenerator,
+        private val stats: StatsRepository,
     ) : ViewModel() {
         private val gameId: String = checkNotNull(savedStateHandle[GAME_ID])
         private val selection = MutableStateFlow<Selection>(Selection.None)
@@ -74,18 +90,31 @@ class GameViewModel
 
         /** Nouvel ordre demandé en plein tour : il s'appliquera au début du tour suivant. */
         private val pendingOrder = MutableStateFlow<List<TeamId>?>(null)
+
+        /** Record battu pendant cette partie : annoncé une fois, puis rappelé sur l'écran de fin. */
+        private val newRecord = MutableStateFlow(false)
         private val effects = Channel<GameEffect>(Channel.BUFFERED)
         val effectFlow: Flow<GameEffect> = effects.receiveAsFlow()
 
+        private val snapshots = games.observe(gameId).filterNotNull()
+
+        /** L'historique n'est résumé qu'une fois la manche finie (série, record) : rien à recalculer pendant le jeu. */
+        @OptIn(ExperimentalCoroutinesApi::class)
+        private val history: Flow<List<SetSummary>> =
+            snapshots
+                .map { it.currentSet.replay.state.status == SetStatus.FINISHED }
+                .distinctUntilChanged()
+                .flatMapLatest { finished -> if (finished) stats.summaries else flowOf(emptyList()) }
+
         val state: StateFlow<GameUiState> =
             combine(
-                games.observe(gameId).filterNotNull(),
+                snapshots,
                 settings.settings,
-                selection,
-                quickMode,
-                pendingOrder,
-            ) { snapshot, prefs, sel, mode, pending ->
-                snapshot.toUiState(prefs, sel, mode).copy(pendingOrder = pending)
+                combine(selection, quickMode, pendingOrder, ::Triple),
+                history,
+                newRecord,
+            ) { snapshot, prefs, (sel, mode, pending), past, record ->
+                snapshot.toUiState(prefs, sel, mode, past, record).copy(pendingOrder = pending)
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), GameUiState())
 
         fun togglePin(pin: Int, knocked: Boolean) =
@@ -120,38 +149,7 @@ class GameViewModel
         }
 
         fun validate() {
-            val chosen = selection.value
-            val result =
-                when (chosen) {
-                    Selection.None -> {
-                        return
-                    }
-
-                    Selection.Miss -> {
-                        ThrowResult.Pins(emptyList())
-                    }
-
-                    is Selection.Pins -> {
-                        ThrowResult.Pins(chosen.pins.sorted())
-                    }
-
-                    is Selection.Quick -> {
-                        if (chosen.value == 0) {
-                            ThrowResult.Pins(emptyList())
-                        } else {
-                            ThrowResult.Points(
-                                chosen.value,
-                                if (quickMode.value ==
-                                    QuickPadMode.SinglePin
-                                ) {
-                                    PointsKind.SINGLE_PIN
-                                } else {
-                                    PointsKind.PIN_COUNT
-                                },
-                            )
-                        }
-                    }
-                }
+            val result = selection.value.toResult(quickMode.value) ?: return
             viewModelScope.launch {
                 val before =
                     games
@@ -175,6 +173,15 @@ class GameViewModel
                 effects.send(GameEffect.Validated(name, points))
                 emitConsequences(before, after, team, result)
                 applyPendingOrder(after)
+                announceNext(
+                    before,
+                    games
+                        .observe(gameId)
+                        .first()
+                        ?.currentSet
+                        ?.replay
+                        ?.state ?: after,
+                )
             }
         }
 
@@ -188,24 +195,93 @@ class GameViewModel
             val points = result.points
             val overshoot = points > 0 && team.score + points > before.config.targetFor(team.id)
             val snapshot = games.observe(gameId).first() ?: return
-            if (points == TWELVE && !overshoot) effects.send(GameEffect.Twelve(strike = result.isStrike))
+            if (points == TWELVE && !overshoot) {
+                effects.send(GameEffect.Twelve(strike = result.isStrike))
+                announce(Announcement.Twelve)
+            }
             when {
                 overshoot -> {
                     effects.send(GameEffect.Overshoot(updated.score))
+                    announce(Announcement.Reset(updated.score))
                 }
 
                 updated.eliminated && !team.eliminated -> {
                     effects.send(
                         GameEffect.Eliminated(snapshot.teamUi(updated), after.config.missLimit),
                     )
+                    announce(Announcement.Eliminated(snapshot.team(team.id)?.name ?: team.id.value))
                 }
             }
-            val winner = after.winner
-            if (after.status == SetStatus.FINISHED && winner != null) {
-                effects.send(GameEffect.Won(snapshot.team(winner)?.name ?: winner.value))
-            }
-            if (after.status == SetStatus.FINISHED) games.close(gameId)
+            if (after.status == SetStatus.FINISHED) celebrate(snapshot)
+            syncClosed(snapshot)
         }
+
+        /** Victoire en direct : animation, record éventuel (comparé à l'historique d'avant la partie), annonce. */
+        private suspend fun celebrate(snapshot: GameSnapshot) {
+            val state = snapshot.currentSet.replay.state
+            val winner = state.winner ?: return
+            val added = summarize(snapshot.toStatsGame()).firstOrNull { it.setIndex == snapshot.currentSet.index }
+            val record =
+                added != null && isNewRecord(stats.summaries.first().filterNot { it.gameId == gameId }, added)
+            if (record) newRecord.value = true
+            val throws = added?.winnerTeam?.throws ?: 0
+            val info = snapshot.team(winner)
+            effects.send(
+                GameEffect.Won(
+                    name = info?.name ?: winner.value,
+                    colorIndex = info?.colorIndex ?: 0,
+                    target = snapshot.config.targetFor(winner),
+                    newRecord = record,
+                    perfect = added?.standard == true && throws in 1..PERFECT_GAME_THROWS,
+                ),
+            )
+            val team = (state.team(winner)?.players?.size ?: 1) > 1
+            announce(Announcement.Victory(info?.name ?: winner.value, team))
+        }
+
+        /** Partie close quand le match est fini (ou abandonnée) ; rouverte si une correction défait la fin. */
+        private suspend fun syncClosed(snapshot: GameSnapshot) {
+            val done = snapshot.abandoned || snapshot.match is MatchStatus.Finished
+            if (done && snapshot.closedAt == null) games.close(gameId)
+            if (!done && snapshot.closedAt != null) games.reopen(gameId)
+        }
+
+        private suspend fun announce(text: Announcement) = effects.send(GameEffect.Announce(text))
+
+        /** « Tour 4 » au changement de tour, puis « Au tour de Léa, il lui faut 7 » quand la victoire est à portée. */
+        private suspend fun announceNext(before: SetState, after: SetState) {
+            if (after.status != SetStatus.IN_PROGRESS) return
+            if (after.round > before.round) announce(Announcement.Round(after.round))
+            val team = after.currentTeam ?: return
+            val snapshot = games.observe(gameId).first() ?: return
+            val needed = (after.config.targetFor(team.id) - team.score).takeIf { it in 1..TWELVE }
+            val name = if (team.players.size > 1) snapshot.playerName(team.nextPlayer) else snapshot.team(team.id)?.name
+            announce(Announcement.Turn(name ?: team.id.value, needed))
+        }
+
+        /** Le lancer sélectionné, tel qu'il sera enregistré ; `null` sans sélection. */
+        private fun Selection.toResult(mode: QuickPadMode): ThrowResult? =
+            when (this) {
+                Selection.None -> {
+                    null
+                }
+
+                Selection.Miss -> {
+                    ThrowResult.Pins(emptyList())
+                }
+
+                is Selection.Pins -> {
+                    ThrowResult.Pins(pins.sorted())
+                }
+
+                is Selection.Quick -> {
+                    when {
+                        value == 0 -> ThrowResult.Pins(emptyList())
+                        mode == QuickPadMode.SinglePin -> ThrowResult.Points(value, PointsKind.SINGLE_PIN)
+                        else -> ThrowResult.Points(value, PointsKind.PIN_COUNT)
+                    }
+                }
+            }
 
         private val ThrowResult.isStrike: Boolean
             get() =
@@ -257,15 +333,15 @@ class GameViewModel
         private suspend fun reconcile(snapshot: GameSnapshot, after: SetState) {
             val before = snapshot.currentSet.replay.state
             val finished = after.status == SetStatus.FINISHED
-            if (finished && snapshot.closedAt == null) games.close(gameId)
-            if (!finished && snapshot.closedAt != null) games.reopen(gameId)
+            val updated = games.observe(gameId).first() ?: return
+            syncClosed(updated)
             after.teams
                 .filter { !it.eliminated && before.team(it.id)?.eliminated == true }
                 .forEach { effects.send(GameEffect.EliminationCancelled(snapshot.teamUi(it), before.config.missLimit)) }
             // Victoire nouvelle, ou vainqueur changé par la correction.
             val winner = after.winner.takeIf { finished }
             val newWinner = before.status != SetStatus.FINISHED || before.winner != winner
-            if (winner != null && newWinner) effects.send(GameEffect.Won(snapshot.team(winner)?.name ?: winner.value))
+            if (winner != null && newWinner) celebrate(updated)
         }
 
         /** Nouvel ordre de passage, entre deux tours seulement (le moteur refuse sinon). */
@@ -354,13 +430,56 @@ class GameViewModel
             }
         }
 
+        /** Revanche : mêmes équipes, ordre de passage selon [order] ; l'écran ouvre la nouvelle partie. */
+        fun rematch(order: NextStarter) {
+            viewModelScope.launch {
+                val id = games.createRematch(gameId, order) ?: return@launch
+                effects.send(GameEffect.OpenGame(id))
+            }
+        }
+
+        /** Manche suivante d'un match, dans l'ordre que le match impose (départage par Mölkkout compris). */
+        fun nextSet() {
+            viewModelScope.launch {
+                val snapshot = games.observe(gameId).first() ?: return@launch
+                val next = snapshot.match as? MatchStatus.NextSet ?: return@launch
+                val last = snapshot.currentSet.replay.state
+                val lineup =
+                    next.order.mapNotNull { id ->
+                        last.team(id)?.takeUnless { it.left }?.let { TeamLineup(id, it.players) }
+                    }
+                newRecord.value = false
+                games.startNextSet(gameId, lineup)
+            }
+        }
+
+        /** Lancer de Mölkkout : quilles 4, 6, 8, 10 et 12, remises en place après chaque lancer. */
+        fun molkkoutThrow(pins: Set<Int>) {
+            viewModelScope.launch {
+                val state = games.observe(gameId).first()?.molkkoutState ?: return@launch
+                val team = state.nextTeam ?: return@launch
+                val player = state.nextPlayer ?: return@launch
+                games.appendMolkkout(gameId, MolkkoutThrow(team.id, player, pins.sorted()))
+            }
+        }
+
+        fun undoMolkkout() {
+            viewModelScope.launch { games.undoMolkkout(gameId) }
+        }
+
         fun abandon() {
             viewModelScope.launch {
                 if (games.append(gameId, Abandon(EventId(ids.newId()))) is Outcome.Ok) games.close(gameId)
             }
         }
 
-        private fun GameSnapshot.toUiState(prefs: UserSettings, sel: Selection, mode: QuickPadMode): GameUiState {
+        private fun GameSnapshot.toUiState(
+            prefs: UserSettings,
+            sel: Selection,
+            mode: QuickPadMode,
+            history: List<SetSummary>,
+            record: Boolean,
+        ): GameUiState {
             val replay = currentSet.replay
             val setState = replay.state
             val teamsUi = setState.teams.map { teamUi(it, active = it.id == setState.turn) }
@@ -390,6 +509,8 @@ class GameViewModel
                 winnerName = setState.winner?.let { team(it)?.name ?: it.value },
                 ranking = setState.ranking.mapNotNull { id -> teamsUi.firstOrNull { it.id == id } },
                 log = logRounds(),
+                end = if (setState.status == SetStatus.FINISHED) endUi(teamsUi, history, record) else null,
+                voice = VoicePrefs(prefs.voiceAnnouncements, prefs.voiceRate, prefs.voiceVolume),
             )
         }
 

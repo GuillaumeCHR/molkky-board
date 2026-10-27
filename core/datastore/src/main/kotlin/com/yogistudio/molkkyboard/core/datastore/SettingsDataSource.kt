@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.yogistudio.molkkyboard.core.model.GameConfig
@@ -31,6 +32,12 @@ class SettingsDataSource
 
         suspend fun setVoiceAnnouncements(enabled: Boolean) = dataStore.edit { it[Keys.VOICE] = enabled }
 
+        suspend fun setVoiceRate(rate: Float) = dataStore.edit { it[Keys.VOICE_RATE] = rate }
+
+        suspend fun setVoiceVolume(volume: Float) = dataStore.edit { it[Keys.VOICE_VOLUME] = volume }
+
+        suspend fun setOngoingNotification(enabled: Boolean) = dataStore.edit { it[Keys.ONGOING_NOTIFICATION] = enabled }
+
         suspend fun setSounds(enabled: Boolean) = dataStore.edit { it[Keys.SOUNDS] = enabled }
 
         suspend fun setCoach(enabled: Boolean) = dataStore.edit { it[Keys.COACH] = enabled }
@@ -54,6 +61,9 @@ class SettingsDataSource
                         ?: InputMode.PINS,
                 sunlight = this[Keys.SUNLIGHT] ?: false,
                 voiceAnnouncements = this[Keys.VOICE] ?: false,
+                voiceRate = this[Keys.VOICE_RATE] ?: 1f,
+                voiceVolume = this[Keys.VOICE_VOLUME] ?: 1f,
+                ongoingNotification = this[Keys.ONGOING_NOTIFICATION] ?: true,
                 sounds = this[Keys.SOUNDS] ?: false,
                 coach = this[Keys.COACH] ?: true,
                 shortIntro = this[Keys.SHORT_INTRO] ?: false,
@@ -78,6 +88,9 @@ class SettingsDataSource
             val INPUT_MODE = stringPreferencesKey("input_mode")
             val SUNLIGHT = booleanPreferencesKey("sunlight")
             val VOICE = booleanPreferencesKey("voice_announcements")
+            val VOICE_RATE = floatPreferencesKey("voice_rate")
+            val VOICE_VOLUME = floatPreferencesKey("voice_volume")
+            val ONGOING_NOTIFICATION = booleanPreferencesKey("ongoing_notification")
             val SOUNDS = booleanPreferencesKey("sounds")
             val COACH = booleanPreferencesKey("coach")
             val SHORT_INTRO = booleanPreferencesKey("short_intro")
