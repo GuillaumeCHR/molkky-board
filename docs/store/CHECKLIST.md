@@ -82,7 +82,7 @@ publication**.
 ## Test fermé (obligatoire pour un compte personnel)
 | Point | Statut | Note |
 |---|---|---|
-| Kit testeurs (`docs/store/testeurs.md`) | ⬜ | |
+| Kit testeurs | 🟡 | plan de test en anglais : `docs/store/closed-test-plan.md` (14 jours, 30 questions) ; lien d'inscription à ajouter, message d'invitation et version française à faire |
 | 12 testeurs ou plus pendant 14 jours consécutifs (viser 15 à 20) | ⬜ 👤 | |
 | Journal des retours et des corrections | ⬜ | pour le questionnaire d'accès à la production |
 
