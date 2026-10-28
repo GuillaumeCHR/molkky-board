@@ -14,8 +14,8 @@ android {
 
     defaultConfig {
         applicationId = "com.yogistudio.molkkyboard"
-        versionCode = 8
-        versionName = "0.8.0"
+        versionCode = 9
+        versionName = "0.8.1"
     }
 
     // Clé d'envoi Play Store (upload key) : jamais dans le dépôt ni dans la CI. Ses coordonnées sont lues dans un
@@ -44,7 +44,9 @@ android {
             buildConfigField("boolean", "FEEDBACK", "true")
         }
         release {
-            buildConfigField("boolean", "FEEDBACK", "false")
+            // Activé pour le test fermé : ./gradlew -Pmolkky.feedback=true :app:bundleRelease
+            val feedback = providers.gradleProperty("molkky.feedback").orNull == "true"
+            buildConfigField("boolean", "FEEDBACK", feedback.toString())
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

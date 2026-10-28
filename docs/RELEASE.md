@@ -61,6 +61,10 @@ python3 -I tools/trackers/check_trackers.py app/build/outputs/apk/debug/app-debu
 ```
 
 - Le fichier d'envoi est `app/build/outputs/bundle/release/app-release.aab`.
+- **Test fermé** : ajoute `-Pmolkky.feedback=true` pour inclure le bouton « Envoyer un retour » (À propos). Sans
+  cette option (production), il n'y est pas.
+- Si le démon Gradle plante pendant `minifyReleaseWithR8` (« daemon disappeared », SIGSEGV), relance avec
+  `-Dorg.gradle.jvmargs="-Xmx3g -XX:MaxMetaspaceSize=768m -XX:+UseSerialGC -Dfile.encoding=UTF-8"`.
 - Avec `~/.config/molkkyboard/upload-key.properties`, l'AAB est signé avec la clé d'envoi. Sans ce fichier, la release
   se construit **sans signature** (utile pour vérifier R8, inutilisable sur le Play Store).
 - Un autre emplacement du fichier de propriétés se donne par la variable `MOLKKY_UPLOAD_KEY_PROPERTIES`.
