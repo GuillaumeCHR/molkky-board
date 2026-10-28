@@ -59,7 +59,8 @@ data class ShareUiState(
 }
 
 /**
- * Partage d'une partie : moments détectés depuis le journal (le plus fort en premier), modèle, format. Le partage est toujours proposé, jamais imposé.
+ * Partage d'une partie : moments détectés depuis le journal (le plus fort en premier), modèle, format. Le partage
+ * est toujours proposé, jamais imposé.
  */
 @HiltViewModel
 class ShareViewModel

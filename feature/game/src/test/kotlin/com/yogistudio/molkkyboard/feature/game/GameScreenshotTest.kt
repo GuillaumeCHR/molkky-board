@@ -124,12 +124,9 @@ class GameScreenshotTest {
 
     @Test
     @Config(qualifiers = "fr-w411dp-h1100dp-xxhdpi")
-    fun placementPasAPas() {
+    fun placement() {
         compose.setContent { MolkkyBoardTheme(reducedMotion = true) { PlacementScreen(onBack = {}) } }
-        repeat(4) { compose.onNodeWithText("Suivante").performClick() }
-        compose.onRoot().captureRoboImage("src/test/screenshots/placement_pas_a_pas.png")
-        compose.onNodeWithText("Vue de côté").performClick()
-        compose.onRoot().captureRoboImage("src/test/screenshots/placement_vue_de_cote.png")
+        compose.onRoot().captureRoboImage("src/test/screenshots/placement.png")
     }
 
     @Test

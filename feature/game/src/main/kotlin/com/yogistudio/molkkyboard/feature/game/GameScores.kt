@@ -74,6 +74,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -124,31 +125,31 @@ import kotlin.math.abs
 internal fun ScoresStrip(state: GameUiState, onOpen: () -> Unit) {
     val colors = MolkkyBoardTheme.colors.teams
     val openLabel = stringResource(R.string.game_scoreboard_open)
-    val threshold = with(LocalDensity.current) { OPEN_DRAG_THRESHOLD.toPx() }
-    val currentOpen by rememberUpdatedState(onOpen)
-    Column(
+    // Icône podium à gauche (retour du test : aucun geste, un bouton visible) ; les puces défilent à côté.
+    Row(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .testTag(SCORES_STRIP_TAG)
-                // Glissement vertical (dans les deux sens) repéré dès la passe initiale : les puces et le défilement
-                // horizontal du bandeau ne peuvent plus l'intercepter (le geste ne marchait pas sur téléphone).
-                .pointerInput(threshold) { detectVerticalSwipe(threshold) { currentOpen() } }
-                .clickable(onClickLabel = openLabel, onClick = onOpen),
-        horizontalAlignment = Alignment.CenterHorizontally,
+                .clickable(onClickLabel = openLabel, onClick = onOpen)
+                .padding(start = MBDimens.ScreenPadding - 4.dp, top = 2.dp, bottom = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            Modifier
-                .padding(top = 2.dp, bottom = 4.dp)
-                .size(width = 40.dp, height = 5.dp)
-                .background(MaterialTheme.colorScheme.outline, CircleShape),
-        )
+        Surface(
+            onClick = onOpen,
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.size(MBDimens.MinTouch).semantics { contentDescription = openLabel },
+        ) {
+            Box(contentAlignment = Alignment.Center) { Icon(MBIcons.Podium, contentDescription = null) }
+        }
         Row(
             modifier =
                 Modifier
-                    .fillMaxWidth()
+                    .weight(1f)
                     .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = MBDimens.ScreenPadding, vertical = 4.dp),
+                    .padding(start = MBDimens.SmallGap, end = MBDimens.ScreenPadding, top = 4.dp, bottom = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
         ) {
             val others = state.teams.filterNot { it.active }
@@ -238,4 +239,3 @@ private fun AvatarBadge(team: TeamUi, onFill: Color) {
 
 private const val OUT_ALPHA = 0.45f
 private val CHIP_MAX_WIDTH = 200.dp
-private val OPEN_DRAG_THRESHOLD = 24.dp

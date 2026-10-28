@@ -88,12 +88,12 @@ private val PARTS =
             R.string.rules_part_prepare,
             listOf(
                 RuleItem(R.string.rules_gear_title, R.string.rules_gear),
-                // Formation officielle, posée quille par quille : 1-2 devant, 7-9-8 au fond.
+                // Formation officielle : 1-2 devant, 7-9-8 au fond.
                 RuleItem(
                     R.string.rules_setup_title,
                     R.string.rules_setup,
                     key = "3,5 m",
-                ) { PlacementGuide(startWithAll = true) },
+                ) { PlacementGuide() },
             ),
         ),
         RulePart(

@@ -165,6 +165,28 @@ object MBIcons {
         }
     }
 
+    /** Podium à trois marches : ouvre le tableau des scores. */
+    val Podium: ImageVector by lazy {
+        stroke("podium") {
+            moveTo(3.5f, 20f)
+            lineTo(20.5f, 20f)
+            moveTo(4f, 20f)
+            lineTo(4f, 13f)
+            lineTo(9f, 13f)
+            lineTo(9f, 8f)
+            lineTo(15f, 8f)
+            lineTo(15f, 15f)
+            lineTo(20f, 15f)
+            lineTo(20f, 20f)
+            moveTo(9f, 13f)
+            lineTo(9f, 20f)
+            moveTo(15f, 15f)
+            lineTo(15f, 20f)
+            moveTo(12f, 3.5f)
+            lineTo(12f, 5f)
+        }
+    }
+
     /** Livre ouvert : règles du jeu. */
     val Book: ImageVector by lazy {
         stroke("book") {

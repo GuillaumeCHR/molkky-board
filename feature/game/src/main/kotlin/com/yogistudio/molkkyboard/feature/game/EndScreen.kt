@@ -357,7 +357,8 @@ private fun EndActions(state: GameUiState, end: EndUi?, actions: GameActions) {
         }
     }
     // Une partie finie se termine par un vrai bouton ; un match en cours reste ouvert et se reprend depuis l'accueil.
-    if (state.finished && match?.nextSet == null && (match?.molkkout == null || match.winner != null)) {
+    val matchOver = match == null || (match.nextSet == null && (match.molkkout == null || match.winner != null))
+    if (state.finished && matchOver) {
         BigActionButton(
             stringResource(R.string.end_finish),
             actions.onHome,

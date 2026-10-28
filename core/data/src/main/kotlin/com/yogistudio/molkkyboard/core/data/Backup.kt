@@ -105,7 +105,8 @@ internal val BackupJson: Json =
 
 /**
  * Contrôles d'un fichier venu de l'extérieur, donc non fiable : identifiants et textes bornés, sans caractères de
- * contrôle ni de mise en forme invisibles (inversion du sens de lecture…), manches contiguës, journaux rejouables et cohérents avec les équipes et joueurs de la partie.
+ * contrôle ni de mise en forme invisibles (inversion du sens de lecture…), manches contiguës, journaux rejouables
+ * et cohérents avec les équipes et joueurs de la partie.
  * Une règle par champ ou par bloc du fichier.
  */
 @Suppress("TooManyFunctions")

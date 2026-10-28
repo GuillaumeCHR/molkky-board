@@ -22,8 +22,8 @@ enum class Sound(
 }
 
 /**
- * Lecteur des effets sonores (désactivés par défaut, réglage « Sons »). Muet seulement si le téléphone est en silencieux
- * (en vibreur, ils jouent au volume du jeu). Les sons sont courts et préchargés : aucun délai à la lecture.
+ * Lecteur des effets sonores (désactivés par défaut, réglage « Sons »). Muet seulement si le téléphone est en
+ * silencieux (en vibreur, ils jouent au volume du jeu). Les sons sont courts et préchargés : aucun délai à la lecture.
  */
 class SoundEffects(
     context: Context,

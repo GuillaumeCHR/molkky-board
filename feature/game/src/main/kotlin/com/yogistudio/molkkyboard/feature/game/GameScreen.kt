@@ -383,7 +383,7 @@ fun GameContent(
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
-                GameTopBar(state, actions, anchors, onOpenScores = { showScoreboard = true }, onOpenLog = {
+                GameTopBar(state, actions, anchors, onOpenLog = {
                     showLog = true
                 }, onOpenPlayers = { showPlayers = true }, onOpenRules = {
                     showRules =
@@ -488,7 +488,6 @@ private fun GameTopBar(
     state: GameUiState,
     actions: GameActions,
     anchors: GuideAnchors,
-    onOpenScores: () -> Unit,
     onOpenLog: () -> Unit,
     onOpenPlayers: () -> Unit,
     onOpenRules: () -> Unit,
@@ -498,10 +497,6 @@ private fun GameTopBar(
     // En grande police, les boutons passent avant le titre « Partie » (évident sur cet écran plein écran).
     val title = if (LocalDensity.current.fontScale >= LARGE_FONT_SCALE) "" else stringResource(R.string.game_title)
     MBTopBar(title, actions.onBack) {
-        // Accès visible au tableau des scores, sans dépendre d'un geste.
-        TextButton(onClick = onOpenScores, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
-            Text(stringResource(R.string.game_scores_button), style = MaterialTheme.typography.titleMedium)
-        }
         // Placement des quilles, discret mais toujours là (utile entre deux manches).
         IconButton(onClick = onOpenPlacement, modifier = Modifier.size(MBDimens.MinTouch)) {
             Icon(MBIcons.Pins, contentDescription = stringResource(R.string.placement_title))

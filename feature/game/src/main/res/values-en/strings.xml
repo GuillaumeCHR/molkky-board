@@ -31,7 +31,6 @@
     <string name="end_finish">Done</string>
     <string name="game_home">Home</string>
     <string name="game_abandoned">Game abandoned</string>
-    <string name="game_scores_button">Scores</string>
     <string name="game_scoreboard_open">Show the scoreboard</string>
     <string name="game_scoreboard_title">Scoreboard</string>
     <string name="game_left">Left</string>
@@ -222,18 +221,7 @@
     <string name="placement_center">in the centre</string>
     <string name="placement_center_left">centre left</string>
     <string name="placement_center_right">centre right</string>
-    <string name="placement_step">Pin %1$d of %2$d</string>
-    <string name="placement_previous">Previous</string>
-    <string name="placement_next">Next</string>
-    <string name="placement_done">See the formation</string>
-    <string name="placement_restart">Start again</string>
-    <string name="placement_show_all">Show all</string>
-    <string name="placement_all_shown">Full formation: the pins touch each other.</string>
-    <string name="placement_from_line">From the line</string>
-    <string name="placement_from_side">Side view</string>
-    <string name="placement_read_aloud">Read aloud</string>
-    <string name="placement_side_caption">The 4 rows are packed tightly together. The throwing line is about 3.5 m from the first row.</string>
-    <string name="placement_side_description">Side view: the throwing line on the left, the 4 tightly packed rows of pins on the right, about 3.5 metres away.</string>
+    <string name="placement_caption">Seen from the throwing line: the 12 pins packed in 4 rows, 1 and 2 at the front, 7, 9 and 8 at the back.</string>
     <string name="placement_distance">Throwing distance: about 3.5 m, or 4 long adult steps. For children or in family mode, move the line closer (about 2 m).</string>
 
     <!-- Ready to play? -->

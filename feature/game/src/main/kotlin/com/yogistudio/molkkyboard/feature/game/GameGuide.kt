@@ -51,25 +51,3 @@ internal const val GUIDE_UNDO = "undo"
 
 /** Balise de test du bandeau des scores. */
 internal const val SCORES_STRIP_TAG = "scores_strip"
-
-/**
- * Appelle [onSwipe] dès qu'un doigt se déplace verticalement de plus de [threshold] (plus que
- * horizontalement). Le geste est alors consommé : la puce touchée ne reçoit pas de clic en plus.
- */
-internal suspend fun PointerInputScope.detectVerticalSwipe(threshold: Float, onSwipe: () -> Unit) {
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-        var tracking = true
-        while (tracking) {
-            val change = awaitPointerEvent(PointerEventPass.Initial).changes.firstOrNull { it.id == down.id }
-            val dy = (change?.position?.y ?: down.position.y) - down.position.y
-            val dx = (change?.position?.x ?: down.position.x) - down.position.x
-            val swiped = change != null && abs(dy) > threshold && abs(dy) > abs(dx)
-            if (swiped) {
-                change.consume()
-                onSwipe()
-            }
-            tracking = change != null && change.pressed && !swiped
-        }
-    }
-}

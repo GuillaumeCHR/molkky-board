@@ -2,12 +2,10 @@ package com.yogistudio.molkkyboard.feature.game
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeDown
-import androidx.compose.ui.test.swipeUp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.TeamId
@@ -17,7 +15,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 
-/** Gestes et messages de l'écran de jeu : le tableau des scores s'ouvre au glissement, le coach parle. */
+/** Accès au tableau des scores depuis le bandeau (icône podium ou tap, sans geste). */
 @RunWith(AndroidJUnit4::class)
 @Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
 class GameGestureTest {
@@ -36,16 +34,9 @@ class GameGestureTest {
         compose.setContent { MolkkyBoardTheme(reducedMotion = true) { GameContent(state, GameActions()) } }
 
     @Test
-    fun `glisser le bandeau vers le haut ouvre le tableau des scores`() {
+    fun `l'icone podium ouvre le tableau des scores`() {
         show()
-        compose.onNodeWithTag(SCORES_STRIP_TAG).performTouchInput { swipeUp() }
-        compose.onNodeWithText("Tableau des scores").assertIsDisplayed()
-    }
-
-    @Test
-    fun `glisser vers le bas depuis la puce d'un joueur l'ouvre aussi`() {
-        show()
-        compose.onNodeWithText("Bruno").performTouchInput { swipeDown() }
+        compose.onNodeWithContentDescription("Afficher le tableau des scores").performClick()
         compose.onNodeWithText("Tableau des scores").assertIsDisplayed()
     }
 
