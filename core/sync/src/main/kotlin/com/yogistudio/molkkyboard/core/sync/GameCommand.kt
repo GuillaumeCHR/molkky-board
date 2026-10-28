@@ -1,5 +1,6 @@
 package com.yogistudio.molkkyboard.core.sync
 
+import com.yogistudio.molkkyboard.core.scoring.AddPlayer
 import com.yogistudio.molkkyboard.core.scoring.MolkkoutThrow
 import com.yogistudio.molkkyboard.core.scoring.NextStarter
 import com.yogistudio.molkkyboard.core.scoring.ScoringError
@@ -20,6 +21,19 @@ sealed interface GameCommand {
     @SerialName("event")
     data class Play(
         val event: SetEvent,
+        val baseSeq: Int,
+    ) : GameCommand
+
+    /**
+     * Un joueur rejoint la partie en cours ([event]), avec son nom et son équipe (nouvelle ou existante) : l'événement
+     * seul ne suffit pas aux autres téléphones pour l'afficher.
+     */
+    @Serializable
+    @SerialName("add_participant")
+    data class AddParticipant(
+        val event: AddPlayer,
+        val player: SharedPlayer,
+        val team: SharedTeam,
         val baseSeq: Int,
     ) : GameCommand
 
@@ -73,6 +87,12 @@ fun GameCommand.allowedFor(author: Author): Boolean =
     author.role == Role.ORGANIZER ||
         when (this) {
             is GameCommand.Play -> true
+
             is GameCommand.MolkkoutPlay -> author.player != null && throwEvent.player == author.player
-            is GameCommand.NextSet, is GameCommand.MolkkoutUndo, is GameCommand.Rematch -> false
+
+            is GameCommand.NextSet,
+            is GameCommand.MolkkoutUndo,
+            is GameCommand.Rematch,
+            is GameCommand.AddParticipant,
+            -> false
         }

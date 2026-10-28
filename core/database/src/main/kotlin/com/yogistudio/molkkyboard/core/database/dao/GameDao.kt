@@ -103,6 +103,31 @@ interface GameDao {
     @Query("DELETE FROM game WHERE id = :gameId")
     suspend fun deleteGame(gameId: String)
 
+    @Query("UPDATE game SET origin = :origin WHERE id = :gameId")
+    suspend fun setOrigin(gameId: String, origin: String)
+
+    /**
+     * Partie reçue d'un autre téléphone (partie à côté) : elle remplace entièrement la copie locale, en une seule
+     * transaction (l'interface ne voit jamais une partie à moitié importée).
+     */
+    @Transaction
+    suspend fun replaceGame(
+        game: GameEntity,
+        sets: List<GameSetEntity>,
+        teams: List<GameTeamEntity>,
+        players: List<GamePlayerEntity>,
+        events: List<GameEventEntity>,
+        molkkout: List<MolkkoutThrowEntity>,
+    ) {
+        deleteGame(game.id)
+        insertGame(game)
+        sets.forEach { insertSet(it) }
+        insertTeams(teams)
+        insertPlayers(players)
+        events.forEach { insertEvent(it) }
+        molkkout.forEach { insertMolkkoutThrow(it) }
+    }
+
     // Historique et statistiques : toutes les parties closes, en quelques requêtes (pas une par partie).
 
     @Query("SELECT s.* FROM game_set s JOIN game g ON g.id = s.gameId WHERE g.closedAt IS NOT NULL ORDER BY s.setIndex")

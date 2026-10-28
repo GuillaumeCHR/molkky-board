@@ -5,6 +5,7 @@ import com.yogistudio.molkkyboard.core.data.DataStoreSettingsRepository
 import com.yogistudio.molkkyboard.core.data.GameRepository
 import com.yogistudio.molkkyboard.core.data.IdGenerator
 import com.yogistudio.molkkyboard.core.data.JournalStatsRepository
+import com.yogistudio.molkkyboard.core.data.NearbyRouter
 import com.yogistudio.molkkyboard.core.data.PlayerRepository
 import com.yogistudio.molkkyboard.core.data.RoomBackupRepository
 import com.yogistudio.molkkyboard.core.data.RoomGameRepository
@@ -13,6 +14,7 @@ import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.data.StatsRepository
 import com.yogistudio.molkkyboard.core.data.TimeSource
 import dagger.Binds
+import dagger.BindsOptionalOf
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,6 +26,10 @@ import java.util.UUID
 abstract class DataModule {
     @Binds
     abstract fun gameRepository(impl: RoomGameRepository): GameRepository
+
+    /** La partie à côté, si son module est présent : sinon toutes les saisies vont au dépôt local. */
+    @BindsOptionalOf
+    abstract fun nearbyRouter(): NearbyRouter
 
     @Binds
     abstract fun playerRepository(impl: RoomPlayerRepository): PlayerRepository

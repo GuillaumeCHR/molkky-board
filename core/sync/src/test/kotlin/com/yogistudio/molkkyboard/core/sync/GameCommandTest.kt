@@ -2,6 +2,7 @@ package com.yogistudio.molkkyboard.core.sync
 
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
+import com.yogistudio.molkkyboard.core.scoring.AddPlayer
 import com.yogistudio.molkkyboard.core.scoring.EventId
 import com.yogistudio.molkkyboard.core.scoring.MolkkoutThrow
 import com.yogistudio.molkkyboard.core.scoring.NextStarter
@@ -26,6 +27,12 @@ class GameCommandTest {
             molkkout,
             GameCommand.MolkkoutUndo(1),
             GameCommand.Rematch("partie-2", NextStarter.Rotate),
+            GameCommand.AddParticipant(
+                AddPlayer(EventId("e2"), PlayerId("chloe"), TeamId("C")),
+                SharedPlayer(PlayerId("chloe"), "Chloé"),
+                SharedTeam(TeamId("C"), "Chloé", 2, memberKey = "c"),
+                baseSeq = 0,
+            ),
         )
 
     @Test
@@ -41,7 +48,12 @@ class GameCommandTest {
             molkkout.copy(throwEvent = molkkout.throwEvent.copy(player = PlayerId("bruno"))).allowedFor(aliceDevice),
         )
         assertFalse(molkkout.allowedFor(Author(DeviceId("x"), Role.PLAYER)))
-        listOf(commands[1], commands[3], commands[4]).forEach { assertFalse(it.allowedFor(aliceDevice), "$it") }
+        listOf(
+            commands[1],
+            commands[3],
+            commands[4],
+            commands[5],
+        ).forEach { assertFalse(it.allowedFor(aliceDevice), "$it") }
     }
 
     @Test

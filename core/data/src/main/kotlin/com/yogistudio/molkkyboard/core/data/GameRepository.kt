@@ -32,6 +32,10 @@ import com.yogistudio.molkkyboard.core.sync.CommandOutcome
 import com.yogistudio.molkkyboard.core.sync.GameCommand
 import com.yogistudio.molkkyboard.core.sync.RejectCode
 import com.yogistudio.molkkyboard.core.sync.SetLog
+import com.yogistudio.molkkyboard.core.sync.SharedGame
+import com.yogistudio.molkkyboard.core.sync.SharedPlayer
+import com.yogistudio.molkkyboard.core.sync.SharedSet
+import com.yogistudio.molkkyboard.core.sync.SharedTeam
 import com.yogistudio.molkkyboard.core.sync.Validation
 import com.yogistudio.molkkyboard.core.sync.allowedFor
 import com.yogistudio.molkkyboard.core.sync.validate
@@ -83,6 +87,14 @@ interface GameRepository {
     /** Parties closes (terminées ou abandonnées), la plus récente d'abord : historique et statistiques. */
     fun observeHistory(): Flow<List<GameSnapshot>>
 
+    /** La partie au format du protocole de la partie à côté (pseudos et emblèmes seulement), ou `null`. */
+    suspend fun share(gameId: String, avatars: Map<String, String> = emptyMap()): SharedGame?
+
+    /** Partie reçue d'un autre téléphone : elle remplace la copie locale (origine « rejointe »). */
+    suspend fun importShared(game: SharedGame)
+
+    suspend fun setOrigin(gameId: String, origin: GameOrigin)
+
     /** Identifiant de la partie en cours la plus récente, à proposer en reprise. */
     fun observeOngoingGameId(): Flow<String?>
 
@@ -93,6 +105,8 @@ interface GameRepository {
     suspend fun delete(gameId: String)
 }
 
+// Unique porte d'écriture des parties (locales et partagées) : la découper disperserait la validation.
+@Suppress("TooManyFunctions")
 @Singleton
 class RoomGameRepository
     @Inject
@@ -106,7 +120,7 @@ class RoomGameRepository
 
         override suspend fun create(game: NewGame): String = insertGame(ids.newId(), game)
 
-        private suspend fun insertGame(id: String, game: NewGame): String {
+        private suspend fun insertGame(id: String, game: NewGame, origin: GameOrigin = GameOrigin.LOCAL): String {
             val now = time.now()
             dao.createGame(
                 GameEntity(
@@ -117,6 +131,7 @@ class RoomGameRepository
                     matchConfigJson = json.encodeToString(game.matchConfig),
                     place = game.place,
                     closedAt = null,
+                    origin = origin.name,
                 ),
                 GameSetEntity(id, 0, json.encodeToString(game.lineup), now),
                 game.teams.map { GameTeamEntity(id, it.id.value, it.name, it.colorIndex, it.emblem, it.memberKey) },
@@ -190,6 +205,7 @@ class RoomGameRepository
                 place = game.place,
                 players = players.map { GamePlayer(PlayerId(it.playerId), it.name, it.profileId) },
                 molkkout = molkkout.map { json.decodeFromString<MolkkoutThrow>(it.payloadJson) },
+                origin = runCatching { GameOrigin.valueOf(game.origin) }.getOrDefault(GameOrigin.LOCAL),
             )
         }
 
@@ -259,15 +275,29 @@ class RoomGameRepository
             event: AddPlayer,
             player: GamePlayer,
             team: GameTeam,
-        ): Outcome<ReplayResult> {
-            val outcome = append(gameId, event)
-            if (outcome is Outcome.Ok) {
+        ): Outcome<ReplayResult> =
+            when (val validation = participant(gameId, event, player, team, Author.Local, null)) {
+                is Validation.Accepted -> Outcome.Ok(validation.result)
+                is Validation.Rejected -> Outcome.Err(validation.error ?: ScoringError.INVALID_EVENT)
+            }
+
+        /** L'événement `AddPlayer` est validé et écrit, puis le nom du joueur (et son équipe si elle est nouvelle). */
+        private suspend fun participant(
+            gameId: String,
+            event: AddPlayer,
+            player: GamePlayer,
+            team: GameTeam,
+            author: Author,
+            baseSeq: Int?,
+        ): Validation {
+            val validation = write(gameId, event, author, baseSeq)
+            if (validation is Validation.Accepted) {
                 dao.insertTeamIfAbsent(
                     GameTeamEntity(gameId, team.id.value, team.name, team.colorIndex, team.emblem, team.memberKey),
                 )
                 dao.upsertPlayer(GamePlayerEntity(gameId, player.id.value, player.name, player.profileId))
             }
-            return outcome
+            return validation
         }
 
         override suspend fun apply(gameId: String, command: GameCommand, author: Author): CommandOutcome {
@@ -275,6 +305,16 @@ class RoomGameRepository
             return when (command) {
                 is GameCommand.Play -> {
                     when (val validation = write(gameId, command.event, author, command.baseSeq)) {
+                        is Validation.Accepted -> CommandOutcome.Applied
+                        is Validation.Rejected -> CommandOutcome.Rejected(validation.code, validation.error)
+                    }
+                }
+
+                is GameCommand.AddParticipant -> {
+                    val player = GamePlayer(command.player.id, command.player.name)
+                    val shared = command.team
+                    val team = GameTeam(shared.id, shared.name, shared.colorIndex, shared.emblem, shared.memberKey)
+                    when (val validation = participant(gameId, command.event, player, team, author, command.baseSeq)) {
                         is Validation.Accepted -> CommandOutcome.Applied
                         is Validation.Rejected -> CommandOutcome.Rejected(validation.code, validation.error)
                     }
@@ -367,19 +407,95 @@ class RoomGameRepository
             val playerIds = lineup.flatMap { it.players }.toSet()
             insertGame(
                 command.gameId,
-                NewGame(
-                    config = snapshot.config,
-                    matchConfig = snapshot.matchConfig,
-                    lineup = lineup,
-                    teams = snapshot.teams.filter { team -> team.id in nextIds },
-                    players = snapshot.players.filter { it.id in playerIds },
-                    place = snapshot.place,
-                ),
+                origin = snapshot.origin,
+                game =
+                    NewGame(
+                        config = snapshot.config,
+                        matchConfig = snapshot.matchConfig,
+                        lineup = lineup,
+                        teams = snapshot.teams.filter { team -> team.id in nextIds },
+                        players = snapshot.players.filter { it.id in playerIds },
+                        place = snapshot.place,
+                    ),
             )
             return CommandOutcome.Applied
         }
 
         private fun invalid(error: ScoringError) = CommandOutcome.Rejected(RejectCode.INVALID, error)
+
+        override suspend fun share(gameId: String, avatars: Map<String, String>): SharedGame? {
+            val snapshot = observe(gameId).first() ?: return null
+            return SharedGame(
+                id = snapshot.id,
+                createdAt = snapshot.createdAt,
+                config = snapshot.config,
+                matchConfig = snapshot.matchConfig,
+                teams = snapshot.teams.map { SharedTeam(it.id, it.name, it.colorIndex, it.emblem, it.memberKey) },
+                // Jamais de photo ni d'identifiant de profil local : le pseudo et l'emblème seulement.
+                players = snapshot.players.map { SharedPlayer(it.id, it.name, it.profileId?.let(avatars::get)) },
+                sets = snapshot.sets.map { SharedSet(it.lineup, it.log) },
+                molkkout = snapshot.molkkout,
+                place = snapshot.place,
+            )
+        }
+
+        override suspend fun importShared(game: SharedGame) =
+            writes.withLock {
+                val now = time.now()
+                dao.replaceGame(
+                    GameEntity(
+                        id = game.id,
+                        createdAt = game.createdAt,
+                        updatedAt = now,
+                        configJson = json.encodeToString(game.config),
+                        matchConfigJson = json.encodeToString(game.matchConfig),
+                        place = game.place,
+                        closedAt = null,
+                        origin = GameOrigin.JOINED.name,
+                    ),
+                    sets =
+                        game.sets.mapIndexed {
+                            i,
+                            set,
+                            ->
+                            GameSetEntity(game.id, i, json.encodeToString(set.lineup), now)
+                        },
+                    teams =
+                        game.teams.map {
+                            GameTeamEntity(
+                                game.id,
+                                it.id.value,
+                                it.name,
+                                it.colorIndex,
+                                it.emblem,
+                                it.memberKey,
+                            )
+                        },
+                    players = game.players.map { GamePlayerEntity(game.id, it.id.value, it.name, null) },
+                    events =
+                        game.sets.flatMapIndexed { i, set ->
+                            set.log.mapIndexed { j, event ->
+                                GameEventEntity(
+                                    event.id.value,
+                                    game.id,
+                                    i,
+                                    j + 1L,
+                                    createdAt = now,
+                                    payloadJson = json.encodeToString(event),
+                                )
+                            }
+                        },
+                    molkkout =
+                        game.molkkout.mapIndexed {
+                            i,
+                            t,
+                            ->
+                            MolkkoutThrowEntity(game.id, i + 1, json.encodeToString(t))
+                        },
+                )
+            }
+
+        override suspend fun setOrigin(gameId: String, origin: GameOrigin) = dao.setOrigin(gameId, origin.name)
 
         override fun observeOngoingGameId(): Flow<String?> = dao.observeOngoing().map { it?.id }
 

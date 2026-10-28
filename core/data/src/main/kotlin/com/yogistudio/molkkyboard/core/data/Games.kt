@@ -18,6 +18,9 @@ import com.yogistudio.molkkyboard.core.scoring.matchStatus
 import com.yogistudio.molkkyboard.core.scoring.toResult
 import java.security.MessageDigest
 
+/** D'où vient une partie (`game.origin`). */
+enum class GameOrigin { LOCAL, HOSTED, JOINED }
+
 /** Apparence d'une équipe dans une partie. */
 data class GameTeam(
     val id: TeamId,
@@ -65,6 +68,8 @@ data class GameSnapshot(
     val players: List<GamePlayer> = emptyList(),
     /** Lancers du Mölkkout éventuel (départage avant la belle). */
     val molkkout: List<MolkkoutThrow> = emptyList(),
+    /** Ce seul téléphone, partie hébergée pour d'autres téléphones, ou partie rejointe (partie à côté). */
+    val origin: GameOrigin = GameOrigin.LOCAL,
 ) {
     val currentSet: GameSetSnapshot get() = sets.last()
 
