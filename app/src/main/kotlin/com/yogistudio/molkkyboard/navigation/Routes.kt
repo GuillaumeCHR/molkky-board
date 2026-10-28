@@ -34,6 +34,12 @@ data object PlayfulRulesRoute
 @Serializable
 data object JoinRoute
 
+/** « Inviter des téléphones » pour la partie [gameId] (partie à côté). */
+@Serializable
+data class InviteRoute(
+    val gameId: String,
+)
+
 @Serializable
 data object SetupRoute
 

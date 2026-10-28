@@ -716,8 +716,10 @@ class GameViewModelTest {
                 // Rien pour l'état déjà présent à l'ouverture.
                 expectNoEvents()
                 play(1)
-                play(12)
                 assertEquals(GameEffect.Validated("Bruno", 1), awaitItem().withoutPins())
+                // Un lancer à la fois : plusieurs lancers rattrapés d'un coup ne jouent que le résultat final.
+                vm.awaitState { it.currentTeam?.name == "Alice" }
+                play(12)
                 assertEquals(GameEffect.Validated("Alice", 12), awaitItem().withoutPins())
                 assertEquals(GameEffect.Twelve(strike = false), awaitItem())
                 assertEquals("Alice", (awaitItem() as GameEffect.Won).name)

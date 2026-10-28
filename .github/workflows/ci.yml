@@ -33,7 +33,7 @@ jobs:
         run: ./gradlew ktlintCheck detekt lintDebug
 
       - name: Tests unitaires et couverture du moteur
-        run: ./gradlew test :core:scoring:koverVerify :core:sync:koverVerify :app:checkDebugNoInternet :app:checkReleaseNoInternet
+        run: ./gradlew test :core:scoring:koverVerify :core:sync:koverVerify :app:checkDebugPermissions :app:checkReleasePermissions
 
       - name: APK debug
         run: ./gradlew :app:assembleDebug

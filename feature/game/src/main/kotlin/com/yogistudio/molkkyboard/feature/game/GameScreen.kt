@@ -80,6 +80,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
@@ -155,6 +156,8 @@ data class GameActions(
     val onGuideDone: () -> Unit = {},
     val onShare: () -> Unit = {},
     val onStartPlaying: (neverAgain: Boolean) -> Unit = {},
+    /** « Inviter des téléphones » (partie à côté) ; `null` : entrée absente. */
+    val onInvite: (() -> Unit)? = null,
 )
 
 @Composable
@@ -164,6 +167,8 @@ fun GameScreen(
     onHome: () -> Unit,
     onOpenGame: (String) -> Unit = {},
     onShare: () -> Unit = {},
+    onInvite: (() -> Unit)? = null,
+    connection: ConnectionBadge? = null,
     viewModel: GameViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -301,8 +306,10 @@ fun GameScreen(
                 onGuideDone = viewModel::finishGuide,
                 onShare = onShare,
                 onStartPlaying = viewModel::startPlaying,
+                onInvite = onInvite,
             ),
         logMessage = logMessage,
+        connection = connection,
         snackbar = snackbar,
         overshoot = overshoot,
         onOvershootShown = { overshoot = null },
@@ -391,6 +398,7 @@ fun GameContent(
     logOpen: Boolean = false,
     playersOpen: Boolean = false,
     logMessage: String? = null,
+    connection: ConnectionBadge? = null,
 ) {
     var showScoreboard by rememberSaveable { mutableStateOf(scoreboardOpen) }
     var showLog by rememberSaveable { mutableStateOf(logOpen) }
@@ -402,7 +410,7 @@ fun GameContent(
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
-                GameTopBar(state, actions, anchors, onOpenLog = {
+                GameTopBar(state, actions, anchors, connection, onOpenLog = {
                     showLog = true
                 }, onOpenPlayers = { showPlayers = true }, onOpenRules = {
                     showRules =
@@ -520,6 +528,7 @@ private fun GameTopBar(
     state: GameUiState,
     actions: GameActions,
     anchors: GuideAnchors,
+    connection: ConnectionBadge?,
     onOpenLog: () -> Unit,
     onOpenPlayers: () -> Unit,
     onOpenRules: () -> Unit,
@@ -529,6 +538,7 @@ private fun GameTopBar(
     // En grande police, les boutons passent avant le titre « Partie » (évident sur cet écran plein écran).
     val title = if (LocalDensity.current.fontScale >= LARGE_FONT_SCALE) "" else stringResource(R.string.game_title)
     MBTopBar(title, actions.onBack) {
+        connection?.let { ConnectionPill(it) }
         // Placement des quilles, discret mais toujours là (utile entre deux manches).
         IconButton(onClick = onOpenPlacement, modifier = Modifier.size(MBDimens.MinTouch)) {
             Icon(MBIcons.Pins, contentDescription = stringResource(R.string.placement_title))
@@ -557,6 +567,13 @@ private fun GameTopBar(
                     menu = false
                     onOpenRules()
                 })
+                val invite = actions.onInvite
+                if (invite != null && !state.joined) {
+                    DropdownMenuItem(text = { Text(stringResource(R.string.game_menu_invite)) }, onClick = {
+                        menu = false
+                        invite()
+                    })
+                }
                 DropdownMenuItem(
                     text = {
                         Text(
@@ -903,3 +920,43 @@ private const val STICKER_DROP_DELAY_MS = 350L
 private const val LOG_MESSAGE_MS = 4_000L
 
 private const val LARGE_FONT_SCALE = 1.3f
+
+/** Partie à côté : nombre de téléphones connectés (hôte) ou état de la connexion (invité). */
+data class ConnectionBadge(
+    /** Téléphones connectés (connu de l'hôte seulement). */
+    val phones: Int?,
+    val online: Boolean,
+)
+
+/** « 3 téléphones », ou « Hors ligne » en corail quand un invité a perdu l'hôte. */
+@Composable
+private fun ConnectionPill(badge: ConnectionBadge) {
+    val phones = badge.phones
+    val text =
+        when {
+            !badge.online -> stringResource(R.string.game_offline)
+            phones != null -> pluralStringResource(R.plurals.game_phones, phones, phones)
+            else -> stringResource(R.string.game_connected)
+        }
+    Surface(
+        shape = RoundedCornerShape(50),
+        color =
+            if (badge.online) {
+                MolkkyBoardTheme.colors.saffron.copy(
+                    alpha = PILL_ALPHA,
+                )
+            } else {
+                MolkkyBoardTheme.colors.coral
+            },
+        contentColor = if (badge.online) MaterialTheme.colorScheme.onSurface else MolkkyBoardTheme.colors.onCoral,
+        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+    ) {
+        Text(
+            text,
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+        )
+    }
+}
+
+private const val PILL_ALPHA = 0.45f

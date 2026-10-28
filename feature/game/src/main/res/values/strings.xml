@@ -245,4 +245,11 @@
     <string name="shared_refused_turn">Ce n\'est pas (ou plus) le tour de ce joueur.</string>
     <string name="shared_refused_forbidden">Seul l\'organisateur de la partie peut faire cela.</string>
     <string name="shared_refused_stale">La partie a changé entre-temps : réessayez.</string>
+    <string name="game_menu_invite">Inviter des téléphones</string>
+    <string name="game_connected">Connecté</string>
+    <string name="game_offline">Hors ligne</string>
+    <plurals name="game_phones">
+        <item quantity="one">%1$d téléphone</item>
+        <item quantity="other">%1$d téléphones</item>
+    </plurals>
 </resources>

@@ -20,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -41,6 +43,8 @@ import com.yogistudio.molkkyboard.feature.game.PlacementScreen
 import com.yogistudio.molkkyboard.feature.game.RulesScreen
 import com.yogistudio.molkkyboard.feature.history.HistoryScreen
 import com.yogistudio.molkkyboard.feature.intro.IntroScreen
+import com.yogistudio.molkkyboard.feature.nearby.InviteScreen
+import com.yogistudio.molkkyboard.feature.nearby.JoinScreen
 import com.yogistudio.molkkyboard.feature.setup.PlayfulRulesScreen
 import com.yogistudio.molkkyboard.feature.setup.SetupScreen
 import com.yogistudio.molkkyboard.feature.share.ShareScreen
@@ -171,7 +175,13 @@ fun MolkkyBoardNavHost(
                 composable<RulesRoute> { RulesScreen(onBack = navController::navigateUp) }
                 composable<PlacementRoute> { PlacementScreen(onBack = navController::navigateUp) }
                 composable<JoinRoute> {
-                    EmptyStateScreen(R.string.join_title, R.string.join_empty, onBack = navController::navigateUp)
+                    JoinScreen(
+                        onBack = navController::navigateUp,
+                        onJoined = { id -> navController.navigate(GameRoute(id)) { popUpTo<HomeRoute>() } },
+                    )
+                }
+                composable<InviteRoute> { entry ->
+                    InviteScreen(entry.toRoute<InviteRoute>().gameId, onBack = navController::navigateUp)
                 }
                 composable<SetupRoute> {
                     SetupScreen(
@@ -188,8 +198,11 @@ fun MolkkyBoardNavHost(
                 }
                 composable<GameRoute> { entry ->
                     val gameId = entry.toRoute<GameRoute>().gameId
+                    val nearby by hiltViewModel<SharingViewModel>().state.collectAsStateWithLifecycle()
                     GameScreen(
                         onShare = { navController.navigate(ShareRoute(gameId)) },
+                        onInvite = { navController.navigate(InviteRoute(gameId)) },
+                        connection = nearby.badgeFor(gameId),
                         onBack = navController::navigateUp,
                         onNewGame = { navController.navigate(SetupRoute) { popUpTo<HomeRoute>() } },
                         onHome = { navController.popBackStack<HomeRoute>(inclusive = false) },

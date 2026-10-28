@@ -245,4 +245,11 @@
     <string name="shared_refused_turn">It is not (or no longer) this player\'s turn.</string>
     <string name="shared_refused_forbidden">Only the game organiser can do that.</string>
     <string name="shared_refused_stale">The game changed in the meantime: try again.</string>
+    <string name="game_menu_invite">Invite phones</string>
+    <string name="game_connected">Connected</string>
+    <string name="game_offline">Offline</string>
+    <plurals name="game_phones">
+        <item quantity="one">%1$d phone</item>
+        <item quantity="other">%1$d phones</item>
+    </plurals>
 </resources>

@@ -27,7 +27,6 @@
     <!-- Écrans à venir -->
     <string name="coming_soon">Bientôt disponible</string>
     <string name="join_title">Rejoindre une partie</string>
-    <string name="join_empty">Saisie du code à 6 caractères ou scan du QR code : arrive avec les parties partagées.</string>
 
 
     <!-- Réglages -->
@@ -108,9 +107,9 @@
     <string name="about_publisher">Une application Yogi Studio</string>
     <string name="about_contact">Contact : %1$s</string>
     <string name="about_privacy_title">Vie privée</string>
-    <string name="about_privacy_headline">Aucune donnée collectée. Molkky Board n\'a même pas accès à Internet.</string>
+    <string name="about_privacy_headline">Aucune donnée collectée. Molkky Board ne se connecte jamais à Internet.</string>
     <string name="about_privacy_no_ads">Molkky Board ne contient aucune publicité, aucun traceur publicitaire, aucun outil de mesure d\'audience, et ne revend aucune donnée.</string>
-    <string name="about_privacy_local">Tout reste sur votre téléphone, sauf ce que vous choisissez vous-même de partager.</string>
+    <string name="about_privacy_local">Quand plusieurs téléphones jouent ensemble, ils échangent directement entre eux, en chiffré, sur le réseau local. Le reste ne quitte votre téléphone que si vous choisissez de le partager.</string>
     <string name="about_privacy_control">Vous pouvez sauvegarder, exporter ou supprimer vos données à tout moment, dans Réglages › Données.</string>
     <string name="about_privacy_open_source">Construite avec des bibliothèques open source (liste ci-dessous).</string>
     <string name="about_credits">Crédits</string>

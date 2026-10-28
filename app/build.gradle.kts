@@ -71,6 +71,8 @@ dependencies {
     implementation(projects.feature.history)
     implementation(projects.feature.stats)
     implementation(projects.feature.share)
+    implementation(projects.feature.nearby)
+    implementation(projects.core.nearby)
     implementation(projects.core.data)
 
     implementation(libs.androidx.core.ktx)
@@ -89,31 +91,55 @@ dependencies {
 }
 
 /**
- * Engagement « aucune requête réseau » sur un seul téléphone : la permission INTERNET ne doit pas figurer dans le
- * manifeste fusionné, y compris par une bibliothèque. Quand la partie à côté l'ajoutera (jalon S2), ce contrôle
- * cédera la place au test « aucune adresse hors du réseau local ».
+ * Permissions de l'APK : une liste blanche, chacune justifiée (fiche Play Store, `THREAT_MODEL.md`). Toute autre
+ * permission, y compris apportée par une bibliothèque (localisation, contacts, identifiant publicitaire…), fait échouer
+ * le build. INTERNET ne sert qu'aux sockets de la partie à côté, sur le réseau local.
  */
-abstract class CheckNoInternetPermission : DefaultTask() {
+abstract class CheckPermissions : DefaultTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val manifest: RegularFileProperty
 
     @TaskAction
     fun check() {
-        val forbidden = "android.permission.INTERNET"
-        if (forbidden in manifest.get().asFile.readText()) {
-            throw GradleException(
-                "$forbidden est déclarée dans le manifeste fusionné : « aucune requête réseau » serait faux.",
+        val allowed =
+            setOf(
+                // Partie à côté : sockets locales, Wi-Fi, point d'accès (sans localisation), réseau local (Android 17).
+                "android.permission.INTERNET",
+                "android.permission.ACCESS_NETWORK_STATE",
+                "android.permission.CHANGE_NETWORK_STATE",
+                "android.permission.ACCESS_WIFI_STATE",
+                "android.permission.CHANGE_WIFI_STATE",
+                "android.permission.NEARBY_WIFI_DEVICES",
+                "android.permission.ACCESS_LOCAL_NETWORK",
+                // Hôte joignable écran éteint ; notification de partie en cours.
+                "android.permission.FOREGROUND_SERVICE",
+                "android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE",
+                "android.permission.POST_NOTIFICATIONS",
+                // Scan du QR code d'invitation, photo de joueur.
+                "android.permission.CAMERA",
+                // WorkManager (AndroidX).
+                "android.permission.WAKE_LOCK",
             )
+        val declared =
+            Regex("<uses-permission[^>]*?android:name=\"([^\"]+)\"", RegexOption.DOT_MATCHES_ALL)
+                .findAll(manifest.get().asFile.readText())
+                .map { it.groupValues[1] }
+                .filterNot { it.endsWith(".DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION") }
+                .toSet()
+        val unexpected = declared - allowed
+        if (unexpected.isNotEmpty()) throw GradleException("Permissions non prévues : $unexpected")
+        if ("neverForLocation" !in manifest.get().asFile.readText()) {
+            throw GradleException("NEARBY_WIFI_DEVICES doit être déclarée avec neverForLocation.")
         }
     }
 }
 
 androidComponents {
     onVariants { variant ->
-        val name = "check${variant.name.replaceFirstChar { it.uppercase() }}NoInternet"
+        val name = "check${variant.name.replaceFirstChar { it.uppercase() }}Permissions"
         val check =
-            tasks.register<CheckNoInternetPermission>(name) {
+            tasks.register<CheckPermissions>(name) {
                 manifest.set(variant.artifacts.get(SingleArtifact.MERGED_MANIFEST))
             }
         tasks.named("check") { dependsOn(check) }

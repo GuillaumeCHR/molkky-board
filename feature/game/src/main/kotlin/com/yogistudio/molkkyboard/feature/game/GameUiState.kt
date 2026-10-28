@@ -100,6 +100,8 @@ data class GameUiState(
     val round: Int = 1,
     /** Le prochain raté de l'équipe au tour serait sanctionné (élimination ou retour en arrière). */
     val missWarning: Boolean = false,
+    /** Partie rejointe sur un autre téléphone (partie à côté) : on n'y invite pas d'autres téléphones. */
+    val joined: Boolean = false,
     /** Sanction qui attend l'équipe au tour si [missWarning] (élimination ou retour à un score). */
     val missPenalty: MissPenalty? = null,
     /** Personne n'a encore lancé dans le tour : l'ordre de passage peut changer. */

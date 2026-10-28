@@ -35,15 +35,17 @@ class TransportTest {
             JcaX509v3CertificateBuilder(name, BigInteger.ONE, Date(now - 60_000), Date(now + 60_000), name, pair.public)
                 .build(JcaContentSignerBuilder("SHA256withECDSA").build(pair.private))
         val cert = JcaX509CertificateConverter().getCertificate(holder)
-        val store = KeyStore.getInstance("PKCS12").apply {
-            load(null)
-            setKeyEntry("k", pair.private, CharArray(0), arrayOf(cert))
-        }
+        val store =
+            KeyStore.getInstance("PKCS12").apply {
+                load(null)
+                setKeyEntry("k", pair.private, CharArray(0), arrayOf(cert))
+            }
         return PartyCertificate.from(store, CharArray(0), "k")
     }
 
     private fun startServer(): Int {
-        server = NearbyServer(InetSocketAddress("127.0.0.1", 0), certificate, { id, text -> received += id to text }, {})
+        server =
+            NearbyServer(InetSocketAddress("127.0.0.1", 0), certificate, { id, text -> received += id to text }, {})
         return server.startAndWait()
     }
 

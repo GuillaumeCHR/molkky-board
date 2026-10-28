@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nearby_channel">Shared game</string>
+    <string name="nearby_notification_title">Shared game in progress</string>
+    <plurals name="nearby_notification_phones">
+        <item quantity="one">%1$d phone connected</item>
+        <item quantity="other">%1$d phones connected</item>
+    </plurals>
+    <string name="nearby_notification_stop">Stop sharing</string>
+</resources>

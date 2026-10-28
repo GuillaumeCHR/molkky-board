@@ -115,7 +115,7 @@ class NearbyServer(
     }
 }
 
-/** N'accepte que le certificat dont l'empreinte SHA-256 est celle du QR code : aucune autre vérification, aucun repli. */
+/** N'accepte que le certificat dont l'empreinte SHA-256 est celle du QR code : aucune autre vérification ni repli. */
 class PinnedTrustManager(
     private val fingerprint: String,
 ) : X509TrustManager {
@@ -155,7 +155,7 @@ class NearbyClient(
     private val client =
         OkHttpClient
             .Builder()
-            .sslSocketFactory(SSLContext.getInstance("TLS").apply { init(null, arrayOf(trust), null) }.socketFactory, trust)
+            .sslSocketFactory(pinnedContext(trust).socketFactory, trust)
             // L'adresse est une IP locale sans nom : c'est l'empreinte épinglée qui authentifie l'hôte.
             .hostnameVerifier { _, _ -> true }
             .apply { network?.let { socketFactory(it.socketFactory) } }
@@ -195,3 +195,6 @@ class NearbyClient(
         const val CLOSE_NORMAL = 1000
     }
 }
+
+private fun pinnedContext(trust: X509TrustManager): SSLContext =
+    SSLContext.getInstance("TLS").apply { init(null, arrayOf(trust), null) }

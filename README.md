@@ -25,15 +25,16 @@ l'historique.
 
 ## Vie privée
 
-**Aucune donnée collectée. Molkky Board n'a même pas accès à Internet.**
+**Aucune donnée collectée. Molkky Board ne se connecte jamais à Internet.**
 
 - Aucune publicité, aucun traceur publicitaire, aucun outil de mesure d'audience, aucune donnée revendue.
 - Tout reste sur votre téléphone, sauf ce que vous choisissez vous-même de partager.
 - Sauvegarde, export (JSON) et suppression de vos données à tout moment, dans Réglages › Données.
-- L'absence de la permission `INTERNET` est vérifiée à chaque build (`check<Variante>NoInternet`).
+- Les permissions de l'APK sont une liste blanche vérifiée à chaque build (`check<Variante>Permissions`) : jamais de localisation, de contacts ni d'identifiant publicitaire. La permission `INTERNET` ne sert qu'aux sockets de la partie à côté, sur le réseau local.
 
-Plusieurs téléphones pourront bientôt jouer ensemble sur le même terrain, directement entre eux, en chiffré et
-sans passer par Internet (« Partie à côté », en préparation).
+**Partie à côté** : plusieurs téléphones jouent ensemble sur le même terrain, directement entre eux (point d'accès
+local ou même Wi-Fi), en TLS 1.3 avec l'empreinte du certificat de la partie épinglée depuis le QR code, sans serveur,
+sans compte et sans Internet. L'organisateur accepte chaque téléphone ; son téléphone valide chaque lancer.
 
 ## Construire et lancer
 

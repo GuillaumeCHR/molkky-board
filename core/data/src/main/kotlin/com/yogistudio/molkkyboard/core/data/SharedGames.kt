@@ -6,8 +6,10 @@ import com.yogistudio.molkkyboard.core.sync.CommandOutcome
 import com.yogistudio.molkkyboard.core.sync.DeviceId
 import com.yogistudio.molkkyboard.core.sync.GameCommand
 import com.yogistudio.molkkyboard.core.sync.GuestStore
+import com.yogistudio.molkkyboard.core.sync.RejectCode
 import com.yogistudio.molkkyboard.core.sync.Role
 import com.yogistudio.molkkyboard.core.sync.SharedGame
+import kotlinx.coroutines.flow.first
 import java.util.Optional
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -77,12 +79,17 @@ class CommandGateway
     ) {
         suspend fun submit(gameId: String, command: GameCommand): CommandOutcome {
             val nearby = router.orElse(null)
-            return if (nearby != null &&
-                nearby.routes(gameId)
-            ) {
-                nearby.submit(gameId, command)
-            } else {
-                games.apply(gameId, command)
+            return when {
+                nearby != null && nearby.routes(gameId) -> nearby.submit(gameId, command)
+
+                // Partie rejointe sans session (hôte parti, app redémarrée) : lecture seule, elle divergerait sinon.
+                games
+                    .observe(
+                        gameId,
+                    ).first()
+                    ?.origin == GameOrigin.JOINED -> CommandOutcome.Rejected(RejectCode.FORBIDDEN)
+
+                else -> games.apply(gameId, command)
             }
         }
     }

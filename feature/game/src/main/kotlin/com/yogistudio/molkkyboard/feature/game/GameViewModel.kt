@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yogistudio.molkkyboard.core.data.CommandGateway
+import com.yogistudio.molkkyboard.core.data.GameOrigin
 import com.yogistudio.molkkyboard.core.data.GamePlayer
 import com.yogistudio.molkkyboard.core.data.GameRepository
 import com.yogistudio.molkkyboard.core.data.GameSnapshot
@@ -255,6 +256,8 @@ class GameViewModel
             val appended =
                 new.effectiveLog.size == old.effectiveLog.size + 1 &&
                     new.effectiveLog.subList(0, old.effectiveLog.size) == old.effectiveLog
+            // Plusieurs événements d'un coup (rattrapage après une coupure) : seul le résultat est mis en scène
+            // (élimination défaite, victoire), sans rejouer chaque lancer.
             if (appended) onPlayed(after, old.state, new.state, new.effectiveLog.last()) else reconcile(before, after)
             syncClosed(after)
         }
@@ -615,6 +618,7 @@ class GameViewModel
                 round = setState.round,
                 betweenRounds = setState.betweenRounds,
                 missWarning = warning,
+                joined = origin == GameOrigin.JOINED,
                 missPenalty = config.onMissLimit.takeIf { warning },
                 inputMode = prefs.inputMode,
                 quickMode = mode,

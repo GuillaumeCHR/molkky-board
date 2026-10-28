@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Aucun trafic en clair, nulle part : la partie à côté passe en TLS avec une empreinte épinglée. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

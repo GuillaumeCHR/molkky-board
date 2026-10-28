@@ -26,7 +26,6 @@
     <!-- Coming screens -->
     <string name="coming_soon">Coming soon</string>
     <string name="join_title">Join a game</string>
-    <string name="join_empty">Typing the 6-character code or scanning the QR code: coming with shared games.</string>
 
     <!-- Settings -->
     <string name="settings_display">Display</string>
@@ -106,9 +105,9 @@
     <string name="about_publisher">A Yogi Studio app</string>
     <string name="about_contact">Contact: %1$s</string>
     <string name="about_privacy_title">Privacy</string>
-    <string name="about_privacy_headline">No data collected. Molkky Board does not even have Internet access.</string>
+    <string name="about_privacy_headline">No data collected. Molkky Board never connects to the Internet.</string>
     <string name="about_privacy_no_ads">Molkky Board contains no ads, no ad trackers, no audience measurement tools, and sells no data.</string>
-    <string name="about_privacy_local">Everything stays on your phone, except what you choose to share yourself.</string>
+    <string name="about_privacy_local">When several phones play together, they talk directly to each other, encrypted, on the local network. Nothing else leaves your phone unless you choose to share it.</string>
     <string name="about_privacy_control">You can back up, export or delete your data at any time, in Settings › Data.</string>
     <string name="about_privacy_open_source">Built with open source libraries (list below).</string>
     <string name="about_credits">Credits</string>

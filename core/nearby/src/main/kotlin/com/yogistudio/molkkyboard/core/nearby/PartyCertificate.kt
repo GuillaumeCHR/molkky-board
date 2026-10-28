@@ -27,6 +27,7 @@ class PartyCertificate(
     companion object {
         private const val ALIAS = "molkky-partie"
         private const val DAY_MS = 86_400_000L
+        private const val SERIAL_BITS = 64
 
         fun keystore(): PartyCertificate {
             val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
@@ -38,7 +39,7 @@ class PartyCertificate(
                         .Builder(ALIAS, KeyProperties.PURPOSE_SIGN)
                         .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_NONE)
                         .setCertificateSubject(X500Principal("CN=Molkky Board partie"))
-                        .setCertificateSerialNumber(BigInteger(64, SecureRandom()))
+                        .setCertificateSerialNumber(BigInteger(SERIAL_BITS, SecureRandom()))
                         .setCertificateNotBefore(Date(now - DAY_MS))
                         .setCertificateNotAfter(Date(now + DAY_MS))
                         .build(),
@@ -55,7 +56,11 @@ class PartyCertificate(
 
         /** Certificat tiré d'un magasin de clés quelconque (tests sur la JVM : PKCS12 en mémoire). */
         fun from(store: KeyStore, password: CharArray?, alias: String): PartyCertificate {
-            val kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm()).apply { init(store, password) }
+            val kmf =
+                KeyManagerFactory
+                    .getInstance(
+                        KeyManagerFactory.getDefaultAlgorithm(),
+                    ).apply { init(store, password) }
             val ssl = SSLContext.getInstance("TLS").apply { init(kmf.keyManagers, null, null) }
             return PartyCertificate(ssl, store.getCertificate(alias) as X509Certificate)
         }
