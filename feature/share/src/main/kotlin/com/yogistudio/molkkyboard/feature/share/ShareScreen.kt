@@ -1,16 +1,22 @@
 package com.yogistudio.molkkyboard.feature.share
 
 import android.content.Context
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
@@ -19,17 +25,21 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
@@ -61,6 +71,8 @@ data class ShareActions(
     val onTemplate: (ShareTemplate) -> Unit = {},
     val onFormat: (ShareFormat) -> Unit = {},
     val onText: (String) -> Unit = {},
+    val onPhoto: (ImageBitmap) -> Unit = {},
+    val onRemovePhoto: () -> Unit = {},
 )
 
 @Composable
@@ -75,6 +87,8 @@ fun ShareScreen(onBack: () -> Unit, viewModel: ShareViewModel = hiltViewModel())
                 onTemplate = viewModel::selectTemplate,
                 onFormat = viewModel::selectFormat,
                 onText = viewModel::editText,
+                onPhoto = viewModel::setPhoto,
+                onRemovePhoto = viewModel::removePhoto,
             ),
     )
 }
@@ -92,7 +106,7 @@ fun ShareContentScreen(state: ShareUiState, actions: ShareActions) {
             if (!state.loading) Text(stringResource(R.string.share_nothing), Modifier.padding(MBDimens.ScreenPadding))
             return@Column
         }
-        val content = snapshot.shareContent(moment, state.victory, state.avatars)
+        val content = snapshot.shareContent(moment, state.victory, state.avatars).copy(photo = state.photo)
         val text = state.choices.text ?: defaultText(context, content)
         Column(
             Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = MBDimens.ScreenPadding),
@@ -108,6 +122,7 @@ fun ShareContentScreen(state: ShareUiState, actions: ShareActions) {
                 }
             }
             TemplatePager(state, content, layer, actions)
+            PhotoButtons(state.photo != null, actions)
             ChipRow {
                 ShareFormat.entries.forEach { format ->
                     FilterChip(state.choices.format == format, {
@@ -145,6 +160,47 @@ fun ShareContentScreen(state: ShareUiState, actions: ShareActions) {
     }
 }
 
+/**
+ * Photo du moment (N1) : appareil photo du système ou sélecteur de photos, sans permission. La photo reste en mémoire,
+ * le fichier de prise de vue est effacé dès qu'il est lu.
+ */
+@Composable
+private fun PhotoButtons(hasPhoto: Boolean, actions: ShareActions) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val load: (Uri?) -> Unit = { uri ->
+        if (uri != null) scope.launch { MomentPhoto.load(context, uri)?.let(actions.onPhoto) }
+    }
+    var capture by remember { mutableStateOf<Uri?>(null) }
+    val camera =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { taken ->
+            if (taken) load(capture)
+        }
+    val gallery = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia(), load)
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(
+            onClick = {
+                capture = MomentPhoto.captureUri(context).also(camera::launch)
+            },
+            modifier = Modifier.heightIn(min = MBDimens.MinTouch),
+        ) { Text(stringResource(R.string.share_photo_camera)) }
+        OutlinedButton(
+            onClick = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+            modifier = Modifier.heightIn(min = MBDimens.MinTouch),
+        ) { Text(stringResource(R.string.share_photo_gallery)) }
+        if (hasPhoto) {
+            TextButton(onClick = actions.onRemovePhoto, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+                Text(stringResource(R.string.share_photo_remove))
+            }
+        }
+    }
+    Text(
+        stringResource(R.string.share_photo_hint),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
 @Composable
 private fun ChipRow(content: @Composable () -> Unit) {
     Row(
@@ -156,21 +212,15 @@ private fun ChipRow(content: @Composable () -> Unit) {
 /** Aperçu : un modèle par page, d'un glissement ; la vignette visible est enregistrée dans [layer] pour le partage. */
 @Composable
 private fun TemplatePager(state: ShareUiState, content: ShareContent, layer: GraphicsLayer, actions: ShareActions) {
-    val templates = ShareTemplate.entries
-    val pager = rememberPagerState(initialPage = templates.indexOf(state.template)) { templates.size }
-    LaunchedEffect(state.template) {
-        if (pager.currentPage !=
-            state.template.ordinal
-        ) {
-            pager.scrollToPage(state.template.ordinal)
-        }
+    // Le modèle « Photo » n'existe qu'une fois la photo du moment choisie.
+    val templates = ShareTemplate.entries.filter { it != ShareTemplate.PHOTO || state.photo != null }
+    val selected = templates.indexOf(state.template).coerceAtLeast(0)
+    val pager = rememberPagerState(initialPage = selected) { templates.size }
+    LaunchedEffect(selected, templates.size) {
+        if (pager.currentPage != selected) pager.scrollToPage(selected)
     }
     LaunchedEffect(pager.currentPage) {
-        if (pager.currentPage !=
-            state.template.ordinal
-        ) {
-            actions.onTemplate(templates[pager.currentPage])
-        }
+        if (pager.currentPage != selected) actions.onTemplate(templates[pager.currentPage])
     }
     val format = state.choices.format
     val description = stringResource(R.string.share_preview_description, keyFigure(content))

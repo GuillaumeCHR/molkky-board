@@ -54,4 +54,11 @@
     <string name="reel_round">Tour %1$d</string>
     <string name="reel_reset">Retour à 25 !</string>
     <string name="reel_eliminated">Éliminé</string>
+    <string name="share_photo_camera">Prendre une photo</string>
+    <string name="share_photo_gallery">Choisir une photo</string>
+    <string name="share_photo_remove">Retirer la photo</string>
+    <string name="share_photo_hint">Photo du moment : elle n\'est pas conservée par l\'app, et l\'image partagée ne contient aucune métadonnée (ni lieu ni appareil).</string>
+    <string name="photo_stat_score">SCORE</string>
+    <string name="photo_stat_throws">LANCERS</string>
+    <string name="photo_stat_round">TOUR</string>
 </resources>

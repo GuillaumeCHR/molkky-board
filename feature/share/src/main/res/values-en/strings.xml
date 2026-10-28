@@ -54,4 +54,11 @@
     <string name="reel_round">Round %1$d</string>
     <string name="reel_reset">Back to 25!</string>
     <string name="reel_eliminated">Out</string>
+    <string name="share_photo_camera">Take a photo</string>
+    <string name="share_photo_gallery">Choose a photo</string>
+    <string name="share_photo_remove">Remove photo</string>
+    <string name="share_photo_hint">Photo of the moment: the app does not keep it, and the shared image contains no metadata (no location, no device).</string>
+    <string name="photo_stat_score">SCORE</string>
+    <string name="photo_stat_throws">THROWS</string>
+    <string name="photo_stat_round">ROUND</string>
 </resources>

@@ -1,11 +1,16 @@
 package com.yogistudio.molkkyboard.feature.share
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
@@ -89,6 +94,28 @@ class ShareCardsTest {
     private fun inThreeFormats(prefix: String, content: ShareContent, template: ShareTemplate) =
         captureAll(ShareFormat.entries.map { Shot("${prefix}_${it.name.lowercase()}", content, template, it) })
 
+    /** Fausse photo de terrain (ciel, pelouse, quilles) dessinée en mémoire : pas de fichier d'image de test. */
+    private fun fakePhoto(): ImageBitmap {
+        val bitmap = Bitmap.createBitmap(PHOTO_W, PHOTO_H, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val paint = Paint()
+        paint.color = 0xFF9EC7E6.toInt()
+        canvas.drawRect(0f, 0f, PHOTO_W.toFloat(), PHOTO_H * 0.45f, paint)
+        paint.color = 0xFF5E8A40.toInt()
+        canvas.drawRect(0f, PHOTO_H * 0.45f, PHOTO_W.toFloat(), PHOTO_H.toFloat(), paint)
+        paint.color = 0xFFE7D2AE.toInt()
+        listOf(0.38f, 0.46f, 0.54f, 0.62f).forEach { x ->
+            canvas.drawRect(PHOTO_W * x, PHOTO_H * 0.5f, PHOTO_W * (x + 0.05f), PHOTO_H * 0.58f, paint)
+        }
+        return bitmap.asImageBitmap()
+    }
+
+    @Test
+    fun photoTroisFormats() {
+        // N1 : photo du moment façon Strava.
+        inThreeFormats("photo", content(victory).copy(photo = fakePhoto()), ShareTemplate.PHOTO)
+    }
+
     @Test
     fun podiumTroisFormats() {
         inThreeFormats("podium", content(victory), ShareTemplate.PODIUM)
@@ -152,3 +179,6 @@ class ShareCardsTest {
         assertEquals(1920, image.height)
     }
 }
+
+private const val PHOTO_W = 900
+private const val PHOTO_H = 1200

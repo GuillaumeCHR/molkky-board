@@ -1,5 +1,6 @@
 package com.yogistudio.molkkyboard.feature.share
 
+import androidx.compose.ui.graphics.ImageBitmap
 import com.yogistudio.molkkyboard.core.data.GameSnapshot
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.targetFor
@@ -19,10 +20,13 @@ private const val SIDE = 1_080
 private const val STORY_HEIGHT = 1_920
 private const val PORTRAIT_HEIGHT = 1_350
 
-/** Modèles graphiques « Nordic Bold » ; le moment choisit le premier proposé. */
-enum class ShareTemplate { PODIUM, SCOREBOARD, HIGHLIGHT, OUCH }
+/**
+ * Modèles graphiques « Nordic Bold » ; le moment choisit le premier proposé. [PHOTO] n'apparaît qu'une fois une
+ * photo du moment choisie.
+ */
+enum class ShareTemplate { PODIUM, SCOREBOARD, HIGHLIGHT, OUCH, PHOTO }
 
-/** Une équipe sur la vignette : pseudo (ou « Joueur 2 » si masqué), couleur, emblème ou avatar emoji. */
+/** Une équipe sur la vignette : pseudo, couleur, emblème au trait (clé de `LineEmblems`). */
 data class ShareTeam(
     val id: TeamId,
     val name: String,
@@ -32,7 +36,10 @@ data class ShareTeam(
     val out: Boolean = false,
 )
 
-/** Tout ce qu'une vignette affiche. Aucune photo par défaut ; aucune donnée de localisation. */
+/**
+ * Tout ce qu'une vignette affiche. Aucune photo par défaut ; aucune donnée de localisation. [photo] : la photo du
+ * moment prise ou choisie par l'auteur (en mémoire seulement, jamais enregistrée par l'app).
+ */
 data class ShareContent(
     val moment: Moment,
     val teams: List<ShareTeam>,
@@ -43,6 +50,7 @@ data class ShareContent(
     val round: Int,
     val playedAt: Long,
     val place: String?,
+    val photo: ImageBitmap? = null,
 )
 
 /** Le modèle qui convient le mieux à un moment. */

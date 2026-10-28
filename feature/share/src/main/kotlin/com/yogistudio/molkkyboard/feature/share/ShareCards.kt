@@ -2,6 +2,7 @@ package com.yogistudio.molkkyboard.feature.share
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,7 +28,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -76,6 +80,7 @@ fun ShareCard(content: ShareContent, template: ShareTemplate, format: ShareForma
                     ShareTemplate.SCOREBOARD -> ScoreboardCard(content, format)
                     ShareTemplate.HIGHLIGHT -> HighlightCard(content, format)
                     ShareTemplate.OUCH -> OuchCard(content, format)
+                    ShareTemplate.PHOTO -> PhotoCard(content)
                 }
             }
         }
@@ -122,6 +127,94 @@ internal fun keyFigure(content: ShareContent): String =
         is Moment.ResetFrom49 -> stringResource(R.string.card_key_reset)
         is Moment.Eliminated -> stringResource(R.string.card_key_eliminated)
     }
+
+/**
+ * Photo du moment, façon Strava (N1, validé le 2026-10-28) : la photo plein cadre, un voile sombre en bas, le moment,
+ * l'équipe et ses chiffres en blanc, puis la date et le logotype, discret. Sans photo, un aplat vert forêt.
+ */
+@Composable
+private fun PhotoCard(content: ShareContent) {
+    val context = LocalContext.current
+    val date =
+        DateUtils.formatDateTime(
+            context,
+            content.playedAt,
+            DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_YEAR,
+        )
+    Box(Modifier.fillMaxSize().background(Forest)) {
+        content.photo?.let {
+            Image(
+                it,
+                contentDescription = null,
+                Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+        }
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.verticalGradient(
+                    PHOTO_VEIL_START to Color.Transparent,
+                    1f to Color.Black.copy(alpha = PHOTO_VEIL),
+                ),
+            ),
+        )
+        Column(
+            Modifier.align(Alignment.BottomStart).padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(momentTitle(content.moment), style = display(32.sp, Color.White).copy(shadow = PhotoShadow))
+            content.hero?.let {
+                Text(
+                    it.name,
+                    style = body(18.sp, Color.White, FontWeight.SemiBold).copy(shadow = PhotoShadow),
+                    maxLines = 1,
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(28.dp)) {
+                content.hero?.let { PhotoStat(stringResource(R.string.photo_stat_score), it.score) }
+                if (content.throws > 0) PhotoStat(stringResource(R.string.photo_stat_throws), content.throws)
+                PhotoStat(stringResource(R.string.photo_stat_round), content.round)
+            }
+            Text(
+                listOfNotNull(date, content.place).joinToString(" · "),
+                style = body(12.sp, Color.White.copy(alpha = PHOTO_SOFT_TEXT)).copy(shadow = PhotoShadow),
+            )
+            Box(
+                Modifier
+                    .background(
+                        Color.White.copy(alpha = PHOTO_LOGO_BACK),
+                        RoundedCornerShape(10.dp),
+                    ).padding(horizontal = 8.dp),
+            ) {
+                MolkkyBoardLogotype(fontSize = 20.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun PhotoStat(label: String, value: Int) {
+    Column {
+        Text(
+            label,
+            style =
+                body(
+                    10.sp,
+                    Color.White.copy(alpha = PHOTO_SOFT_TEXT),
+                    FontWeight.SemiBold,
+                ).copy(shadow = PhotoShadow),
+        )
+        Text(value.toString(), style = display(30.sp, Color.White).copy(shadow = PhotoShadow))
+    }
+}
+
+private const val PHOTO_VEIL_START = 0.3f
+private const val PHOTO_VEIL = 0.7f
+private const val PHOTO_SOFT_TEXT = 0.85f
+private const val PHOTO_LOGO_BACK = 0.92f
+
+// Ombre douce sous les textes blancs : lisibles même sur une photo claire (ciel, sable).
+private val PhotoShadow = Shadow(Color.Black.copy(alpha = 0.6f), Offset(0f, 2f), blurRadius = 8f)
 
 /** Signature systématique et discrète : « Comptez vos parties avec », logotype, date (et lieu s'il existe). */
 @Composable

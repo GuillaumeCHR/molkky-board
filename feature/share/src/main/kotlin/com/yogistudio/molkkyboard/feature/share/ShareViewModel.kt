@@ -1,5 +1,6 @@
 package com.yogistudio.molkkyboard.feature.share
 
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -50,6 +51,8 @@ data class ShareUiState(
     val moments: List<Moment> = emptyList(),
     val choices: ShareChoices = ShareChoices(),
     val avatars: Map<String, String> = emptyMap(),
+    /** Photo du moment, en mémoire seulement (jamais enregistrée). */
+    val photo: ImageBitmap? = null,
 ) {
     val moment: Moment? get() = moments.getOrNull(choices.momentIndex)
     val victory: Moment.Victory? get() = moments.filterIsInstance<Moment.Victory>().firstOrNull()
@@ -73,6 +76,7 @@ class ShareViewModel
     ) : ViewModel() {
         private val gameId: String = checkNotNull(savedStateHandle[GAME_ID])
         private val choices = MutableStateFlow(ShareChoices())
+        private val photo = MutableStateFlow<ImageBitmap?>(null)
 
         val state: StateFlow<ShareUiState> =
             combine(
@@ -80,7 +84,8 @@ class ShareViewModel
                 stats.summaries,
                 choices,
                 players.profiles.map { list -> list.mapNotNull { p -> p.avatar?.let { p.id to it } }.toMap() },
-            ) { snapshot, history, chosen, avatars ->
+                photo,
+            ) { snapshot, history, chosen, avatars, picture ->
                 val game = snapshot.toStatsGame()
                 val index = snapshot.currentSet.index
                 val added = summarize(game).firstOrNull { it.setIndex == index }
@@ -88,7 +93,7 @@ class ShareViewModel
                 val record = added != null && isNewRecord(previous, added)
                 // Un seul moment par type (quatre « 12 » d'une partie parfaite ne font qu'une vignette).
                 val distinct = moments(game, index, record).distinctBy { it.kind }
-                ShareUiState(false, snapshot, distinct, chosen, avatars)
+                ShareUiState(false, snapshot, distinct, chosen, avatars, picture)
             }.flowOn(Dispatchers.Default)
                 .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), ShareUiState())
 
@@ -97,6 +102,17 @@ class ShareViewModel
         fun selectTemplate(template: ShareTemplate) = choices.update { it.copy(template = template) }
 
         fun selectFormat(format: ShareFormat) = choices.update { it.copy(format = format) }
+
+        /** Photo du moment choisie : le modèle « Photo » s'affiche aussitôt. */
+        fun setPhoto(picture: ImageBitmap) {
+            photo.value = picture
+            choices.update { it.copy(template = ShareTemplate.PHOTO) }
+        }
+
+        fun removePhoto() {
+            photo.value = null
+            choices.update { it.copy(template = null) }
+        }
 
         fun editText(text: String) =
             choices.update {
