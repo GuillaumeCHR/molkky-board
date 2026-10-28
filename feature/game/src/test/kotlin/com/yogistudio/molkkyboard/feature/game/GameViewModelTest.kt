@@ -360,8 +360,11 @@ class GameViewModelTest {
                 assertEquals("Alice", (awaitItem() as GameEffect.Won).name)
                 vm.undo()
                 vm.awaitState { !it.finished }
+                // Lancers arrivés par le journal (comme d'un autre téléphone) : ils se jouent aussi.
                 play(1, 2, 3, 4, 5, 6, 7)
+                assertEquals(GameEffect.Validated("Alice", 7), awaitItem().withoutPins())
                 play(1)
+                assertEquals(GameEffect.Validated("Bruno", 1), awaitItem().withoutPins())
                 vm.awaitState { it.currentTeam?.name == "Alice" && it.teams.first().score == 45 }
                 vm.togglePin(12, true)
                 vm.awaitState { it.selection != Selection.None }
@@ -561,8 +564,16 @@ class GameViewModelTest {
             games.close(gameId)
             vm.gameEffects().test {
                 vm.correct(firstMiss, ThrowResult.Pins(listOf(3)))
-                assertEquals("Alice", (awaitItem() as GameEffect.EliminationCancelled).team.name)
-                assertEquals(GameEffect.Edited, awaitItem())
+                // « Corrigé » vient de l'action ; l'élimination défaite, du nouvel état (dans un ordre libre).
+                val received = listOf(awaitItem(), awaitItem())
+                assertTrue(GameEffect.Edited in received)
+                assertEquals(
+                    "Alice",
+                    received
+                        .filterIsInstance<GameEffect.EliminationCancelled>()
+                        .single()
+                        .team.name,
+                )
             }
             val state = vm.awaitState { !it.finished }
             assertEquals(3, state.teams.first { it.name == "Alice" }.score)
@@ -580,6 +591,7 @@ class GameViewModelTest {
                 assertEquals(GameEffect.OrderChanged, awaitItem())
                 assertEquals("Bruno", vm.awaitState { it.currentTeam?.name == "Bruno" }.currentTeam?.name)
                 play(3)
+                assertEquals(GameEffect.Validated("Bruno", 3), awaitItem().withoutPins())
                 assertEquals(false, vm.awaitState { it.currentTeam?.name == "Alice" }.betweenRounds)
                 // En plein tour : le nouvel ordre est prévu, puis appliqué dès la fin du tour.
                 vm.reorder(listOf(TeamId("A"), TeamId("B")))
@@ -685,4 +697,28 @@ class GameViewModelTest {
 
     /** Les quilles touchées accompagnent l'effet (envol) ; les autres tests ne regardent que le nom et les points. */
     private fun GameEffect.withoutPins(): GameEffect = (this as? GameEffect.Validated)?.copy(pins = emptySet()) ?: this
+
+    @Test
+    fun `un lancer venu d'ailleurs se joue comme un lancer saisi ici, mais rouvrir la partie ne rejoue rien`() =
+        runTest {
+            listOf(12, 12, 12).forEach {
+                play(it)
+                play(1)
+            }
+            // Alice à 38 : il lui faudra 12.
+            play(1, 2)
+            val vm = viewModel()
+            backgroundScope.launchCollect(vm)
+            vm.awaitState { it.currentTeam?.name == "Bruno" }
+            vm.gameEffects().test {
+                // Rien pour l'état déjà présent à l'ouverture.
+                expectNoEvents()
+                play(1)
+                play(12)
+                assertEquals(GameEffect.Validated("Bruno", 1), awaitItem().withoutPins())
+                assertEquals(GameEffect.Validated("Alice", 12), awaitItem().withoutPins())
+                assertEquals(GameEffect.Twelve(strike = false), awaitItem())
+                assertEquals("Alice", (awaitItem() as GameEffect.Won).name)
+            }
+        }
 }

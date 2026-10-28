@@ -136,6 +136,19 @@ class GameViewModel
                 )
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), GameUiState())
 
+        init {
+            // Les animations et annonces viennent du changement d'état observé, pas de l'action de cet écran : un
+            // lancer saisi sur un autre téléphone (partie à côté) se joue de la même façon. Le premier état sert de
+            // référence : rouvrir une partie ne rejoue rien.
+            viewModelScope.launch {
+                var previous: GameSnapshot? = null
+                snapshots.collect { current ->
+                    previous?.let { onChange(it, current) }
+                    previous = current
+                }
+            }
+        }
+
         private data class InputState(
             val selection: Selection,
             val mode: QuickPadMode,
@@ -195,42 +208,48 @@ class GameViewModel
             val chosen = selection.value
             val result = chosen.toResult(quickMode.value) ?: return
             viewModelScope.launch {
-                val before =
-                    games
-                        .observe(gameId)
-                        .first()
-                        ?.currentSet
-                        ?.replay
-                        ?.state ?: return@launch
-                val team = before.currentTeam ?: return@launch
-                val name =
-                    games
-                        .observe(gameId)
-                        .first()
-                        ?.team(team.id)
-                        ?.name ?: team.id.value
                 // La sélection est vidée avant l'écriture : le joueur suivant n'hérite jamais des quilles du précédent,
                 // même un instant. Elle revient si le moteur refuse le lancer.
                 selection.value = Selection.None
                 val outcome = games.append(gameId, Throw(EventId(ids.newId()), result))
-                if (outcome !is Outcome.Ok) {
-                    selection.value = chosen
-                    return@launch
-                }
-                val after = outcome.value.state
-                val points = result.points
-                effects.send(GameEffect.Validated(name, points, (result as? ThrowResult.Pins)?.pins.orEmpty().toSet()))
-                emitConsequences(before, after, team, result)
-                applyPendingOrder(after)
-                announceNext(
-                    before,
-                    games
-                        .observe(gameId)
-                        .first()
-                        ?.currentSet
-                        ?.replay
-                        ?.state ?: after,
+                if (outcome !is Outcome.Ok) selection.value = chosen
+            }
+        }
+
+        /** Nouvel état de la partie : effets du lancer ajouté, ou de la réécriture du journal (annulation…). */
+        private suspend fun onChange(before: GameSnapshot, after: GameSnapshot) {
+            // Nouvelle manche : rien à mettre en scène.
+            if (before.currentSet.index != after.currentSet.index) return
+            val old = before.currentSet.replay
+            val new = after.currentSet.replay
+            if (before.currentSet.log.size == after.currentSet.log.size) return
+            val appended =
+                new.effectiveLog.size == old.effectiveLog.size + 1 &&
+                    new.effectiveLog.subList(0, old.effectiveLog.size) == old.effectiveLog
+            if (appended) onPlayed(after, old.state, new.state, new.effectiveLog.last()) else reconcile(before, after)
+            syncClosed(after)
+        }
+
+        /** Événement ajouté en fin de journal (ici ou sur un autre téléphone) : lancer, faute, joueurs. */
+        private suspend fun onPlayed(snapshot: GameSnapshot, before: SetState, after: SetState, event: PlayEvent) {
+            val team = before.currentTeam
+            if (event is Throw && team != null) {
+                val result = event.result
+                val name = snapshot.team(team.id)?.name ?: team.id.value
+                effects.send(
+                    GameEffect.Validated(name, result.points, (result as? ThrowResult.Pins)?.pins.orEmpty().toSet()),
                 )
+                emitConsequences(snapshot, before, after, team, result)
+            } else {
+                // Une faute ou un départ peut aussi éliminer, ou désigner le vainqueur.
+                after.teams
+                    .filter { it.eliminated && before.team(it.id)?.eliminated != true }
+                    .forEach { eliminated(snapshot, after, it) }
+                if (after.status == SetStatus.FINISHED) celebrate(snapshot)
+            }
+            if (event is Throw) {
+                applyPendingOrder(after)
+                announceNext(before, after)
             }
         }
 
@@ -239,11 +258,16 @@ class GameViewModel
          * cible ne se célèbre pas (seul le retour en arrière est mis en scène) ; une élimination qui désigne un
          * vainqueur s'enchaîne avec la victoire.
          */
-        private suspend fun emitConsequences(before: SetState, after: SetState, team: TeamState, result: ThrowResult) {
+        private suspend fun emitConsequences(
+            snapshot: GameSnapshot,
+            before: SetState,
+            after: SetState,
+            team: TeamState,
+            result: ThrowResult,
+        ) {
             val updated = after.team(team.id) ?: return
             val points = result.points
             val overshoot = points > 0 && team.score + points > before.config.targetFor(team.id)
-            val snapshot = games.observe(gameId).first() ?: return
             if (points == TWELVE && !overshoot) {
                 effects.send(GameEffect.Twelve(strike = result.isStrike))
                 announce(Announcement.Twelve)
@@ -261,14 +285,15 @@ class GameViewModel
                 }
 
                 updated.eliminated && !team.eliminated -> {
-                    effects.send(
-                        GameEffect.Eliminated(snapshot.teamUi(updated, faces = avatars.value), after.config.missLimit),
-                    )
-                    announce(Announcement.Eliminated(snapshot.team(team.id)?.name ?: team.id.value))
+                    eliminated(snapshot, after, updated)
                 }
             }
             if (after.status == SetStatus.FINISHED) celebrate(snapshot)
-            syncClosed(snapshot)
+        }
+
+        private suspend fun eliminated(snapshot: GameSnapshot, after: SetState, team: TeamState) {
+            effects.send(GameEffect.Eliminated(snapshot.teamUi(team, faces = avatars.value), after.config.missLimit))
+            announce(Announcement.Eliminated(snapshot.team(team.id)?.name ?: team.id.value))
         }
 
         /** Victoire en direct : animation, record éventuel (comparé à l'historique d'avant la partie), annonce. */
@@ -351,8 +376,7 @@ class GameViewModel
                 val last =
                     snapshot.currentSet.replay.effectiveLog
                         .lastOrNull() ?: return@launch
-                val outcome = games.append(gameId, Undo(EventId(ids.newId()), last.id))
-                if (outcome is Outcome.Ok) reconcile(snapshot, outcome.value.state)
+                games.append(gameId, Undo(EventId(ids.newId()), last.id))
                 selection.value = Selection.None
             }
         }
@@ -366,16 +390,9 @@ class GameViewModel
 
         private fun edit(event: SetEvent) {
             viewModelScope.launch {
-                val snapshot = games.observe(gameId).first() ?: return@launch
                 when (val outcome = games.append(gameId, event)) {
-                    is Outcome.Err -> {
-                        effects.send(GameEffect.EditRefused(outcome.error))
-                    }
-
-                    is Outcome.Ok -> {
-                        reconcile(snapshot, outcome.value.state)
-                        effects.send(GameEffect.Edited)
-                    }
+                    is Outcome.Err -> effects.send(GameEffect.EditRefused(outcome.error))
+                    is Outcome.Ok -> effects.send(GameEffect.Edited)
                 }
             }
         }
@@ -385,11 +402,10 @@ class GameViewModel
          * referme) ou se clôt si elle apparaît ; une élimination défaite se rejoue à l'envers, une nouvelle victoire
          * est célébrée.
          */
-        private suspend fun reconcile(snapshot: GameSnapshot, after: SetState) {
+        private suspend fun reconcile(snapshot: GameSnapshot, updated: GameSnapshot) {
             val before = snapshot.currentSet.replay.state
+            val after = updated.currentSet.replay.state
             val finished = after.status == SetStatus.FINISHED
-            val updated = games.observe(gameId).first() ?: return
-            syncClosed(updated)
             after.teams
                 .filter { !it.eliminated && before.team(it.id)?.eliminated == true }
                 .forEach {
@@ -486,7 +502,6 @@ class GameViewModel
 
                     is Outcome.Ok -> {
                         effects.send(GameEffect.PlayerLeft(snapshot.playerName(player)))
-                        reconcile(snapshot, outcome.value.state)
                     }
                 }
             }
