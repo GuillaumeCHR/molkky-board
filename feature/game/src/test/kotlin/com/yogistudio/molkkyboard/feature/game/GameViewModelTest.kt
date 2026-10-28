@@ -139,7 +139,8 @@ class GameViewModelTest {
             assertTrue(preview.canValidate)
             vm.gameEffects().test {
                 vm.validate()
-                assertEquals(GameEffect.Validated("Alice", 7), awaitItem())
+                // N2 : la quille touchée accompagne l'effet, pour s'envoler de la grille.
+                assertEquals(setOf(7), (awaitItem() as GameEffect.Validated).pins)
             }
             val after = vm.awaitState { it.currentTeam?.name == "Bruno" }
             assertEquals(7, after.teams.first { it.name == "Alice" }.score)
@@ -228,7 +229,7 @@ class GameViewModelTest {
             assertEquals(PreviewKind.OVERSHOOT, vm.awaitState { it.selection != Selection.None }.preview.kind)
             vm.gameEffects().test {
                 vm.validate()
-                assertEquals(GameEffect.Validated("Alice", 9), awaitItem())
+                assertEquals(GameEffect.Validated("Alice", 9), awaitItem().withoutPins())
                 val overshoot = awaitItem() as GameEffect.Overshoot
                 assertEquals(25, overshoot.resetTo)
                 // C'est le joueur qui a dépassé qui est mis en scène, pas le suivant.
@@ -250,7 +251,7 @@ class GameViewModelTest {
             assertEquals(PreviewKind.WIN, vm.awaitState { it.selection != Selection.None }.preview.kind)
             vm.gameEffects().test {
                 vm.validate()
-                assertEquals(GameEffect.Validated("Alice", 5), awaitItem())
+                assertEquals(GameEffect.Validated("Alice", 5), awaitItem().withoutPins())
                 assertEquals("Alice", (awaitItem() as GameEffect.Won).name)
             }
             val finished = vm.awaitState { it.finished }
@@ -324,13 +325,13 @@ class GameViewModelTest {
                 vm.togglePin(12, true)
                 vm.awaitState { it.selection != Selection.None }
                 vm.validate()
-                assertEquals(GameEffect.Validated("Alice", 12), awaitItem())
+                assertEquals(GameEffect.Validated("Alice", 12), awaitItem().withoutPins())
                 assertEquals(GameEffect.Twelve(strike = false), awaitItem())
                 vm.awaitState { it.currentTeam?.name == "Bruno" }
                 (1..12).forEach { vm.togglePin(it, true) }
                 vm.awaitState { (it.selection as? Selection.Pins)?.pins?.size == 12 }
                 vm.validate()
-                assertEquals(GameEffect.Validated("Bruno", 12), awaitItem())
+                assertEquals(GameEffect.Validated("Bruno", 12), awaitItem().withoutPins())
                 assertEquals(GameEffect.Twelve(strike = true), awaitItem())
             }
         }
@@ -350,7 +351,7 @@ class GameViewModelTest {
                 vm.togglePin(12, true)
                 vm.awaitState { it.selection != Selection.None }
                 vm.validate()
-                assertEquals(GameEffect.Validated("Alice", 12), awaitItem())
+                assertEquals(GameEffect.Validated("Alice", 12), awaitItem().withoutPins())
                 assertEquals(GameEffect.Twelve(strike = false), awaitItem())
                 assertEquals("Alice", (awaitItem() as GameEffect.Won).name)
                 vm.undo()
@@ -361,7 +362,7 @@ class GameViewModelTest {
                 vm.togglePin(12, true)
                 vm.awaitState { it.selection != Selection.None }
                 vm.validate()
-                assertEquals(GameEffect.Validated("Alice", 12), awaitItem())
+                assertEquals(GameEffect.Validated("Alice", 12), awaitItem().withoutPins())
                 val overshoot = awaitItem() as GameEffect.Overshoot
                 assertEquals(25, overshoot.resetTo)
                 // C'est le joueur qui a dépassé qui est mis en scène, pas le suivant.
@@ -384,7 +385,7 @@ class GameViewModelTest {
                 vm.toggleMiss()
                 assertEquals(PreviewKind.ELIMINATION, vm.awaitState { it.selection == Selection.Miss }.preview.kind)
                 vm.validate()
-                assertEquals(GameEffect.Validated("Alice", 0), awaitItem())
+                assertEquals(GameEffect.Validated("Alice", 0), awaitItem().withoutPins())
                 val eliminated = awaitItem() as GameEffect.Eliminated
                 assertEquals("Alice", eliminated.team.name)
                 assertEquals(3, eliminated.missLimit)
@@ -522,7 +523,7 @@ class GameViewModelTest {
             vm.awaitState { it.selection != Selection.None }
             vm.gameEffects().test {
                 vm.validate()
-                assertEquals(GameEffect.Validated("Alice", 5), awaitItem())
+                assertEquals(GameEffect.Validated("Alice", 5), awaitItem().withoutPins())
                 assertEquals("Alice", (awaitItem() as GameEffect.Won).name)
                 val finished = vm.awaitState { it.finished }
                 // La partie est close juste après la victoire.
@@ -581,7 +582,7 @@ class GameViewModelTest {
                 vm.togglePin(4, true)
                 vm.awaitState { it.selection != Selection.None }
                 vm.validate()
-                assertEquals(GameEffect.Validated("Alice", 4), awaitItem())
+                assertEquals(GameEffect.Validated("Alice", 4), awaitItem().withoutPins())
                 assertEquals(GameEffect.OrderChanged, awaitItem())
             }
             val state = vm.awaitState { it.round == 2 && it.pendingOrder == null && it.currentTeam?.name == "Alice" }
@@ -675,4 +676,7 @@ class GameViewModelTest {
 
         override suspend fun recordLaunch() = settings.value
     }
+
+    /** Les quilles touchées accompagnent l'effet (envol) ; les autres tests ne regardent que le nom et les points. */
+    private fun GameEffect.withoutPins(): GameEffect = (this as? GameEffect.Validated)?.copy(pins = emptySet()) ?: this
 }

@@ -163,6 +163,18 @@ class GameScreenshotTest {
     }
 
     @Test
+    fun envolDesQuillesTouchees() {
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            MolkkyBoardTheme(reducedMotion = false) {
+                GameContent(playing, GameActions(), flight = ThrowFlightShow(setOf(3, 10, 4), key = 1))
+            }
+        }
+        compose.mainClock.advanceTimeBy(FLIGHT_FRAME_MS)
+        compose.onRoot().captureRoboImage("src/test/screenshots/envol_lancer.png")
+    }
+
+    @Test
     fun douzeQuilleSeule() =
         capture(
             "douze_quille_seule",
@@ -377,3 +389,5 @@ private const val VICTORY_BURST_MS = 350L
 private const val VICTORY_NAME_MS = 1_600L
 
 private const val STRIKE_FRAME_MS = 260L
+
+private const val FLIGHT_FRAME_MS = 150L

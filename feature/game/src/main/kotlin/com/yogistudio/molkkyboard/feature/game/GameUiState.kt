@@ -167,6 +167,8 @@ sealed interface GameEffect {
     data class Validated(
         val name: String,
         val points: Int,
+        /** Quilles touchées (mode « Quilles ») : elles s'envolent ; vide en saisie rapide ou sur un raté. */
+        val pins: Set<Int> = emptySet(),
     ) : GameEffect
 
     /** Dépassement de la cible par [team] : de [from] points (au-delà de la cible), retour au score [resetTo]. */

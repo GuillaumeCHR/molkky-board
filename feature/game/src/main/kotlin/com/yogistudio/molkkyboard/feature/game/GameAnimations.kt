@@ -106,7 +106,14 @@ fun TwelveOverlay(
         )
     }
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        if (!reduced) FlyingPins(show.strike, elapsed)
+        if (!reduced) {
+            FlyingPins(
+                numbers = if (show.strike) FORMATION.keys.toList() else listOf(TWELVE),
+                far = if (show.strike) FAR_PINS else emptySet(),
+                elapsed = elapsed,
+                impact = true,
+            )
+        }
         AnimatedVisibility(visible = true, enter = fadeIn()) {
             ImpactBurst(
                 text = stringResource(R.string.game_twelve),
@@ -133,22 +140,71 @@ private class FlyingPin(
     val far: Boolean,
 )
 
+/** Envol des quilles d'un lancer ordinaire ; [key] distingue deux lancers successifs. */
+data class ThrowFlightShow(
+    val pins: Set<Int>,
+    val key: Int,
+)
+
+/**
+ * Petite animation à chaque lancer validé (≈ 0,45 s) : les quilles touchées s'envolent hors de la grille, sans
+ * éclat ni bulle (le « 12 » garde la sienne). Ne capte aucun tap : la saisie suivante n'attend pas.
+ * Rien avec « Réduire les animations ».
+ */
 @Composable
-private fun FlyingPins(strike: Boolean, elapsed: Float) {
+fun ThrowFlightOverlay(
+    show: ThrowFlightShow?,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (show == null || show.pins.isEmpty()) return
+    if (MolkkyBoardTheme.reducedMotion) {
+        LaunchedEffect(show) { onDone() }
+        return
+    }
+    var elapsed by remember(show) { mutableFloatStateOf(0f) }
+    LaunchedEffect(show) {
+        val start = withFrameNanos { it }
+        var now = start
+        while (now - start < FLIGHT_DURATION_NS) {
+            now = withFrameNanos { it }
+            elapsed = (now - start) / NANOS_PER_SECOND
+        }
+        onDone()
+    }
+    Box(modifier.fillMaxSize()) {
+        FlyingPins(
+            numbers = show.pins.sorted(),
+            far = emptySet(),
+            elapsed = elapsed * FLIGHT_SPEEDUP,
+            impact = false,
+            pinScale = FLIGHT_PIN_SCALE,
+        )
+    }
+}
+
+@Composable
+private fun FlyingPins(
+    numbers: List<Int>,
+    far: Set<Int>,
+    elapsed: Float,
+    impact: Boolean,
+    pinScale: Float = 1f,
+) {
     val colors = MolkkyBoardTheme.colors
     val measurer = rememberTextMeasurer()
     val numberStyle = MolkkyBoardTheme.typography.pinNumber.copy(color = colors.pinNumber)
     val labels = remember(measurer) { (1..TWELVE).associateWith { measurer.measure(it.toString(), numberStyle) } }
-    val pins = remember(strike) { flyingPins(strike) }
+    val pins = remember(numbers, far) { flyingPins(numbers, far) }
     Canvas(Modifier.fillMaxSize()) {
         val side = size.minDimension * FORMATION_RATIO
         val origin = Offset((size.width - side) / 2f, (size.height - side) / 2f)
         // Image d'impact figée : un seul éclat safran (pas de flash répété, critère WCAG 2.3.1).
-        if (elapsed < FREEZE_S) drawImpactFlash(colors)
-        if (elapsed < SPEED_LINES_S) drawSpeedLines(colors, 1f - elapsed / SPEED_LINES_S)
-        val t = (elapsed - FREEZE_S).coerceAtLeast(0f)
+        if (impact && elapsed < FREEZE_S) drawImpactFlash(colors)
+        if (impact && elapsed < SPEED_LINES_S) drawSpeedLines(colors, 1f - elapsed / SPEED_LINES_S)
+        val t = if (impact) (elapsed - FREEZE_S).coerceAtLeast(0f) else elapsed
         pins.forEach { pin ->
-            val scale = if (pin.far) (1f - t * FAR_SHRINK).coerceAtLeast(0f) else 1f
+            val scale = pinScale * if (pin.far) (1f - t * FAR_SHRINK).coerceAtLeast(0f) else 1f
             val cx = origin.x + side * (pin.start.x + pin.velocity.x * t)
             val cy = origin.y + side * (pin.start.y + pin.velocity.y * t + GRAVITY * t * t)
             if (scale > SPARKLE_SCALE) {
@@ -236,12 +292,11 @@ private val FORMATION =
     )
 
 /** Trajectoires déterministes (graine fixe) : les captures restent stables. */
-private fun flyingPins(strike: Boolean): List<FlyingPin> {
+private fun flyingPins(numbers: List<Int>, farPins: Set<Int>): List<FlyingPin> {
     val random = Random(SEED)
-    val numbers = if (strike) FORMATION.keys.toList() else listOf(TWELVE)
-    return numbers.map { number ->
+    return numbers.filter { it in FORMATION }.map { number ->
         val (x, y) = FORMATION.getValue(number)
-        val far = strike && number in FAR_PINS
+        val far = number in farPins
         // Le mölkky arrive d'en bas : les quilles partent vers le haut et les côtés.
         val jitter = random.nextFloat() - HALF
         val angle = if (far) UP else UP + (x - HALF) * PI * SPREAD + jitter * JITTER
@@ -410,6 +465,13 @@ private const val SPEED_GROUPS = 3
 private val FAR_PINS = setOf(9, 11)
 private const val NANOS_PER_SECOND = 1_000_000_000f
 private const val TWELVE_DURATION_NS = 1_000_000_000L
+private const val FLIGHT_DURATION_NS = 450_000_000L
+
+// L'envol d'un lancer ordinaire va plus vite que celui du « 12 ! » : les quilles sortent en 0,45 s.
+private const val FLIGHT_SPEEDUP = 1.6f
+
+// Les quilles volantes ont la taille de celles de la grille, qu'elles quittent.
+private const val FLIGHT_PIN_SCALE = 1.3f
 private const val FREEZE_MS = 60L
 private const val FREEZE_S = 0.06f
 private const val SPEED_LINES_S = 0.45f

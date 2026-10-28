@@ -218,7 +218,7 @@ class GameViewModel
                 }
                 val after = outcome.value.state
                 val points = result.points
-                effects.send(GameEffect.Validated(name, points))
+                effects.send(GameEffect.Validated(name, points, (result as? ThrowResult.Pins)?.pins.orEmpty().toSet()))
                 emitConsequences(before, after, team, result)
                 applyPendingOrder(after)
                 announceNext(

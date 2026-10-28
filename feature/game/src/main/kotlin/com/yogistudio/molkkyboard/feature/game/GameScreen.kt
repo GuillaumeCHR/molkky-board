@@ -165,6 +165,7 @@ fun GameScreen(
     val scope = rememberCoroutineScope()
     var overshoot by remember { mutableStateOf<OvershootShow?>(null) }
     var twelve by remember { mutableStateOf<TwelveShow?>(null) }
+    var flight by remember { mutableStateOf<ThrowFlightShow?>(null) }
     var elimination by remember { mutableStateOf<EliminationShow?>(null) }
     var victory by remember { mutableStateOf<VictoryShow?>(null) }
     val voice = state.voice
@@ -188,6 +189,7 @@ fun GameScreen(
             when (effect) {
                 is GameEffect.Validated -> {
                     scope.launch { showValidated(snackbar, context, effect, viewModel::undo) }
+                    flight = ThrowFlightShow(effect.pins, ++animationKey)
                 }
 
                 is GameEffect.Overshoot -> {
@@ -213,6 +215,8 @@ fun GameScreen(
 
                 is GameEffect.Twelve -> {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    // Le « 12 ! » a son propre envol : il remplace celui du lancer ordinaire.
+                    flight = null
                     twelve = TwelveShow(effect.strike, ++animationKey)
                     currentSounds?.play(Sound.TWELVE)
                 }
@@ -296,6 +300,8 @@ fun GameScreen(
         onOvershootShown = { overshoot = null },
         twelve = twelve,
         onTwelveDone = { twelve = null },
+        flight = flight,
+        onFlightDone = { flight = null },
         elimination = elimination,
         onEliminationDone = { elimination = null },
         victory = victory,
@@ -364,6 +370,8 @@ fun GameContent(
     onOvershootShown: () -> Unit = {},
     twelve: TwelveShow? = null,
     onTwelveDone: () -> Unit = {},
+    flight: ThrowFlightShow? = null,
+    onFlightDone: () -> Unit = {},
     elimination: EliminationShow? = null,
     onEliminationDone: () -> Unit = {},
     victory: VictoryShow? = null,
@@ -396,9 +404,16 @@ fun GameContent(
                 // Pendant « 12 ! », les quilles de la grille s'effacent (elles s'envolent) puis reviennent en fondu.
                 val pinsAlpha by animateFloatAsState(if (twelve != null) TWELVE_PINS_ALPHA else 1f, label = "pins")
                 Box(Modifier.weight(1f).fillMaxWidth()) {
-                    InputArea(state, actions, Modifier.fillMaxSize().alpha(pinsAlpha).guideAnchor(anchors, GUIDE_INPUT))
+                    InputArea(
+                        state,
+                        actions,
+                        Modifier.fillMaxSize().alpha(pinsAlpha).guideAnchor(anchors, GUIDE_INPUT),
+                        // Pendant l'envol, les quilles touchées quittent la grille, puis reviennent avec un rebond.
+                        flying = flight?.pins.orEmpty(),
+                    )
                     // Les quilles s'envolent depuis la grille ; la bulle claque au centre de la zone de saisie.
                     TwelveOverlay(twelve, onTwelveDone)
+                    ThrowFlightOverlay(flight, onFlightDone)
                 }
                 ActionButtons(state, actions, anchors)
             }
@@ -457,7 +472,12 @@ private fun GameSheets(
 
 /** Grille de quilles ou pavé rapide, selon le mode de saisie. */
 @Composable
-private fun InputArea(state: GameUiState, actions: GameActions, modifier: Modifier) {
+private fun InputArea(
+    state: GameUiState,
+    actions: GameActions,
+    modifier: Modifier,
+    flying: Set<Int> = emptySet(),
+) {
     Box(modifier.padding(horizontal = MBDimens.ScreenPadding), contentAlignment = Alignment.Center) {
         when (state.inputMode) {
             InputMode.PINS -> {
@@ -465,6 +485,7 @@ private fun InputArea(state: GameUiState, actions: GameActions, modifier: Modifi
                     knocked = (state.selection as? Selection.Pins)?.pins.orEmpty(),
                     onToggle = actions.onTogglePin,
                     enabled = !state.finished,
+                    visible = if (flying.isEmpty()) null else ALL_PINS - flying,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -811,6 +832,7 @@ private fun OvershootSticker(show: OvershootShow?, onShown: () -> Unit, modifier
     }
 }
 
+private val ALL_PINS = (1..12).toSet()
 private const val DOUBLE_VIBRATION_GAP_MS = 180L
 private const val TWELVE_PINS_ALPHA = 0.1f
 private const val STICKER_MS = 1_400L
