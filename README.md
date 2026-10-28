@@ -95,7 +95,8 @@ Documentation : [règles](docs/RULES.md) · [moteur de score](docs/SCORING_SPEC.
 | **Typographies** | Bricolage Grotesque (Mathieu Triay) et Inter (Rasmus Andersson), SIL Open Font License 1.1 |
 | **Matériel de test** | un PC portable vaillant sous Zorin OS et son émulateur Android ; aucun PC n'a été blessé, presque |
 
-Construite avec des bibliothèques open source, listées dans l'app (À propos › Bibliothèques open source).
+Construite avec des bibliothèques open source (Apache 2.0, MIT, BSD), listées dans l'app (À propos › Bibliothèques
+open source).
 
 | Statistiques de production | |
 |---|---|
@@ -112,3 +113,15 @@ des règles officielles. Mölkky® est une marque de Tactic Games Oy ; Molkky Bo
 indépendante, ni affiliée ni approuvée par le détenteur de la marque.
 
 Aucun arbre n'a été abattu pour réaliser cette application.
+
+## Licence
+
+Copyright © 2026 Yogi Studio.
+
+Molkky Board est un logiciel libre : vous pouvez le redistribuer et le modifier selon les termes de la
+**[GNU General Public License v3](LICENSE)** (ou toute version ultérieure), publiée par la Free Software
+Foundation. Il est distribué dans l'espoir d'être utile, mais **sans aucune garantie**. Toute version
+redistribuée, modifiée ou non, doit rester sous GPL v3 et publier son code source.
+
+Les noms « Molkky Board » et « Yogi Studio », leurs logos et l'icône de l'application ne sont pas couverts par la
+licence : voir [`TRADEMARKS.md`](TRADEMARKS.md).
