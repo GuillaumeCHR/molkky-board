@@ -1687,3 +1687,7 @@ et tiens-la à jour jusqu'à la publication.
 ### Spécification du 2026-10-28 (soir) — « Modes de jeu »
 - 2026-10-28 — Nouvelle version fournie (`01-specifications-molkky-board.md`, copiée aussi dans `prompt-molkky.md`, et `02-journal-decisions.md`). Ses 8 modifications sont reportées dans la spec de ce fichier **sans écraser les ajustements « retour du test »** : mölkkout officiel en phase 1, deux familles (options de règles / modes de jeu), interface `GameMode` en phase 2, `WELCOME` avec mode, version et options, fiches de modes dans le guide des règles, victoires tous modes avec filtre, section « Modes de jeu (variantes) — après la V1 », backlog.
 - **En attente** : audit du socle (étape 1), puis adaptation (étape A) sur accord ; modes (étape B) seulement sur « go étape B ». Priorités des modes non validées.
+
+### Publication (décisions du 2026-10-28)
+- 2026-10-28 — **Version 0.8.0 (build 8)** : partie à côté fusionnée sur `main` (avance rapide), tag `v0.8.0`, pré-version GitHub avec l'APK de debug. Release minifiée (R8) construite sans erreur ; pas encore signée (clé d'envoi à créer). Procédure dans `docs/RELEASE.md`.
+- 2026-10-28 — **Validé** : **phase 4 (comptes, jeu à distance, groupes) reportée en V2** — la V1 publiée est sans compte (ni suppression de compte, ni compte de démonstration, ni hébergeur) ; **modes de jeu après la publication** ; vérification de la marque « Mölkky » avant l'envoi, avec un nom de repli.
