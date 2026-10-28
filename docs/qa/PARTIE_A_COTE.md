@@ -1,4 +1,4 @@
-# Plan de test sur téléphones — Partie à côté, version 0.7.0 (2026-10-28)
+# Plan de test sur téléphones — Partie à côté, version 0.8.0 (2026-10-28)
 
 Première partie à plusieurs téléphones, sans serveur ni Internet (phase 3 bis). Il faut **deux téléphones** :
 l'**hôte** (Fairphone 6, celui de l'organisateur) et l'**invité** (Galaxy S23). Un troisième téléphone est un plus
@@ -15,8 +15,8 @@ sans les vider.
 
 ## 0. Préparation
 - Branche les deux téléphones en USB (débogage USB activé), puis `! adb devices -l` : je repère lequel est lequel.
-- Installe la 0.7.0 sur chacun : `! adb -s <numéro> install -r app/build/outputs/apk/debug/app-debug.apk`
-  (À propos › Version 0.7.0). Je peux le faire pour toi une fois les deux téléphones visibles.
+- Installe la 0.8.0 sur chacun : `! adb -s <numéro> install -r app/build/outputs/apk/debug/app-debug.apk`
+  (À propos › Version 0.8.0). Je peux le faire pour toi une fois les deux téléphones visibles.
 - Les deux téléphones en vibreur, Wi-Fi activé. Sur l'invité, laisse les données mobiles activées (elles ne doivent
   pas servir : c'est vérifié par les journaux).
 - Sur l'hôte : une partie à 3 joueurs, par exemple Léa, Tom et Max, puis lance-la.
