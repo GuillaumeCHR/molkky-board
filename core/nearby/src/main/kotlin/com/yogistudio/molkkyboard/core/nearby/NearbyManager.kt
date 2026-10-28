@@ -14,6 +14,7 @@ import com.yogistudio.molkkyboard.core.data.NearbyRouter
 import com.yogistudio.molkkyboard.core.data.PlayerRepository
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.scoring.Fault
+import com.yogistudio.molkkyboard.core.scoring.SetStatus
 import com.yogistudio.molkkyboard.core.scoring.Throw
 import com.yogistudio.molkkyboard.core.sync.CommandOutcome
 import com.yogistudio.molkkyboard.core.sync.ConnectionId
@@ -38,8 +39,11 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -72,6 +76,35 @@ enum class NearbyError {
     WRONG_HOST,
 }
 
+/** Ce qui arrive aux autres téléphones, annoncé à l'écran (« Tristan s'est déconnecté »…). */
+sealed interface NearbyNotice {
+    /** Hôte : l'invité a quitté la partie de lui-même. */
+    data class GuestLeft(
+        val name: String,
+    ) : NearbyNotice
+
+    /** Hôte : connexion perdue avec l'invité (il revient tout seul s'il le peut). */
+    data class GuestOffline(
+        val name: String,
+    ) : NearbyNotice
+
+    /** Hôte : l'invité est de retour. */
+    data class GuestBack(
+        val name: String,
+    ) : NearbyNotice
+
+    /** Invité : l'organisateur a déconnecté ce téléphone. */
+    data object RemovedByHost : NearbyNotice
+
+    /** Invité : l'organisateur a arrêté le partage. */
+    data object SharingStopped : NearbyNotice
+
+    /** Partie terminée ou abandonnée : le partage s'arrête tout seul ([host] : sur le téléphone de l'organisateur). */
+    data class GameOver(
+        val host: Boolean,
+    ) : NearbyNotice
+}
+
 /** Ce que les écrans « Inviter » et « Rejoindre », et la pastille de l'écran de jeu, affichent. */
 data class NearbyState(
     val role: NearbyRole = NearbyRole.NONE,
@@ -86,6 +119,8 @@ data class NearbyState(
     val rejection: JoinRejection? = null,
     val connected: Boolean = false,
     val error: NearbyError? = null,
+    /** Invité : joueur dont ce téléphone saisit les lancers. */
+    val player: String? = null,
 ) {
     /** Téléphones connectés à la partie, ce téléphone compris. */
     val phones: Int get() = 1 + guestsOnline
@@ -131,6 +166,11 @@ class NearbyManager
         private var network: Network? = null
         private var reconnect: Job? = null
         private var renewal: Job? = null
+        private var ending: Job? = null
+        private val noticeFlow = MutableSharedFlow<NearbyNotice>(extraBufferCapacity = NOTICE_BUFFER)
+
+        /** Événements à annoncer à l'écran (départs, exclusions, fin du partage). */
+        val notices: SharedFlow<NearbyNotice> = noticeFlow.asSharedFlow()
         private val waiters = HashMap<String, CompletableDeferred<CommandOutcome>>()
 
         // ---- Hôte ----
@@ -165,6 +205,7 @@ class NearbyManager
                                 onText = { id, text -> scope.launch { onHostText(id, text) } },
                                 onClosed = { id ->
                                     scope.launch {
+                                        guestOn(id)?.let { noticeFlow.tryEmit(NearbyNotice.GuestOffline(it)) }
                                         host?.disconnected(id)
                                         publishHost()
                                     }
@@ -191,6 +232,7 @@ class NearbyManager
                 mutable.update { it.copy(starting = false, ssid = spot?.ssid) }
                 publishHost()
                 renewal = renewInvitesForever()
+                ending = stopWhenGameCloses(gameId)
             }
         }
 
@@ -236,7 +278,13 @@ class NearbyManager
                 server?.close(connection)
                 return
             }
+            val before = guestOn(connection)
             dispatch(session.receive(connection, message))
+            when (message) {
+                Message.Leave -> before?.let { noticeFlow.tryEmit(NearbyNotice.GuestLeft(it)) }
+                is Message.Resume -> guestOn(connection)?.let { noticeFlow.tryEmit(NearbyNotice.GuestBack(it)) }
+                else -> Unit
+            }
             // Le jeton vient de servir : le QR code suivant en porte un nouveau.
             if (message is Message.JoinRequest) invite = invite?.copy(token = session.newInvite())
             publishHost()
@@ -360,7 +408,10 @@ class NearbyManager
         private suspend fun onGuestText(text: String) {
             val session = guest ?: return
             val message = decodeMessage(text) ?: return
+            val wasPlaying = session.status == GuestStatus.PLAYING
             session.receive(message).forEach { send(it) }
+            if (wasPlaying && session.status == GuestStatus.REMOVED) noticeFlow.tryEmit(NearbyNotice.RemovedByHost)
+            if (wasPlaying && session.status == GuestStatus.ENDED) noticeFlow.tryEmit(endNotice())
             // Réponses aux propositions de ce téléphone.
             session.outcomes.keys.toList().forEach { id ->
                 session.outcomes.remove(id)?.let { waiters.remove(id)?.complete(it) }
@@ -369,6 +420,7 @@ class NearbyManager
                 it.copy(
                     gameId = store?.gameId,
                     guestStatus = session.status,
+                    player = session.player?.value,
                     rejection = session.rejection,
                     starting = session.status == GuestStatus.CONNECTING,
                 )
@@ -429,7 +481,7 @@ class NearbyManager
                     }
 
                     guestSession != null -> {
-                        val proposal = guestSession.propose(command.withPlayer(guestSession.player))
+                        val proposal = guestSession.propose(command)
                         val waiter = CompletableDeferred<CommandOutcome>()
                         waiters[proposal.id] = waiter
                         send(proposal)
@@ -443,26 +495,44 @@ class NearbyManager
                 }
             }
 
-        /** Un invité ne lance que pour le joueur de son téléphone : son nom est inscrit sur ses lancers et fautes. */
-        private fun GameCommand.withPlayer(player: PlayerId?): GameCommand {
-            if (player == null || this !is GameCommand.Play) return this
-            val event =
-                when (val e = event) {
-                    is Throw -> if (e.by == null) e.copy(by = player) else e
-                    is Fault -> if (e.by == null) e.copy(by = player) else e
-                    else -> e
-                }
-            return copy(event = event)
-        }
-
         // ---- Fin ----
 
-        /** Arrête le partage (hôte) ou quitte la partie (invité). La partie reste dans l'historique. */
-        fun stop() = scope.launch { stopAll() }
+        /** Arrêt du partage (hôte), ou départ de la partie (invité : l'hôte en est prévenu). */
+        fun stop() =
+            scope.launch {
+                if (guest?.status == GuestStatus.PLAYING) send(Message.Leave)
+                stopAll()
+            }
+
+        /** Invité : fin du partage parce que la partie est finie, ou parce que l'organisateur l'a arrêté. */
+        private suspend fun endNotice(): NearbyNotice {
+            val game = store?.gameId?.let { games.observe(it).first() }
+            val over =
+                game != null &&
+                    (
+                        game.closedAt != null || game.abandoned ||
+                            game.currentSet.replay.state.status == SetStatus.FINISHED
+                    )
+            return if (over) NearbyNotice.GameOver(host = false) else NearbyNotice.SharingStopped
+        }
+
+        /** Partie terminée ou abandonnée : fin du partage, les invités sont prévenus (`GAME_ENDED`). */
+        private fun stopWhenGameCloses(gameId: String): Job =
+            scope.launch {
+                games.observe(gameId).first { it == null || it.closedAt != null }
+                noticeFlow.tryEmit(NearbyNotice.GameOver(host = true))
+                stopAll()
+            }
+
+        /** Pseudo de l'invité accepté sur cette connexion. */
+        private fun guestOn(connection: ConnectionId): String? =
+            host?.guests?.firstOrNull { it.connection == connection }?.nickname
 
         private fun stopAll() {
             renewal?.cancel()
             renewal = null
+            ending?.cancel()
+            ending = null
             host?.let { dispatch(it.end()) }
             server?.let { runCatching { it.stop(STOP_TIMEOUT_MS) } }
             if (server != null) PartyCertificate.delete()
@@ -501,6 +571,7 @@ class NearbyManager
         private companion object {
             val FINAL = setOf(GuestStatus.REJECTED, GuestStatus.REMOVED, GuestStatus.ENDED)
             const val ADDRESS_TRIES = 20
+            const val NOTICE_BUFFER = 8
             const val ADDRESS_DELAY_MS = 250L
             const val RECONNECT_DELAY_MS = 2_000L
             const val ANSWER_TIMEOUT_MS = 10_000L

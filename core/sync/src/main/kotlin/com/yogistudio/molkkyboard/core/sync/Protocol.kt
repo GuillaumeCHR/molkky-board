@@ -107,6 +107,11 @@ sealed interface Message {
     @SerialName("device_removed")
     data object DeviceRemoved : Message
 
+    /** Invité → hôte : ce téléphone quitte la partie (il la garde en lecture seule). */
+    @Serializable
+    @SerialName("leave")
+    data object Leave : Message
+
     /** Hôte → tous : fin du partage (partie terminée ou arrêt par l'organisateur). */
     @Serializable
     @SerialName("game_ended")

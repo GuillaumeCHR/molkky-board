@@ -106,6 +106,29 @@ class ValidationTest {
     }
 
     @Test
+    fun `un compteur (invite par defaut, joueur ou arbitre) saisit et corrige pour tout le monde`() {
+        val referee = Author(DeviceId("tel-arbitre"), Role.SCORER)
+        val aliceThrow = pins(7, by = alice)
+        val brunoThrow = pins(3)
+        val log = set(aliceThrow, brunoThrow)
+        assertAccepted(validate(set(), pins(7), referee))
+        assertAccepted(validate(set(), Fault(id(), FaultKind.TRESPASS), referee))
+        assertAccepted(validate(set(), WrongTeam(id(), b, bruno, ThrowResult.Pins(listOf(3))), referee))
+        assertAccepted(validate(log, Undo(id(), brunoThrow.id), referee))
+        assertAccepted(validate(log, Correct(id(), aliceThrow.id, pins(9)), referee))
+        assertAccepted(validate(log, Delete(id(), aliceThrow.id), referee))
+        // Hors tour : refusé comme pour tout le monde.
+        assertRejected(RejectCode.NOT_YOUR_TURN, validate(set(), pins(7, by = bruno), referee))
+        // Jamais la gestion des joueurs, ni une correction qui n'est pas un lancer.
+        assertRejected(RejectCode.FORBIDDEN, validate(log, Correct(id(), aliceThrow.id, Abandon(id())), referee))
+        val late = AddPlayer(id(), PlayerId("chloe"), TeamId("C"))
+        assertRejected(RejectCode.FORBIDDEN, validate(set(late), Undo(id(), late.id), referee))
+        listOf(Abandon(id()), late, RemovePlayer(id(), bruno), Reorder(id(), listOf(b, a))).forEach { event ->
+            assertRejected(RejectCode.FORBIDDEN, validate(set(), event, referee))
+        }
+    }
+
+    @Test
     fun `gestion des joueurs et abandon - organisateur seulement`() {
         listOf(
             Abandon(id()),

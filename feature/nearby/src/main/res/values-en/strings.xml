@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="invite_title">Invite phones</string>
+    <string name="invite_title">Manage phones</string>
     <string name="invite_intro">The other players follow and enter the game on their own phones, with no account and no Internet: phones talk directly to each other, encrypted.</string>
     <string name="invite_hotspot">Hotspot</string>
     <string name="invite_same_wifi">Same Wi-Fi</string>
@@ -8,15 +8,15 @@
     <string name="invite_same_wifi_hint">All phones are on the same Wi-Fi (some public or “guest” networks isolate phones: try the hotspot then).</string>
     <string name="invite_start">Share the game</string>
     <string name="invite_starting">Starting…</string>
-    <string name="invite_scan">Have this QR code scanned in Molkky Board › Join. Each QR code is only valid for 2 minutes: it renews itself.</string>
+    <string name="invite_scan">In Molkky Board, the guest taps “Join” and scans this QR code. Each QR code is only valid for 2 minutes: it renews itself.</string>
     <string name="invite_qr_description">Game invitation QR code</string>
     <string name="invite_network">Game network: %1$s</string>
     <string name="invite_renew">New QR code</string>
     <string name="invite_phones">Guests connected: %1$d</string>
     <string name="invite_guest_online">%1$s · connected</string>
     <string name="invite_guest_offline">%1$s · offline</string>
-    <string name="invite_guest_player">Enters throws for %1$s</string>
-    <string name="invite_exclude">Remove</string>
+    <string name="invite_guest_player">Plays %1$s · scores for everyone</string>
+    <string name="invite_exclude">Disconnect this phone</string>
     <string name="invite_stop">Stop sharing</string>
     <string name="invite_candidate">%1$s wants to join the game</string>
     <string name="invite_is_player">It\'s %1$s</string>
@@ -47,4 +47,9 @@
     <string name="join_full">The game is full.</string>
     <string name="join_version">Different Molkky Board versions: update the app.</string>
     <string name="join_session">This phone is no longer part of the game.</string>
+    <string name="invite_section_invite">Invite a phone</string>
+    <string name="invite_section_phones">Connected phones</string>
+    <string name="invite_no_guest">No guest phone yet. Have the QR code above scanned.</string>
+    <string name="invite_referee">Referee (not playing)</string>
+    <string name="invite_guest_referee">Referee · scores for everyone</string>
 </resources>

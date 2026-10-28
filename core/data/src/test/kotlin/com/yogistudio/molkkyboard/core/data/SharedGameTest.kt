@@ -8,6 +8,7 @@ import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.TeamLineup
+import com.yogistudio.molkkyboard.core.scoring.Abandon
 import com.yogistudio.molkkyboard.core.scoring.AddPlayer
 import com.yogistudio.molkkyboard.core.scoring.Correct
 import com.yogistudio.molkkyboard.core.scoring.EventId
@@ -156,8 +157,8 @@ class SharedGameTest {
         runTest {
             val id = start()
             assertEquals(CommandOutcome.Applied, guestPlays(id, GameCommand.Play(pins(5, by = bruno), baseSeq(id))))
-            // Bruno ne lance pas pour Alice.
-            val refused = guestPlays(id, GameCommand.Play(pins(5, by = alice), baseSeq(id)))
+            // Un invité compte les points, mais n'abandonne pas la partie.
+            val refused = guestPlays(id, GameCommand.Play(Abandon(EventId("a1")), baseSeq(id)))
             assertEquals(RejectCode.FORBIDDEN, (refused as CommandOutcome.Rejected).code)
             // L'organisateur saisit pour Alice, puis corrige son premier lancer.
             val first =

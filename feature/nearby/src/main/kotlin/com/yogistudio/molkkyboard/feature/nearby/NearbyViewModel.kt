@@ -85,6 +85,9 @@ class NearbyViewModel
         /** « C'est Léa » : le téléphone saisira les lancers de ce joueur. */
         fun accept(candidate: JoinCandidate, player: PlayerId) = nearby.accept(candidate.connection, player)
 
+        /** « Arbitre » : le téléphone compte les points de tout le monde, sans joueur associé. */
+        fun acceptAsReferee(candidate: JoinCandidate) = nearby.accept(candidate.connection, null)
+
         /** « Nouveau joueur » : il rejoint la partie (comme un retardataire), puis son téléphone est accepté. */
         fun acceptAsNewPlayer(candidate: JoinCandidate) {
             val gameId = state.value.gameId ?: return

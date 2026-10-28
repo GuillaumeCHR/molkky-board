@@ -613,6 +613,7 @@ class GameViewModel
                 teams = teamsUi,
                 currentTeam = teamsUi.firstOrNull { it.active },
                 currentPlayerName = current?.nextPlayer?.let(::playerName),
+                currentPlayerId = current?.nextPlayer?.value,
                 target = current?.let { config.targetFor(it.id) } ?: config.targetScore,
                 missLimit = config.missLimit,
                 round = setState.round,

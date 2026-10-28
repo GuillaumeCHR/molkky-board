@@ -7,4 +7,11 @@
         <item quantity="other">%1$d guests connected</item>
     </plurals>
     <string name="nearby_notification_stop">Stop sharing</string>
+    <string name="notice_guest_left">%1$s disconnected.</string>
+    <string name="notice_guest_offline">Connection lost with %1$s.</string>
+    <string name="notice_guest_back">%1$s is back.</string>
+    <string name="notice_removed">The organiser disconnected you. The game stays readable on this phone.</string>
+    <string name="notice_stopped">The organiser stopped sharing. The game stays readable on this phone.</string>
+    <string name="notice_over_host">Game over: sharing has stopped and guests have been told.</string>
+    <string name="notice_over_guest">Game over: sharing stops. The game stays readable on this phone.</string>
 </resources>

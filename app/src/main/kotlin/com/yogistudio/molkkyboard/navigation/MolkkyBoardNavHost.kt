@@ -16,8 +16,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -57,6 +59,7 @@ import com.yogistudio.molkkyboard.ui.EmptyStateScreen
 import com.yogistudio.molkkyboard.ui.HomeScreen
 import com.yogistudio.molkkyboard.ui.LicensesScreen
 import com.yogistudio.molkkyboard.ui.SettingsScreen
+import kotlinx.coroutines.flow.map
 import kotlin.reflect.KClass
 
 /** Onglets de la barre de navigation du bas : toujours visibles au pouce, sauf pendant une partie. */
@@ -199,10 +202,14 @@ fun MolkkyBoardNavHost(
                 }
                 composable<GameRoute> { entry ->
                     val gameId = entry.toRoute<GameRoute>().gameId
-                    val nearby by hiltViewModel<SharingViewModel>().state.collectAsStateWithLifecycle()
+                    val resources = LocalContext.current.resources
+                    val sharing = hiltViewModel<SharingViewModel>()
+                    val nearby by sharing.state.collectAsStateWithLifecycle()
                     GameScreen(
                         onShare = { navController.navigate(ShareRoute(gameId)) },
                         onInvite = { navController.navigate(InviteRoute(gameId)) },
+                        onLeaveSharing = { sharing.leave() },
+                        notices = remember(sharing, resources) { sharing.notices.map { it.text(resources) } },
                         connection = nearby.badgeFor(gameId),
                         onBack = navController::navigateUp,
                         onNewGame = { navController.navigate(SetupRoute) { popUpTo<HomeRoute>() } },

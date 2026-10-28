@@ -31,8 +31,12 @@ value class DeviceId(
     val value: String,
 )
 
-/** Rôle d'un téléphone : l'organisateur peut tout faire, un joueur saisit et corrige ses propres lancers. */
-enum class Role { ORGANIZER, PLAYER }
+/**
+ * Droits d'un téléphone. [SCORER] (rôle par défaut de tout invité, joueur ou arbitre) saisit, annule et corrige les
+ * lancers de tout le monde ; [PLAYER] ne touche qu'aux lancers de son joueur ; seul l'[ORGANIZER] gère les joueurs et
+ * abandonne la partie.
+ */
+enum class Role { ORGANIZER, SCORER, PLAYER }
 
 /** Le téléphone qui propose un événement, et le joueur qui lui est associé (pour un [Role.PLAYER]). */
 data class Author(
@@ -105,6 +109,10 @@ fun validate(
                 Validation.Rejected(RejectCode.STALE)
             }
 
+            author.role == Role.SCORER && !scorerAllowed(before, event) -> {
+                Validation.Rejected(RejectCode.FORBIDDEN)
+            }
+
             author.role == Role.PLAYER && !allowed(set, before, event, author.player) -> {
                 Validation.Rejected(RejectCode.FORBIDDEN)
             }
@@ -167,6 +175,25 @@ private fun allowed(
         is Undo -> event.target == lastThrowOf(set, before, player)
         is Correct -> event.target == lastThrowOf(set, before, player) && event.replacement.ownedBy(player)
         is Delete -> event.target == lastThrowOf(set, before, player)
+    }
+}
+
+/** Compteur : lancers et fautes de tous, leurs annulations et corrections ; jamais la gestion des joueurs. */
+private fun scorerAllowed(before: ReplayResult, event: SetEvent): Boolean {
+    fun isThrow(e: SetEvent?): Boolean = e is Throw || e is Fault || e is WrongTeam
+    val target =
+        when (event) {
+            is Undo -> event.target
+            is Correct -> event.target
+            is Delete -> event.target
+            else -> null
+        }
+    val targeted = target?.let { id -> before.effectiveLog.firstOrNull { it.id == id } }
+    return when (event) {
+        is Throw, is Fault, is WrongTeam -> true
+        is Abandon, is AddPlayer, is RemovePlayer, is Reorder -> false
+        is Correct -> isThrow(targeted) && isThrow(event.replacement)
+        is Undo, is Delete -> isThrow(targeted)
     }
 }
 

@@ -245,11 +245,21 @@
     <string name="shared_refused_turn">Ce n\'est pas (ou plus) le tour de ce joueur.</string>
     <string name="shared_refused_forbidden">Seul l\'organisateur de la partie peut faire cela.</string>
     <string name="shared_refused_stale">La partie a changé entre-temps : réessayez.</string>
-    <string name="game_menu_invite">Inviter des téléphones</string>
     <string name="game_connected">Connecté</string>
     <string name="game_offline">Hors ligne</string>
     <plurals name="game_phones">
         <item quantity="one">%1$d téléphone</item>
         <item quantity="other">%1$d téléphones</item>
     </plurals>
+    <string name="game_menu_phones">Gérer les téléphones</string>
+    <string name="game_menu_leave">Se déconnecter</string>
+    <string name="game_leave_title">Se déconnecter de la partie ?</string>
+    <string name="game_leave_text">Ce téléphone ne recevra plus les lancers. La partie reste consultable ici ; pour revenir, scannez un nouveau QR code de l\'organisateur.</string>
+    <string name="game_leave_confirm">Se déconnecter</string>
+    <string name="guest_read_only">Lecture seule : cette partie n\'est plus partagée avec ce téléphone.</string>
+    <string name="guest_reconnecting">Connexion perdue, reconnexion… La saisie reprendra toute seule.</string>
+    <string name="guest_watching">Vous êtes arbitre : vous saisissez les lancers de tout le monde.</string>
+    <string name="guest_your_turn">À vous de lancer : saisissez le lancer de %1$s.</string>
+    <string name="guest_other_turn">Au tour de %1$s : vous pouvez saisir son lancer.</string>
+    <string name="guest_finished">Partie terminée. Vous pouvez vous déconnecter.</string>
 </resources>

@@ -86,13 +86,20 @@ sealed interface CommandOutcome {
 fun GameCommand.allowedFor(author: Author): Boolean =
     author.role == Role.ORGANIZER ||
         when (this) {
-            is GameCommand.Play -> true
+            is GameCommand.Play -> {
+                true
+            }
 
-            is GameCommand.MolkkoutPlay -> author.player != null && throwEvent.player == author.player
+            is GameCommand.MolkkoutPlay -> {
+                author.role == Role.SCORER ||
+                    (author.player != null && throwEvent.player == author.player)
+            }
 
             is GameCommand.NextSet,
             is GameCommand.MolkkoutUndo,
             is GameCommand.Rematch,
             is GameCommand.AddParticipant,
-            -> false
+            -> {
+                false
+            }
         }

@@ -94,6 +94,7 @@ data class GameUiState(
     val teams: List<TeamUi> = emptyList(),
     val currentTeam: TeamUi? = null,
     val currentPlayerName: String? = null,
+    val currentPlayerId: String? = null,
     val target: Int = 50,
     val missLimit: Int = 3,
     /** Tour en cours, dérivé du journal (`SCORING_SPEC.md` § 16). */
@@ -128,11 +129,13 @@ data class GameUiState(
     val readyCard: Boolean = false,
     /** Réglage « Sons » (désactivé par défaut). */
     val sounds: Boolean = false,
+    /** Invité : ce n'est pas le lancer de son joueur, ou la partie n'est plus partagée (lecture seule). */
+    val inputLocked: Boolean = false,
 ) {
     /** Le déroulé se modifie tant que la partie n'est pas abandonnée (même terminée : la victoire peut changer). */
     val canEditLog: Boolean get() = !abandoned
 
-    val canValidate: Boolean get() = selection != Selection.None && !finished && !abandoned
+    val canValidate: Boolean get() = selection != Selection.None && !finished && !abandoned && !inputLocked
 
     /** Tableau des scores : équipes en jeu par score décroissant (à égalité, ordre de passage), puis hors jeu. */
     val scoreboard: List<TeamUi> get() =

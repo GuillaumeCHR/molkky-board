@@ -245,11 +245,21 @@
     <string name="shared_refused_turn">It is not (or no longer) this player\'s turn.</string>
     <string name="shared_refused_forbidden">Only the game organiser can do that.</string>
     <string name="shared_refused_stale">The game changed in the meantime: try again.</string>
-    <string name="game_menu_invite">Invite phones</string>
     <string name="game_connected">Connected</string>
     <string name="game_offline">Offline</string>
     <plurals name="game_phones">
         <item quantity="one">%1$d phone</item>
         <item quantity="other">%1$d phones</item>
     </plurals>
+    <string name="game_menu_phones">Manage phones</string>
+    <string name="game_menu_leave">Disconnect</string>
+    <string name="game_leave_title">Disconnect from the game?</string>
+    <string name="game_leave_text">This phone will no longer receive throws. The game stays readable here; to come back, scan a new QR code from the organiser.</string>
+    <string name="game_leave_confirm">Disconnect</string>
+    <string name="guest_read_only">Read only: this game is no longer shared with this phone.</string>
+    <string name="guest_reconnecting">Connection lost, reconnecting… Input will resume on its own.</string>
+    <string name="guest_watching">You are the referee: you enter everyone\'s throws.</string>
+    <string name="guest_your_turn">Your turn: enter %1$s\'s throw.</string>
+    <string name="guest_other_turn">%1$s\'s turn: you can enter the throw.</string>
+    <string name="guest_finished">Game over. You can disconnect.</string>
 </resources>

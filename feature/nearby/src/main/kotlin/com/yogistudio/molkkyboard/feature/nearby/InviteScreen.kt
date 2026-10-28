@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,6 +59,7 @@ import com.yogistudio.molkkyboard.core.nearby.NearbyError
 import com.yogistudio.molkkyboard.core.nearby.NearbyRole
 import com.yogistudio.molkkyboard.core.nearby.NearbyState
 import com.yogistudio.molkkyboard.core.nearby.NetworkMode
+import com.yogistudio.molkkyboard.core.sync.GuestDevice
 import com.yogistudio.molkkyboard.core.sync.JoinCandidate
 
 /**
@@ -88,22 +90,32 @@ fun InviteScreen(gameId: String, onBack: () -> Unit, viewModel: NearbyViewModel 
         ) {
             if (!sharing || state.error != null) {
                 Text(stringResource(R.string.invite_intro), style = MaterialTheme.typography.bodyLarge)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(mode == NetworkMode.HOTSPOT, {
-                        mode = NetworkMode.HOTSPOT
-                    }, { Text(stringResource(R.string.invite_hotspot)) })
-                    FilterChip(mode == NetworkMode.SAME_WIFI, {
-                        mode = NetworkMode.SAME_WIFI
-                    }, { Text(stringResource(R.string.invite_same_wifi)) })
+                Section(R.string.invite_section_invite) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(mode == NetworkMode.HOTSPOT, {
+                            mode = NetworkMode.HOTSPOT
+                        }, { Text(stringResource(R.string.invite_hotspot)) })
+                        FilterChip(mode == NetworkMode.SAME_WIFI, {
+                            mode = NetworkMode.SAME_WIFI
+                        }, { Text(stringResource(R.string.invite_same_wifi)) })
+                    }
+                    Hint(
+                        if (mode ==
+                            NetworkMode.HOTSPOT
+                        ) {
+                            R.string.invite_hotspot_hint
+                        } else {
+                            R.string.invite_same_wifi_hint
+                        },
+                    )
+                    state.error?.let { ErrorText(it) }
+                    BigActionButton(
+                        stringResource(R.string.invite_start),
+                        { permissions.launch(sharePermissions(mode)) },
+                        BigActionKind.Primary,
+                        Modifier.fillMaxWidth(),
+                    )
                 }
-                Hint(if (mode == NetworkMode.HOTSPOT) R.string.invite_hotspot_hint else R.string.invite_same_wifi_hint)
-                state.error?.let { ErrorText(it) }
-                BigActionButton(
-                    stringResource(R.string.invite_start),
-                    { permissions.launch(sharePermissions(mode)) },
-                    BigActionKind.Primary,
-                    Modifier.fillMaxWidth(),
-                )
             } else {
                 Sharing(state, players, viewModel)
             }
@@ -121,50 +133,77 @@ private fun Sharing(state: NearbyState, players: List<PartyPlayer>, viewModel: N
     }
     KeepBright()
     state.candidates.forEach { CandidateCard(it, players, viewModel) }
-    Text(stringResource(R.string.invite_scan), style = MaterialTheme.typography.titleMedium)
-    val description = stringResource(R.string.invite_qr_description)
-    val bitmap = remember(link) { qrBitmap(link) }
-    Box(
-        Modifier
-            .background(Color.White, RoundedCornerShape(16.dp))
-            .padding(12.dp)
-            .semantics { contentDescription = description },
-    ) {
-        Image(bitmap.asImageBitmap(), contentDescription = null, modifier = Modifier.size(QR_SIZE.dp))
-    }
-    state.ssid?.let { Hint(R.string.invite_network, it) }
-    TextButton(onClick = viewModel::renewInvite, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
-        Text(stringResource(R.string.invite_renew))
-    }
-    Text(
-        stringResource(R.string.invite_phones, state.guestsOnline),
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.fillMaxWidth(),
-    )
-    state.guests.forEach { guest ->
-        Surface(
-            shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier.fillMaxWidth(),
+    Section(R.string.invite_section_invite) {
+        Text(stringResource(R.string.invite_scan), style = MaterialTheme.typography.bodyLarge)
+        val description = stringResource(R.string.invite_qr_description)
+        val bitmap = remember(link) { qrBitmap(link) }
+        Box(
+            Modifier
+                .background(Color.White, RoundedCornerShape(16.dp))
+                .padding(12.dp)
+                .semantics { contentDescription = description },
         ) {
-            Column(Modifier.padding(12.dp)) {
-                val player = players.firstOrNull { it.id == guest.player }?.name
-                Text(
-                    stringResource(
-                        if (guest.connection != null) R.string.invite_guest_online else R.string.invite_guest_offline,
-                        guest.nickname,
-                    ),
-                    style = MaterialTheme.typography.titleSmall,
-                )
-                if (player != null) Hint(R.string.invite_guest_player, player)
-                TextButton(onClick = { viewModel.exclude(guest.device) }) {
-                    Text(stringResource(R.string.invite_exclude), color = MolkkyBoardTheme.colors.coralText)
-                }
+            Image(bitmap.asImageBitmap(), contentDescription = null, modifier = Modifier.size(QR_SIZE.dp))
+        }
+        state.ssid?.let { Hint(R.string.invite_network, it) }
+        TextButton(onClick = viewModel::renewInvite, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+            Text(stringResource(R.string.invite_renew))
+        }
+    }
+    Section(R.string.invite_section_phones) {
+        Text(stringResource(R.string.invite_phones, state.guestsOnline), style = MaterialTheme.typography.titleSmall)
+        if (state.guests.isEmpty()) Hint(R.string.invite_no_guest)
+        state.guests.forEach { GuestRow(it, players, viewModel) }
+        OutlinedButton(onClick = viewModel::stop, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+            Text(stringResource(R.string.invite_stop))
+        }
+    }
+}
+
+/** Un téléphone invité : pseudo, état, joueur qu'il saisit, et « Déconnecter ». */
+@Composable
+private fun GuestRow(guest: GuestDevice, players: List<PartyPlayer>, viewModel: NearbyViewModel) {
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            val player = players.firstOrNull { it.id == guest.player }?.name
+            Text(
+                stringResource(
+                    if (guest.connection != null) R.string.invite_guest_online else R.string.invite_guest_offline,
+                    guest.nickname,
+                ),
+                style = MaterialTheme.typography.titleSmall,
+            )
+            if (player != null) Hint(R.string.invite_guest_player, player) else Hint(R.string.invite_guest_referee)
+            TextButton(
+                onClick = { viewModel.exclude(guest.device) },
+                modifier = Modifier.align(Alignment.End).heightIn(min = MBDimens.MinTouch),
+            ) {
+                Text(stringResource(R.string.invite_exclude), color = MolkkyBoardTheme.colors.coralText)
             }
         }
     }
-    OutlinedButton(onClick = viewModel::stop, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
-        Text(stringResource(R.string.invite_stop))
+}
+
+/** Pavé titré de l'écran « Gérer les téléphones ». */
+@Composable
+private fun Section(title: Int, content: @Composable ColumnScope.() -> Unit) {
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(MBDimens.Gap),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(stringResource(title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.fillMaxWidth())
+            content()
+        }
     }
 }
 
@@ -193,6 +232,12 @@ private fun CandidateCard(candidate: JoinCandidate, players: List<PartyPlayer>, 
                     viewModel.acceptAsNewPlayer(candidate)
                 }, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
                     Text(stringResource(R.string.invite_new_player))
+                }
+                // Arbitre : compte les points de tout le monde sans jouer.
+                OutlinedButton(onClick = {
+                    viewModel.acceptAsReferee(candidate)
+                }, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+                    Text(stringResource(R.string.invite_referee))
                 }
                 TextButton(
                     onClick = { viewModel.refuse(candidate) },

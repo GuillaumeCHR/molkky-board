@@ -121,6 +121,8 @@ class HostSession(
 
             Message.Ping -> listOf(Outgoing.To(connection, Message.Pong))
 
+            Message.Leave -> leave(connection)
+
             // Un invité n'envoie rien d'autre : la connexion est fermée.
             else -> listOf(Outgoing.Close(connection))
         }
@@ -145,13 +147,22 @@ class HostSession(
         val device = DeviceId("tel-" + randomHex(ID_BYTES))
         val token = randomHex(SESSION_BYTES)
         devices[device] = GuestDevice(device, candidate.nickname, player, connection, token)
-        val welcome = Message.Welcome(token, device.value, Role.PLAYER, player, authority.snapshot(), lastSeq)
+        val welcome = Message.Welcome(token, device.value, Role.SCORER, player, authority.snapshot(), lastSeq)
         return listOf(Outgoing.To(connection, welcome))
     }
 
     fun refuse(connection: ConnectionId): List<Outgoing> {
         pendingJoins.remove(connection) ?: return emptyList()
         return listOf(Outgoing.To(connection, Message.JoinRejected(JoinRejection.REFUSED)), Outgoing.Close(connection))
+    }
+
+    /** Un invité s'en va de lui-même : comme une exclusion, sans message ; il revient en rescannant un QR code. */
+    private fun leave(connection: ConnectionId): List<Outgoing> {
+        val left =
+            devices.values.firstOrNull { it.connection == connection } ?: return listOf(Outgoing.Close(connection))
+        devices.remove(left.device)
+        revoked += left.sessionToken
+        return listOf(Outgoing.Close(connection))
     }
 
     /** L'organisateur exclut un téléphone : son jeton de session est révoqué. */
@@ -234,7 +245,7 @@ class HostSession(
                 is Result.Refused -> listOf(Outgoing.To(connection, Message.EventRejected(id, previous.code)))
             }
         }
-        val author = Author(device.device, Role.PLAYER, device.player)
+        val author = Author(device.device, Role.SCORER, device.player)
         return when (val outcome = authority.apply(proposal.command, author)) {
             CommandOutcome.Applied -> {
                 listOf(Outgoing.Broadcast(record(id, device.device, proposal.command)))

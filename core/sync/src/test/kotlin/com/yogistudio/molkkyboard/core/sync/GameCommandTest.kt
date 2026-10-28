@@ -48,6 +48,7 @@ class GameCommandTest {
             molkkout.copy(throwEvent = molkkout.throwEvent.copy(player = PlayerId("bruno"))).allowedFor(aliceDevice),
         )
         assertFalse(molkkout.allowedFor(Author(DeviceId("x"), Role.PLAYER)))
+        assertTrue(molkkout.allowedFor(Author(DeviceId("x"), Role.SCORER)))
         listOf(
             commands[1],
             commands[3],

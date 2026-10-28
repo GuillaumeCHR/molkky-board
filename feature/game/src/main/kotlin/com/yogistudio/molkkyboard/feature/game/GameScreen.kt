@@ -127,6 +127,8 @@ import com.yogistudio.molkkyboard.core.scoring.ScoringError
 import com.yogistudio.molkkyboard.core.scoring.ThrowResult
 import com.yogistudio.molkkyboard.core.sync.RejectCode
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -158,6 +160,8 @@ data class GameActions(
     val onStartPlaying: (neverAgain: Boolean) -> Unit = {},
     /** « Inviter des téléphones » (partie à côté) ; `null` : entrée absente. */
     val onInvite: (() -> Unit)? = null,
+    /** Invité : quitter la partie partagée (elle reste consultable sur ce téléphone). */
+    val onLeaveSharing: () -> Unit = {},
 )
 
 @Composable
@@ -168,11 +172,15 @@ fun GameScreen(
     onOpenGame: (String) -> Unit = {},
     onShare: () -> Unit = {},
     onInvite: (() -> Unit)? = null,
+    onLeaveSharing: () -> Unit = {},
     connection: ConnectionBadge? = null,
+    /** Partie à côté : « Tristan s'est déconnecté », « L'organisateur vous a déconnecté »… */
+    notices: Flow<String> = emptyFlow(),
     viewModel: GameViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
+    LaunchedEffect(notices) { notices.collect { snackbar.showSnackbar(it) } }
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -279,7 +287,7 @@ fun GameScreen(
         }
     }
     GameContent(
-        state = state,
+        state = state.forGuest(connection),
         actions =
             GameActions(
                 onBack = onBack,
@@ -307,6 +315,7 @@ fun GameScreen(
                 onShare = onShare,
                 onStartPlaying = viewModel::startPlaying,
                 onInvite = onInvite,
+                onLeaveSharing = onLeaveSharing,
             ),
         logMessage = logMessage,
         connection = connection,
@@ -417,6 +426,7 @@ fun GameContent(
                         true
                 }, onOpenPlacement = { showPlacement = true })
                 if (state.loading) return@Column
+                GuestBanner(state, connection, onLeave = actions.onLeaveSharing)
                 ScoresStrip(state, onOpen = { showScoreboard = true })
                 ActiveCard(state)
                 PreviewLine(state, actions)
@@ -535,10 +545,12 @@ private fun GameTopBar(
     onOpenPlacement: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
+    var leaving by remember { mutableStateOf(false) }
     // En grande police, les boutons passent avant le titre « Partie » (évident sur cet écran plein écran).
     val title = if (LocalDensity.current.fontScale >= LARGE_FONT_SCALE) "" else stringResource(R.string.game_title)
     MBTopBar(title, actions.onBack) {
-        connection?.let { ConnectionPill(it) }
+        // Chez l'hôte, la pastille ouvre la gestion des téléphones.
+        connection?.let { ConnectionPill(it, onClick = actions.onInvite.takeIf { _ -> !state.joined }) }
         // Placement des quilles, discret mais toujours là (utile entre deux manches).
         IconButton(onClick = onOpenPlacement, modifier = Modifier.size(MBDimens.MinTouch)) {
             Icon(MBIcons.Pins, contentDescription = stringResource(R.string.placement_title))
@@ -567,28 +579,25 @@ private fun GameTopBar(
                     menu = false
                     onOpenRules()
                 })
-                val invite = actions.onInvite
-                if (invite != null && !state.joined) {
-                    DropdownMenuItem(text = { Text(stringResource(R.string.game_menu_invite)) }, onClick = {
-                        menu = false
-                        invite()
-                    })
+                SharingItems(state, actions, connection, onLeave = { leaving = true }, close = { menu = false })
+                if (!state.joined) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                stringResource(R.string.game_menu_abandon),
+                                color = MolkkyBoardTheme.colors.coralText,
+                            )
+                        },
+                        onClick = {
+                            menu = false
+                            actions.onAbandon()
+                        },
+                    )
                 }
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            stringResource(R.string.game_menu_abandon),
-                            color = MolkkyBoardTheme.colors.coralText,
-                        )
-                    },
-                    onClick = {
-                        menu = false
-                        actions.onAbandon()
-                    },
-                )
             }
         }
     }
+    if (leaving) LeaveDialog(onLeave = actions.onLeaveSharing, onDismiss = { leaving = false })
 }
 
 /**
@@ -920,43 +929,3 @@ private const val STICKER_DROP_DELAY_MS = 350L
 private const val LOG_MESSAGE_MS = 4_000L
 
 private const val LARGE_FONT_SCALE = 1.3f
-
-/** Partie à côté : nombre de téléphones connectés (hôte) ou état de la connexion (invité). */
-data class ConnectionBadge(
-    /** Téléphones connectés (connu de l'hôte seulement). */
-    val phones: Int?,
-    val online: Boolean,
-)
-
-/** « 3 téléphones », ou « Hors ligne » en corail quand un invité a perdu l'hôte. */
-@Composable
-private fun ConnectionPill(badge: ConnectionBadge) {
-    val phones = badge.phones
-    val text =
-        when {
-            !badge.online -> stringResource(R.string.game_offline)
-            phones != null -> pluralStringResource(R.plurals.game_phones, phones, phones)
-            else -> stringResource(R.string.game_connected)
-        }
-    Surface(
-        shape = RoundedCornerShape(50),
-        color =
-            if (badge.online) {
-                MolkkyBoardTheme.colors.saffron.copy(
-                    alpha = PILL_ALPHA,
-                )
-            } else {
-                MolkkyBoardTheme.colors.coral
-            },
-        contentColor = if (badge.online) MaterialTheme.colorScheme.onSurface else MolkkyBoardTheme.colors.onCoral,
-        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-    ) {
-        Text(
-            text,
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-        )
-    }
-}
-
-private const val PILL_ALPHA = 0.45f

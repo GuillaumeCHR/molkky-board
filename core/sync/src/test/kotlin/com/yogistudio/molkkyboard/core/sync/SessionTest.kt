@@ -204,21 +204,24 @@ class SessionTest {
         }
 
     @Test
-    fun `hors tour ou au nom d'un autre - refuse avec le motif, rien n'est diffuse`() =
+    fun `un invite compte pour tout le monde, mais pas hors tour ni la gestion du match`() =
         runTest {
             joinBoth()
-            val notMine = brunoGuest.propose(GameCommand.Play(pins(7, by = alice), baseSeq = 0))
-            send(brunoConn, notMine)
-            assertEquals(CommandOutcome.Rejected(RejectCode.FORBIDDEN), brunoGuest.outcomes[notMine.id])
             val early = brunoGuest.propose(GameCommand.Play(pins(7, by = bruno), baseSeq = 0))
             send(brunoConn, early)
             assertEquals(CommandOutcome.Rejected(RejectCode.NOT_YOUR_TURN), brunoGuest.outcomes[early.id])
             assertEquals(0, host.lastSeq)
             assertTrue(aliceStore.applied.isEmpty())
-            // Un joueur ne gère pas le match.
+            // Un invité ne gère pas le match.
             val nextSet = brunoGuest.propose(GameCommand.NextSet(1))
             send(brunoConn, nextSet)
             assertEquals(CommandOutcome.Rejected(RejectCode.FORBIDDEN), brunoGuest.outcomes[nextSet.id])
+            // Mais il saisit le lancer d'Alice, dont c'est le tour : appliqué et diffusé à tous.
+            val forAlice = brunoGuest.propose(GameCommand.Play(pins(7, by = alice), baseSeq = 0))
+            send(brunoConn, forAlice)
+            assertEquals(CommandOutcome.Applied, brunoGuest.outcomes[forAlice.id])
+            assertEquals(1, host.lastSeq)
+            assertEquals(1, aliceStore.applied.size)
         }
 
     @Test
@@ -278,6 +281,18 @@ class SessionTest {
         }
 
     @Test
+    fun `un invite qui part de lui-meme - connexion fermee, jeton revoque`() =
+        runTest {
+            joinBoth()
+            assertEquals(listOf(Outgoing.Close(brunoConn)), host.receive(brunoConn, Message.Leave))
+            assertEquals(listOf("Alice"), host.guests.map { it.nickname })
+            val again = host.receive(ConnectionId(9), brunoGuest.resumeRequest()!!)
+            assertEquals(Message.JoinRejected(JoinRejection.SESSION_INVALID), (again.first() as Outgoing.To).message)
+            // Un départ sur une connexion inconnue ferme simplement la connexion.
+            assertEquals(listOf(Outgoing.Close(ConnectionId(9))), host.receive(ConnectionId(9), Message.Leave))
+        }
+
+    @Test
     fun `fin du partage, ping et message inattendu`() =
         runTest {
             joinBoth()
@@ -307,7 +322,7 @@ class SessionTest {
             assertTrue(refused is CommandOutcome.Rejected)
             assertTrue(nothing.isEmpty())
             // Une proposition refusée, renvoyée telle quelle, reçoit le même refus.
-            val bad = brunoGuest.propose(GameCommand.Play(pins(7, by = alice), baseSeq = 0))
+            val bad = brunoGuest.propose(GameCommand.NextSet(1))
             assertEquals(1, brunoGuest.unanswered().size)
             send(brunoConn, bad)
             assertEquals(
