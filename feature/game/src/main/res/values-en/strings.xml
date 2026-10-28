@@ -242,4 +242,7 @@
     <string name="game_last_chance_reset">1 miss = back to %1$d</string>
     <string name="rules_go_to">Go to “%1$s”</string>
     <string name="players_add_taken">“%1$s” is already in the game: try “%2$s” or add an initial.</string>
+    <string name="shared_refused_turn">It is not (or no longer) this player\'s turn.</string>
+    <string name="shared_refused_forbidden">Only the game organiser can do that.</string>
+    <string name="shared_refused_stale">The game changed in the meantime: try again.</string>
 </resources>

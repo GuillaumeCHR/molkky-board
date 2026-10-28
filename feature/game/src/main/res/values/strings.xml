@@ -242,4 +242,7 @@
     <string name="game_last_chance_reset">1 raté = retour à %1$d</string>
     <string name="rules_go_to">Aller à la partie « %1$s »</string>
     <string name="players_add_taken">« %1$s » est déjà dans la partie : essayez « %2$s » ou ajoutez une initiale.</string>
+    <string name="shared_refused_turn">Ce n\'est pas (ou plus) le tour de ce joueur.</string>
+    <string name="shared_refused_forbidden">Seul l\'organisateur de la partie peut faire cela.</string>
+    <string name="shared_refused_stale">La partie a changé entre-temps : réessayez.</string>
 </resources>

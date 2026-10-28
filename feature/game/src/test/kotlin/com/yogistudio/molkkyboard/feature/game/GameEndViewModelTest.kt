@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import app.cash.turbine.test
+import com.yogistudio.molkkyboard.core.data.CommandGateway
 import com.yogistudio.molkkyboard.core.data.GamePlayer
 import com.yogistudio.molkkyboard.core.data.GameTeam
 import com.yogistudio.molkkyboard.core.data.JournalStatsRepository
@@ -51,6 +52,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.Optional
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
@@ -107,6 +109,7 @@ class GameEndViewModelTest {
         GameViewModel(
             SavedStateHandle(mapOf(GameViewModel.GAME_ID to gameId)),
             games,
+            CommandGateway(games, Optional.empty()),
             settings,
             { "ev-${ids.incrementAndGet()}" },
             JournalStatsRepository(games),

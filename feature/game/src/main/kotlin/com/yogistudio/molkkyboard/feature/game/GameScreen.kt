@@ -124,6 +124,7 @@ import com.yogistudio.molkkyboard.core.scoring.EventId
 import com.yogistudio.molkkyboard.core.scoring.NextStarter
 import com.yogistudio.molkkyboard.core.scoring.ScoringError
 import com.yogistudio.molkkyboard.core.scoring.ThrowResult
+import com.yogistudio.molkkyboard.core.sync.RejectCode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -347,14 +348,17 @@ private fun sheetMessage(context: Context, effect: GameEffect): String? =
         GameEffect.OrderChanged -> context.getString(R.string.players_order_saved)
         is GameEffect.OrderScheduled -> context.getString(R.string.players_order_scheduled, effect.round)
         GameEffect.Edited -> context.getString(R.string.log_edited)
-        is GameEffect.EditRefused -> context.getString(refusalMessage(effect.error))
+        is GameEffect.EditRefused -> context.getString(refusalMessage(effect.error, effect.code))
         else -> null
     }
 
-private fun refusalMessage(error: ScoringError): Int =
-    when (error) {
-        ScoringError.CORRECTION_INVALIDATES_LOG -> R.string.log_refused_invalidates
-        ScoringError.NOT_BETWEEN_ROUNDS -> R.string.players_refused_round
+private fun refusalMessage(error: ScoringError, code: RejectCode): Int =
+    when {
+        code == RejectCode.NOT_YOUR_TURN -> R.string.shared_refused_turn
+        code == RejectCode.FORBIDDEN -> R.string.shared_refused_forbidden
+        code == RejectCode.STALE -> R.string.shared_refused_stale
+        error == ScoringError.CORRECTION_INVALIDATES_LOG -> R.string.log_refused_invalidates
+        error == ScoringError.NOT_BETWEEN_ROUNDS -> R.string.players_refused_round
         else -> R.string.log_refused
     }
 

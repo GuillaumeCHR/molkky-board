@@ -9,6 +9,7 @@ import com.yogistudio.molkkyboard.core.scoring.EventId
 import com.yogistudio.molkkyboard.core.scoring.FaultKind
 import com.yogistudio.molkkyboard.core.scoring.ScoringError
 import com.yogistudio.molkkyboard.core.scoring.ThrowResult
+import com.yogistudio.molkkyboard.core.sync.RejectCode
 
 /** Une équipe (ou un joueur seul) telle que l'écran l'affiche. */
 data class TeamUi(
@@ -218,9 +219,10 @@ sealed interface GameEffect {
         val round: Int,
     ) : GameEffect
 
-    /** Correction ou suppression refusée par le moteur (journal inchangé). */
+    /** Saisie refusée (moteur, ou hôte d'une partie à côté) : le journal est inchangé. */
     data class EditRefused(
         val error: ScoringError,
+        val code: RejectCode = RejectCode.INVALID,
     ) : GameEffect
 
     data class Won(

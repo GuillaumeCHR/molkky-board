@@ -3,6 +3,7 @@ package com.yogistudio.molkkyboard.feature.game
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yogistudio.molkkyboard.core.data.CommandGateway
 import com.yogistudio.molkkyboard.core.data.GamePlayer
 import com.yogistudio.molkkyboard.core.data.GameRepository
 import com.yogistudio.molkkyboard.core.data.GameSnapshot
@@ -38,6 +39,7 @@ import com.yogistudio.molkkyboard.core.scoring.PlayEvent
 import com.yogistudio.molkkyboard.core.scoring.PointsKind
 import com.yogistudio.molkkyboard.core.scoring.RemovePlayer
 import com.yogistudio.molkkyboard.core.scoring.Reorder
+import com.yogistudio.molkkyboard.core.scoring.ScoringError
 import com.yogistudio.molkkyboard.core.scoring.SetEvent
 import com.yogistudio.molkkyboard.core.scoring.SetState
 import com.yogistudio.molkkyboard.core.scoring.SetStatus
@@ -57,6 +59,8 @@ import com.yogistudio.molkkyboard.core.stats.isNewRecord
 import com.yogistudio.molkkyboard.core.stats.summarize
 import com.yogistudio.molkkyboard.core.sync.CommandOutcome
 import com.yogistudio.molkkyboard.core.sync.GameCommand
+import com.yogistudio.molkkyboard.core.sync.SharedPlayer
+import com.yogistudio.molkkyboard.core.sync.SharedTeam
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -78,13 +82,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 // Une fonction par action de l'écran de jeu : les regrouper rendrait l'interface moins lisible.
-@Suppress("TooManyFunctions")
+// Lecture (dépôt), écriture (passerelle), réglages, identifiants, statistiques et profils : six rôles distincts.
+@Suppress("TooManyFunctions", "LongParameterList")
 @HiltViewModel
 class GameViewModel
     @Inject
     constructor(
         savedStateHandle: SavedStateHandle,
         private val games: GameRepository,
+        private val gateway: CommandGateway,
         private val settings: SettingsRepository,
         private val ids: IdGenerator,
         private val stats: StatsRepository,
@@ -211,10 +217,33 @@ class GameViewModel
                 // La sélection est vidée avant l'écriture : le joueur suivant n'hérite jamais des quilles du précédent,
                 // même un instant. Elle revient si le moteur refuse le lancer.
                 selection.value = Selection.None
-                val outcome = games.append(gameId, Throw(EventId(ids.newId()), result))
-                if (outcome !is Outcome.Ok) selection.value = chosen
+                val outcome = play(Throw(EventId(ids.newId()), result))
+                if (outcome is CommandOutcome.Rejected) {
+                    selection.value = chosen
+                    refused(outcome)
+                }
             }
         }
+
+        /**
+         * Toute saisie passe par la passerelle : partie locale, ou partie à côté (l'hôte valide). [baseSeq] : la taille
+         * du journal que ce téléphone connaissait.
+         */
+        private suspend fun submit(command: GameCommand): CommandOutcome = gateway.submit(gameId, command)
+
+        private suspend fun play(event: SetEvent): CommandOutcome {
+            val base =
+                games
+                    .observe(gameId)
+                    .first()
+                    ?.currentSet
+                    ?.log
+                    ?.size ?: 0
+            return submit(GameCommand.Play(event, base))
+        }
+
+        private suspend fun refused(outcome: CommandOutcome.Rejected) =
+            effects.send(GameEffect.EditRefused(outcome.error ?: ScoringError.INVALID_EVENT, outcome.code))
 
         /** Nouvel état de la partie : effets du lancer ajouté, ou de la réécriture du journal (annulation…). */
         private suspend fun onChange(before: GameSnapshot, after: GameSnapshot) {
@@ -376,7 +405,7 @@ class GameViewModel
                 val last =
                     snapshot.currentSet.replay.effectiveLog
                         .lastOrNull() ?: return@launch
-                games.append(gameId, Undo(EventId(ids.newId()), last.id))
+                (play(Undo(EventId(ids.newId()), last.id)) as? CommandOutcome.Rejected)?.let { refused(it) }
                 selection.value = Selection.None
             }
         }
@@ -390,9 +419,9 @@ class GameViewModel
 
         private fun edit(event: SetEvent) {
             viewModelScope.launch {
-                when (val outcome = games.append(gameId, event)) {
-                    is Outcome.Err -> effects.send(GameEffect.EditRefused(outcome.error))
-                    is Outcome.Ok -> effects.send(GameEffect.Edited)
+                when (val outcome = play(event)) {
+                    is CommandOutcome.Rejected -> refused(outcome)
+                    CommandOutcome.Applied -> effects.send(GameEffect.Edited)
                 }
             }
         }
@@ -438,9 +467,9 @@ class GameViewModel
                     effects.send(GameEffect.OrderScheduled(state.round + 1))
                     return@launch
                 }
-                when (val outcome = games.append(gameId, Reorder(EventId(ids.newId()), order))) {
-                    is Outcome.Err -> effects.send(GameEffect.EditRefused(outcome.error))
-                    is Outcome.Ok -> effects.send(GameEffect.OrderChanged)
+                when (val outcome = play(Reorder(EventId(ids.newId()), order))) {
+                    is CommandOutcome.Rejected -> refused(outcome)
+                    CommandOutcome.Applied -> effects.send(GameEffect.OrderChanged)
                 }
             }
         }
@@ -458,10 +487,8 @@ class GameViewModel
             val full =
                 order.filter { id -> after.teams.any { it.id == id } } +
                     after.teams.map { it.id }.filterNot { it in order }
-            if (games.append(
-                    gameId,
-                    Reorder(EventId(ids.newId()), full),
-                ) is Outcome.Ok
+            if (play(Reorder(EventId(ids.newId()), full)) ==
+                CommandOutcome.Applied
             ) {
                 effects.send(GameEffect.OrderChanged)
             }
@@ -477,16 +504,16 @@ class GameViewModel
                 val team = TeamId(player.value)
                 val used = snapshot.teams.map { it.colorIndex }.toSet()
                 val color = (0 until PALETTE_SIZE).firstOrNull { it !in used } ?: (snapshot.teams.size % PALETTE_SIZE)
-                val outcome =
-                    games.addParticipant(
-                        gameId,
+                val command =
+                    GameCommand.AddParticipant(
                         AddPlayer(EventId(ids.newId()), player, team),
-                        GamePlayer(player, trimmed),
-                        GameTeam(team, trimmed, color, memberKey = memberKey(listOf(player))),
+                        SharedPlayer(player, trimmed),
+                        SharedTeam(team, trimmed, color, memberKey = memberKey(listOf(player))),
+                        baseSeq = snapshot.currentSet.log.size,
                     )
-                when (outcome) {
-                    is Outcome.Err -> effects.send(GameEffect.EditRefused(outcome.error))
-                    is Outcome.Ok -> effects.send(GameEffect.PlayerJoined(trimmed))
+                when (val outcome = submit(command)) {
+                    is CommandOutcome.Rejected -> refused(outcome)
+                    CommandOutcome.Applied -> effects.send(GameEffect.PlayerJoined(trimmed))
                 }
             }
         }
@@ -495,12 +522,12 @@ class GameViewModel
         fun removePlayer(player: PlayerId) {
             viewModelScope.launch {
                 val snapshot = games.observe(gameId).first() ?: return@launch
-                when (val outcome = games.append(gameId, RemovePlayer(EventId(ids.newId()), player))) {
-                    is Outcome.Err -> {
-                        effects.send(GameEffect.EditRefused(outcome.error))
+                when (val outcome = play(RemovePlayer(EventId(ids.newId()), player))) {
+                    is CommandOutcome.Rejected -> {
+                        refused(outcome)
                     }
 
-                    is Outcome.Ok -> {
+                    CommandOutcome.Applied -> {
                         effects.send(GameEffect.PlayerLeft(snapshot.playerName(player)))
                     }
                 }
@@ -512,7 +539,7 @@ class GameViewModel
             viewModelScope.launch {
                 // L'identifiant est choisi ici : une deuxième demande (double tap, autre téléphone) est sans effet.
                 val id = ids.newId()
-                if (games.apply(gameId, GameCommand.Rematch(id, order)) == CommandOutcome.Applied) {
+                if (submit(GameCommand.Rematch(id, order)) == CommandOutcome.Applied) {
                     effects.send(GameEffect.OpenGame(id))
                 }
             }
@@ -524,7 +551,7 @@ class GameViewModel
                 val snapshot = games.observe(gameId).first() ?: return@launch
                 newRecord.value = false
                 // L'ordre de la manche est calculé par l'autorité (ici, ce téléphone) à partir du match.
-                games.apply(gameId, GameCommand.NextSet(snapshot.sets.size))
+                submit(GameCommand.NextSet(snapshot.sets.size))
             }
         }
 
@@ -535,8 +562,7 @@ class GameViewModel
                 val state = snapshot.molkkoutState ?: return@launch
                 val team = state.nextTeam ?: return@launch
                 val player = state.nextPlayer ?: return@launch
-                games.apply(
-                    gameId,
+                submit(
                     GameCommand.MolkkoutPlay(snapshot.molkkout.size + 1, MolkkoutThrow(team.id, player, pins.sorted())),
                 )
             }
@@ -550,13 +576,13 @@ class GameViewModel
                         .first()
                         ?.molkkout
                         ?.size ?: return@launch
-                games.apply(gameId, GameCommand.MolkkoutUndo(count))
+                submit(GameCommand.MolkkoutUndo(count))
             }
         }
 
         fun abandon() {
             viewModelScope.launch {
-                if (games.append(gameId, Abandon(EventId(ids.newId()))) is Outcome.Ok) games.close(gameId)
+                if (play(Abandon(EventId(ids.newId()))) == CommandOutcome.Applied) games.close(gameId)
             }
         }
 
