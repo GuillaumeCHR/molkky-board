@@ -19,6 +19,19 @@ val MIGRATION_1_2 =
         }
     }
 
+/**
+ * 3 → 4 : préparation des parties à plusieurs téléphones (A1, 2026-10-28) : origine de la partie et téléphone auteur
+ * de chaque événement. Ajouts de colonnes seulement ; les parties existantes restent « locales ».
+ */
+val MIGRATION_3_4 =
+    object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `game` ADD COLUMN `origin` TEXT NOT NULL DEFAULT 'LOCAL'")
+            db.execSQL("ALTER TABLE `game_event` ADD COLUMN `authorDevice` TEXT")
+            db.execSQL("ALTER TABLE `molkkout_throw` ADD COLUMN `authorDevice` TEXT")
+        }
+    }
+
 /** 2 → 3 : lancers du Mölkkout (J5). */
 val MIGRATION_2_3 =
     object : Migration(2, 3) {

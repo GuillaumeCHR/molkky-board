@@ -74,7 +74,33 @@ class MigrationTest {
             database.close()
         }
 
+    @Test
+    fun `une base du J5 garde ses parties, devenues locales, apres la preparation multi-telephones`() =
+        runTest {
+            helper.createDatabase(DB_J5, 3).apply {
+                execSQL("INSERT INTO game VALUES ('g1', 1, 1, '{}', '{}', NULL, NULL)")
+                execSQL("INSERT INTO game_event VALUES ('e1', 'g1', 0, 1, NULL, 'LOCAL', 1, '{}')")
+                execSQL("INSERT INTO molkkout_throw VALUES ('g1', 1, '{}')")
+                close()
+            }
+            helper.runMigrationsAndValidate(DB_J5, 4, true, MIGRATION_3_4).close()
+            val database = openMigrated(DB_J5)
+            val dao = database.gameDao()
+            assertEquals("LOCAL", dao.observeGame("g1").first()?.origin)
+            assertEquals(
+                null,
+                dao
+                    .observeEvents("g1")
+                    .first()
+                    .single()
+                    .authorDevice,
+            )
+            assertEquals(null, dao.molkkoutThrows("g1").single().authorDevice)
+            database.close()
+        }
+
     private companion object {
+        const val DB_J5 = "migration-j5.db"
         const val DB_J4 = "migration-j4.db"
         const val DB = "migration-test.db"
         const val DB_RECENT = "migration-recent.db"

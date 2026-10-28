@@ -1,5 +1,6 @@
 package com.yogistudio.molkkyboard.core.database.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -44,7 +45,15 @@ data class GameEntity(
     val matchConfigJson: String,
     val place: String?,
     val closedAt: Long?,
-)
+    /** D'où vient la partie : ce seul téléphone, hébergée par lui, ou rejointe sur un autre (partie à côté). */
+    @ColumnInfo(defaultValue = "'$ORIGIN_LOCAL'") val origin: String = ORIGIN_LOCAL,
+) {
+    companion object {
+        const val ORIGIN_LOCAL = "LOCAL"
+        const val ORIGIN_HOSTED = "HOSTED"
+        const val ORIGIN_JOINED = "JOINED"
+    }
+}
 
 /** Une manche : sa composition de départ (équipes et ordre de passage), en JSON. */
 @Entity(
@@ -89,8 +98,9 @@ data class GameTeamEntity(
 )
 
 /**
- * Événement du journal d'une manche, en ajout seul. [localSeq] donne l'ordre sur l'appareil ; [serverSeq] et
- * [syncState] serviront à la synchronisation (Phase 4).
+ * Événement du journal d'une manche, en ajout seul. [localSeq] donne l'ordre sur l'appareil ; [serverSeq] est le
+ * numéro attribué par l'autorité (téléphone hôte ou serveur) dans une partie à plusieurs téléphones, et [syncState]
+ * son état d'envoi. [authorDevice] : le téléphone qui l'a proposé (`null` = ce téléphone).
  */
 @Entity(
     tableName = "game_event",
@@ -113,6 +123,7 @@ data class GameEventEntity(
     val syncState: String = SYNC_LOCAL,
     val createdAt: Long,
     val payloadJson: String,
+    val authorDevice: String? = null,
 ) {
     companion object {
         /** Partie locale, jamais synchronisée. */
@@ -160,4 +171,6 @@ data class MolkkoutThrowEntity(
     val gameId: String,
     val seq: Int,
     val payloadJson: String,
+    /** Le téléphone qui a saisi ce lancer (`null` = ce téléphone). */
+    val authorDevice: String? = null,
 )
