@@ -88,7 +88,10 @@ data class NearbyState(
     val error: NearbyError? = null,
 ) {
     /** Téléphones connectés à la partie, ce téléphone compris. */
-    val phones: Int get() = 1 + guests.count { it.connection != null }
+    val phones: Int get() = 1 + guestsOnline
+
+    /** Invités connectés (sans ce téléphone). */
+    val guestsOnline: Int get() = guests.count { it.connection != null }
 }
 
 /**
@@ -127,6 +130,7 @@ class NearbyManager
         private var link: JoinLink? = null
         private var network: Network? = null
         private var reconnect: Job? = null
+        private var renewal: Job? = null
         private val waiters = HashMap<String, CompletableDeferred<CommandOutcome>>()
 
         // ---- Hôte ----
@@ -186,6 +190,7 @@ class NearbyManager
                 ContextCompat.startForegroundService(context, HostService.start(context))
                 mutable.update { it.copy(starting = false, ssid = spot?.ssid) }
                 publishHost()
+                renewal = renewInvitesForever()
             }
         }
 
@@ -205,6 +210,15 @@ class NearbyManager
             scope.launch {
                 host?.let { dispatch(it.exclude(device)) }
                 publishHost()
+            }
+
+        /** Le jeton d'invitation ne vaut que 2 minutes : le QR code affiché est renouvelé avant expiration. */
+        private fun renewInvitesForever(): Job =
+            scope.launch {
+                while (true) {
+                    delay(INVITE_RENEW_MS)
+                    renewInvite()
+                }
             }
 
         /** Nouveau QR code (le précédent expire au bout de 2 minutes, ou après une arrivée). */
@@ -262,7 +276,7 @@ class NearbyManager
                     guests = session?.guests.orEmpty(),
                 )
             }
-            HostService.refresh(context, mutable.value.phones)
+            HostService.refresh(context, mutable.value.guestsOnline)
         }
 
         private suspend fun waitForAddress(hotspot: Boolean): String? {
@@ -447,6 +461,8 @@ class NearbyManager
         fun stop() = scope.launch { stopAll() }
 
         private fun stopAll() {
+            renewal?.cancel()
+            renewal = null
             host?.let { dispatch(it.end()) }
             server?.let { runCatching { it.stop(STOP_TIMEOUT_MS) } }
             if (server != null) PartyCertificate.delete()
@@ -489,5 +505,6 @@ class NearbyManager
             const val RECONNECT_DELAY_MS = 2_000L
             const val ANSWER_TIMEOUT_MS = 10_000L
             const val STOP_TIMEOUT_MS = 1_000
+            const val INVITE_RENEW_MS = 90_000L
         }
     }

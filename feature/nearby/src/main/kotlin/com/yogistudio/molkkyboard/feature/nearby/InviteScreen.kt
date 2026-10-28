@@ -137,7 +137,7 @@ private fun Sharing(state: NearbyState, players: List<PartyPlayer>, viewModel: N
         Text(stringResource(R.string.invite_renew))
     }
     Text(
-        stringResource(R.string.invite_phones, state.phones),
+        stringResource(R.string.invite_phones, state.guestsOnline),
         style = MaterialTheme.typography.titleMedium,
         modifier = Modifier.fillMaxWidth(),
     )

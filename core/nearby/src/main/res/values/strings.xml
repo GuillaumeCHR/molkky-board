@@ -3,8 +3,8 @@
     <string name="nearby_channel">Partie partagée</string>
     <string name="nearby_notification_title">Partie partagée en cours</string>
     <plurals name="nearby_notification_phones">
-        <item quantity="one">%1$d téléphone connecté</item>
-        <item quantity="other">%1$d téléphones connectés</item>
+        <item quantity="one">%1$d invité connecté</item>
+        <item quantity="other">%1$d invités connectés</item>
     </plurals>
     <string name="nearby_notification_stop">Arrêter le partage</string>
 </resources>

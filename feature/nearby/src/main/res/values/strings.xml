@@ -8,11 +8,11 @@
     <string name="invite_same_wifi_hint">Tous les téléphones sont connectés au même Wi-Fi (certains réseaux publics ou « invités » isolent les téléphones : essayez alors le point d\'accès).</string>
     <string name="invite_start">Partager la partie</string>
     <string name="invite_starting">Démarrage du partage…</string>
-    <string name="invite_scan">Faites scanner ce QR code dans Molkky Board › Rejoindre</string>
+    <string name="invite_scan">Faites scanner ce QR code dans Molkky Board › Rejoindre. Chaque QR code n\'est valable que 2 minutes : il se renouvelle tout seul.</string>
     <string name="invite_qr_description">QR code d\'invitation à la partie</string>
     <string name="invite_network">Réseau de la partie : %1$s</string>
     <string name="invite_renew">Nouveau QR code</string>
-    <string name="invite_phones">Téléphones connectés : %1$d</string>
+    <string name="invite_phones">Invités connectés : %1$d</string>
     <string name="invite_guest_online">%1$s · connecté</string>
     <string name="invite_guest_offline">%1$s · hors ligne</string>
     <string name="invite_guest_player">Saisit pour %1$s</string>

@@ -140,7 +140,7 @@ fun MolkkyBoardNavHost(
                     if (crashReport != null) CrashReportDialog(crashReport, onCrashReportHandled)
                     HomeScreen(
                         onNewGame = { navController.navigate(SetupRoute) },
-                        onJoin = { navController.navigate(JoinRoute) },
+                        onJoin = { navController.navigate(JoinRoute()) },
                         onResume = { navController.navigate(GameRoute(it)) },
                         onRules = { navController.navigate(RulesRoute) },
                         onPlacement = { navController.navigate(PlacementRoute) },
@@ -174,8 +174,9 @@ fun MolkkyBoardNavHost(
                 composable<PlayfulRulesRoute> { PlayfulRulesScreen(onBack = navController::navigateUp) }
                 composable<RulesRoute> { RulesScreen(onBack = navController::navigateUp) }
                 composable<PlacementRoute> { PlacementScreen(onBack = navController::navigateUp) }
-                composable<JoinRoute> {
+                composable<JoinRoute> { entry ->
                     JoinScreen(
+                        initialLink = entry.toRoute<JoinRoute>().link,
                         onBack = navController::navigateUp,
                         onJoined = { id -> navController.navigate(GameRoute(id)) { popUpTo<HomeRoute>() } },
                     )
@@ -251,6 +252,7 @@ private fun LaunchTargetEffect(
                 LaunchTarget.NewGame -> SetupRoute
                 LaunchTarget.Placement -> PlacementRoute
                 LaunchTarget.Rules -> RulesRoute
+                is LaunchTarget.Join -> JoinRoute(wanted.link)
             }
         navController.navigate(route) {
             popUpTo<HomeRoute>()

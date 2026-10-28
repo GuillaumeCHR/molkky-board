@@ -8,6 +8,11 @@ sealed interface LaunchTarget {
 
     data object NewGame : LaunchTarget
 
+    /** Builds de debug seulement : invitation transmise par adb (émulateur sans caméra). */
+    data class Join(
+        val link: String,
+    ) : LaunchTarget
+
     data object Placement : LaunchTarget
 
     data object Rules : LaunchTarget

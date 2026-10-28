@@ -31,8 +31,11 @@ data object RulesRoute
 @Serializable
 data object PlayfulRulesRoute
 
+/** « Rejoindre » ; [link] n'est rempli qu'en debug (invitation passée par adb à un émulateur sans caméra). */
 @Serializable
-data object JoinRoute
+data class JoinRoute(
+    val link: String? = null,
+)
 
 /** « Inviter des téléphones » pour la partie [gameId] (partie à côté). */
 @Serializable

@@ -65,9 +65,15 @@ import java.util.concurrent.Executors
  * confirme son pseudo, puis on attend que l'organisateur accepte. Accepté, l'invité arrive sur l'écran de jeu.
  */
 @Composable
-fun JoinScreen(onBack: () -> Unit, onJoined: (String) -> Unit, viewModel: NearbyViewModel = hiltViewModel()) {
+fun JoinScreen(
+    onBack: () -> Unit,
+    onJoined: (String) -> Unit,
+    initialLink: String? = null,
+    viewModel: NearbyViewModel = hiltViewModel(),
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var link by rememberSaveable { mutableStateOf("") }
+    // Debug : une nouvelle invitation passée par adb remplace la précédente.
+    var link by rememberSaveable(initialLink) { mutableStateOf(initialLink.orEmpty()) }
     var nickname by rememberSaveable { mutableStateOf("") }
     var submitted by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) { if (nickname.isEmpty()) nickname = viewModel.suggestedNickname() }

@@ -11,6 +11,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
+import com.yogistudio.molkkyboard.core.nearby.JoinLink
 import com.yogistudio.molkkyboard.crash.CrashReports
 import com.yogistudio.molkkyboard.navigation.LaunchTarget
 import com.yogistudio.molkkyboard.navigation.MolkkyBoardNavHost
@@ -90,6 +91,14 @@ class MainActivity : AppCompatActivity() {
             }
             return
         }
+        // Debug seulement : l'émulateur n'a pas de caméra pour scanner le QR code de l'organisateur. Même validation
+        // stricte que pour un scan ; jamais pris en compte en release.
+        if (BuildConfig.DEBUG) {
+            intent.getStringExtra(EXTRA_DEBUG_JOIN)?.takeIf { JoinLink.parse(it) != null }?.let {
+                target.value = LaunchTarget.Join(it)
+                return
+            }
+        }
         target.value =
             when (intent.getStringExtra(AppShortcuts.EXTRA_SHORTCUT)) {
                 AppShortcuts.NEW_GAME -> LaunchTarget.NewGame
@@ -101,5 +110,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_GAME_ID = "com.yogistudio.molkkyboard.GAME_ID"
+        const val EXTRA_DEBUG_JOIN = "com.yogistudio.molkkyboard.DEBUG_JOIN"
     }
 }

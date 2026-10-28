@@ -17,7 +17,7 @@ import javax.inject.Inject
 
 /**
  * Service de premier plan de l'hôte (type `connectedDevice`) : la partie reste joignable écran éteint. Sa
- * notification dit combien de téléphones sont connectés et propose « Arrêter le partage ».
+ * notification dit combien d'invités sont connectés et propose « Arrêter le partage ».
  */
 @AndroidEntryPoint
 class HostService : Service() {
@@ -32,7 +32,7 @@ class HostService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
-        val phones = intent?.getIntExtra(EXTRA_PHONES, 1) ?: 1
+        val guests = intent?.getIntExtra(EXTRA_PHONES, 0) ?: 0
         val type =
             if (Build.VERSION.SDK_INT >=
                 Build.VERSION_CODES.Q
@@ -41,7 +41,7 @@ class HostService : Service() {
             } else {
                 0
             }
-        ServiceCompat.startForeground(this, NOTIFICATION_ID, notification(this, phones), type)
+        ServiceCompat.startForeground(this, NOTIFICATION_ID, notification(this, guests), type)
         return START_NOT_STICKY
     }
 
@@ -53,11 +53,11 @@ class HostService : Service() {
 
         fun start(context: Context): Intent = Intent(context, HostService::class.java)
 
-        /** Met à jour le nombre de téléphones affiché (sans relancer le service s'il ne tourne pas). */
-        fun refresh(context: Context, phones: Int) {
+        /** Met à jour le nombre d'invités connectés affiché (sans relancer le service s'il ne tourne pas). */
+        fun refresh(context: Context, guests: Int) {
             val manager = context.getSystemService(NotificationManager::class.java)
             if (manager.activeNotifications.any { it.id == NOTIFICATION_ID }) {
-                manager.notify(NOTIFICATION_ID, notification(context, phones))
+                manager.notify(NOTIFICATION_ID, notification(context, guests))
             }
         }
 
@@ -65,7 +65,7 @@ class HostService : Service() {
             context.stopService(Intent(context, HostService::class.java))
         }
 
-        private fun notification(context: Context, phones: Int): Notification {
+        private fun notification(context: Context, guests: Int): Notification {
             val manager = context.getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(
                 NotificationChannel(
@@ -87,7 +87,7 @@ class HostService : Service() {
                 .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
                 .setContentTitle(context.getString(R.string.nearby_notification_title))
                 .setContentText(
-                    context.resources.getQuantityString(R.plurals.nearby_notification_phones, phones, phones),
+                    context.resources.getQuantityString(R.plurals.nearby_notification_phones, guests, guests),
                 ).setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .apply {

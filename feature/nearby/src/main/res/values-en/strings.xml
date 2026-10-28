@@ -8,11 +8,11 @@
     <string name="invite_same_wifi_hint">All phones are on the same Wi-Fi (some public or “guest” networks isolate phones: try the hotspot then).</string>
     <string name="invite_start">Share the game</string>
     <string name="invite_starting">Starting…</string>
-    <string name="invite_scan">Have this QR code scanned in Molkky Board › Join</string>
+    <string name="invite_scan">Have this QR code scanned in Molkky Board › Join. Each QR code is only valid for 2 minutes: it renews itself.</string>
     <string name="invite_qr_description">Game invitation QR code</string>
     <string name="invite_network">Game network: %1$s</string>
     <string name="invite_renew">New QR code</string>
-    <string name="invite_phones">Connected phones: %1$d</string>
+    <string name="invite_phones">Guests connected: %1$d</string>
     <string name="invite_guest_online">%1$s · connected</string>
     <string name="invite_guest_offline">%1$s · offline</string>
     <string name="invite_guest_player">Enters throws for %1$s</string>
