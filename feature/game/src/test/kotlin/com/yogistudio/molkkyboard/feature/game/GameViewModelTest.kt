@@ -229,7 +229,11 @@ class GameViewModelTest {
             vm.gameEffects().test {
                 vm.validate()
                 assertEquals(GameEffect.Validated("Alice", 9), awaitItem())
-                assertEquals(GameEffect.Overshoot(25), awaitItem())
+                val overshoot = awaitItem() as GameEffect.Overshoot
+                assertEquals(25, overshoot.resetTo)
+                // C'est le joueur qui a dépassé qui est mis en scène, pas le suivant.
+                assertEquals("Alice", overshoot.team?.name)
+                assertTrue(overshoot.from > 50)
             }
         }
 
@@ -358,7 +362,11 @@ class GameViewModelTest {
                 vm.awaitState { it.selection != Selection.None }
                 vm.validate()
                 assertEquals(GameEffect.Validated("Alice", 12), awaitItem())
-                assertEquals(GameEffect.Overshoot(25), awaitItem())
+                val overshoot = awaitItem() as GameEffect.Overshoot
+                assertEquals(25, overshoot.resetTo)
+                // C'est le joueur qui a dépassé qui est mis en scène, pas le suivant.
+                assertEquals("Alice", overshoot.team?.name)
+                assertTrue(overshoot.from > 50)
                 expectNoEvents()
             }
         }

@@ -5,21 +5,18 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.EncodeHintType
-import com.google.zxing.qrcode.QRCodeWriter
 import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.random.Random
 
 /**
  * Dessine une image du mini-clip à l'instant [timeMs], dans un [Canvas] Android (aucune dépendance à Compose :
- * le même code sert à la vidéo MP4 et au GIF). Tout est préparé une fois : pinceaux, trajectoires, QR code ;
+ * le même code sert à la vidéo MP4 et au GIF). Tout est préparé une fois : pinceaux, trajectoires ;
  * la boucle de dessin n'alloue rien.
  *
  * Déroulé (≈ 8,8 s) : 1. le strike, les quilles s'envolent ; 2. la course vers 50, tour après tour, avec les
  * retours à 25 et les éliminations ; 3. le lancer décisif et la pluie de quilles ; 4. carton final avec le
- * score, le logotype et le QR code.
+ * score et le logotype.
  */
 class ReelRenderer(
     private val data: ReelData,
@@ -66,7 +63,6 @@ class ReelRenderer(
         }
     private val roundLabels = (0..data.steps.maxOfOrNull { it.round }.let { it ?: 1 }).map(data.labels.round)
     private val winnerName = data.winner?.let { data.teams[it].name.take(NAME_MAX) }
-    private val qr = QRCodeWriter().encode(STORE_URL, BarcodeFormat.QR_CODE, 0, 0, mapOf(EncodeHintType.MARGIN to 1))
 
     val durationMs: Long get() = END
 
@@ -226,7 +222,7 @@ class ReelRenderer(
         text.textAlign = Paint.Align.CENTER
         text.textSize = 40f * unit
         text.color = INK
-        canvas.drawText(data.labels.scan, width / 2f, height * 0.72f, text)
+        canvas.drawText(data.labels.scan, width / 2f, height * 0.76f, text)
         // Logotype : « Molkky » vert forêt, « Board » safran, même ligne de base.
         big.textSize = 96f * unit
         val molkky = big.measureText("Molkky ")
@@ -234,34 +230,17 @@ class ReelRenderer(
         val start = (width - molkky - board) / 2f
         big.textAlign = Paint.Align.LEFT
         big.color = FOREST
-        canvas.drawText("Molkky ", start, height * 0.8f, big)
+        canvas.drawText("Molkky ", start, height * 0.84f, big)
         big.color = SAFFRON
-        canvas.drawText("Board", start + molkky, height * 0.8f, big)
+        canvas.drawText("Board", start + molkky, height * 0.84f, big)
         big.textAlign = Paint.Align.CENTER
-        drawQr(canvas, width / 2f, height * 0.88f, 200f * unit)
         text.textSize = 36f * unit
-        canvas.drawText(data.labels.hashtag, width / 2f, height * 0.97f, text)
+        canvas.drawText(data.labels.hashtag, width / 2f, height * 0.9f, text)
     }
 
     private fun finalScore(team: Int): Int = data.steps.lastOrNull { it.team == team }?.score ?: 0
 
     private val finalScores = data.teams.indices.map { finalScore(it).toString() }
-
-    private fun drawQr(canvas: Canvas, cx: Float, cy: Float, size: Float) {
-        fill.color = WHITE
-        rect.set(cx - size / 2, cy - size / 2, cx + size / 2, cy + size / 2)
-        canvas.drawRect(rect, fill)
-        val cell = size / qr.width
-        fill.color = INK
-        for (y in 0 until qr.height) {
-            for (x in 0 until qr.width) {
-                if (!qr[x, y]) continue
-                val left = cx - size / 2 + x * cell
-                val top = cy - size / 2 + y * cell
-                canvas.drawRect(left, top, left + cell + 0.5f, top + cell + 0.5f, fill)
-            }
-        }
-    }
 
     /** Tampon penché (« Éliminé », « Retour à 25 ! »). */
     private fun stamp(canvas: Canvas, label: String, cx: Float, cy: Float, color: Int) {

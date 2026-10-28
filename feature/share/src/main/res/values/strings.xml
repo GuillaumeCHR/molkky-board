@@ -11,10 +11,6 @@
     <string name="share_format_square">Carré 1:1</string>
     <string name="share_text_label">Texte d\'accompagnement</string>
     <string name="share_template_hint">Glissez pour changer de modèle</string>
-    <string name="share_consent">Les autres joueurs sont d\'accord pour apparaître ? Touchez un nom pour le masquer.</string>
-    <string name="share_masked_name">Joueur %1$d</string>
-    <string name="share_hide">Masquer %1$s</string>
-    <string name="share_show">Afficher %1$s</string>
     <string name="share_chooser">Partager la partie</string>
     <string name="share_preview_description">Aperçu de la vignette : %1$s</string>
     <string name="share_nothing">Rien à partager pour cette partie.</string>

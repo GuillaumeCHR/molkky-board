@@ -11,7 +11,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.zxing.core)
     implementation(libs.androidx.core.ktx)
     implementation(libs.media3.transformer)
     implementation(libs.media3.effect)

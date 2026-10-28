@@ -20,6 +20,7 @@ import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.RulesMode
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.TeamOverride
+import com.yogistudio.molkkyboard.core.model.withoutUnsafeChars
 import com.yogistudio.molkkyboard.core.scoring.MatchConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -75,7 +76,10 @@ class SetupViewModel
             viewModelScope.launch { settings.setOnboardingDone(true) }
         }
 
-        fun onNameChange(name: String) = mutableState.update { it.copy(draftName = name.take(SetupUiState.MAX_NAME)) }
+        fun onNameChange(name: String) =
+            mutableState.update {
+                it.copy(draftName = name.withoutUnsafeChars().take(SetupUiState.MAX_NAME))
+            }
 
         /** Ajoute le joueur saisi et crée son profil local (avatar et couleur libres), pour les prochaines parties. */
         fun addPlayer(teamNames: List<String> = emptyList()) {
@@ -103,7 +107,7 @@ class SetupViewModel
 
         /** Ajoute directement un nouveau joueur à une équipe (et crée son profil). */
         fun addPlayerToTeam(team: TeamId, name: String) {
-            val trimmed = name.trim().take(SetupUiState.MAX_NAME)
+            val trimmed = name.withoutUnsafeChars().trim().take(SetupUiState.MAX_NAME)
             if (trimmed.isEmpty()) return
             val state = mutableState.value
             val profile =
@@ -275,7 +279,7 @@ class SetupViewModel
         fun renameTeam(id: TeamId, name: String) =
             updateTeam(
                 id,
-            ) { it.copy(name = name.take(MAX_TEAM_NAME), known = null) }
+            ) { it.copy(name = name.withoutUnsafeChars().take(MAX_TEAM_NAME), known = null) }
 
         /** 🎲 : un nom amusant au hasard, différent de ceux déjà pris. */
         fun randomTeamName(id: TeamId, teamNames: List<String>) {

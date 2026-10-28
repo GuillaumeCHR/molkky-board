@@ -8,7 +8,7 @@ import com.yogistudio.molkkyboard.core.data.GameSnapshot
 import com.yogistudio.molkkyboard.core.data.PlayerRepository
 import com.yogistudio.molkkyboard.core.data.StatsRepository
 import com.yogistudio.molkkyboard.core.data.toStatsGame
-import com.yogistudio.molkkyboard.core.model.TeamId
+import com.yogistudio.molkkyboard.core.model.withoutUnsafeChars
 import com.yogistudio.molkkyboard.core.stats.Moment
 import com.yogistudio.molkkyboard.core.stats.isNewRecord
 import com.yogistudio.molkkyboard.core.stats.moments
@@ -41,8 +41,6 @@ data class ShareChoices(
     val momentIndex: Int = 0,
     val template: ShareTemplate? = null,
     val format: ShareFormat = ShareFormat.STORY,
-    /** Équipes dont le nom est masqué (« Joueur 2 ») : vie privée des autres joueurs. */
-    val masked: Set<TeamId> = emptySet(),
     val text: String? = null,
 )
 
@@ -58,20 +56,10 @@ data class ShareUiState(
 
     /** Modèle affiché : celui choisi, sinon celui qui convient au moment. */
     val template: ShareTemplate get() = choices.template ?: moment?.defaultTemplate() ?: ShareTemplate.PODIUM
-
-    /** Équipes qu'on peut masquer (toutes : l'auteur peut se masquer lui-même). */
-    val teams: List<Pair<TeamId, String>>
-        get() =
-            snapshot
-                ?.let { s ->
-                    s.currentSet.replay.state.teams
-                        .map { it.id to (s.team(it.id)?.name ?: it.id.value) }
-                }.orEmpty()
 }
 
 /**
- * Partage d'une partie : moments détectés depuis le journal (le plus fort en premier), modèle, format, noms
- * masquables. Le partage est toujours proposé, jamais imposé.
+ * Partage d'une partie : moments détectés depuis le journal (le plus fort en premier), modèle, format. Le partage est toujours proposé, jamais imposé.
  */
 @HiltViewModel
 class ShareViewModel
@@ -109,10 +97,10 @@ class ShareViewModel
 
         fun selectFormat(format: ShareFormat) = choices.update { it.copy(format = format) }
 
-        fun toggleMasked(team: TeamId) =
-            choices.update { it.copy(masked = if (team in it.masked) it.masked - team else it.masked + team) }
-
-        fun editText(text: String) = choices.update { it.copy(text = text.take(MAX_TEXT)) }
+        fun editText(text: String) =
+            choices.update {
+                it.copy(text = text.withoutUnsafeChars(keepNewlines = true).take(MAX_TEXT))
+            }
 
         companion object {
             const val GAME_ID = "gameId"

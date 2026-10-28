@@ -48,6 +48,7 @@ import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
+import com.yogistudio.molkkyboard.core.model.withoutUnsafeChars
 
 /**
  * Gestion des joueurs en cours de partie : changer l'ordre de passage (entre deux tours, avec confirmation),
@@ -132,7 +133,7 @@ internal fun PlayersSheet(
                 ) {
                     OutlinedTextField(
                         value = newName,
-                        onValueChange = { newName = it.take(MAX_NAME) },
+                        onValueChange = { newName = it.withoutUnsafeChars().take(MAX_NAME) },
                         label = { Text(stringResource(R.string.players_add_name)) },
                         singleLine = true,
                         keyboardOptions =

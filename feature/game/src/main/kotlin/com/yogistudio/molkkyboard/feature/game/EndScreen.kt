@@ -356,7 +356,17 @@ private fun EndActions(state: GameUiState, end: EndUi?, actions: GameActions) {
             )
         }
     }
-    TextButton(onClick = actions.onHome) { Text(stringResource(R.string.game_home)) }
+    // Une partie finie se termine par un vrai bouton ; un match en cours reste ouvert et se reprend depuis l'accueil.
+    if (state.finished && match?.nextSet == null && (match?.molkkout == null || match.winner != null)) {
+        BigActionButton(
+            stringResource(R.string.end_finish),
+            actions.onHome,
+            BigActionKind.Secondary,
+            Modifier.fillMaxWidth(),
+        )
+    } else {
+        TextButton(onClick = actions.onHome) { Text(stringResource(R.string.game_home)) }
+    }
 }
 
 /** « Revanche » en un tap, avec l'ordre de passage choisi juste au-dessus (rotation par défaut). */

@@ -75,6 +75,7 @@ import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.RulesMode
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.TeamOverride
+import com.yogistudio.molkkyboard.core.model.withoutUnsafeChars
 
 /** Actions de l'écran de création (l'écran reste sans état, pour les aperçus et les captures). */
 data class SetupActions(
@@ -616,7 +617,7 @@ private fun TeamAddRow(team: SetupTeam, state: SetupUiState, actions: SetupActio
     ) {
         OutlinedTextField(
             value = name,
-            onValueChange = { name = it.take(SetupUiState.MAX_NAME) },
+            onValueChange = { name = it.withoutUnsafeChars().take(SetupUiState.MAX_NAME) },
             label = { Text(stringResource(R.string.setup_team_add_player)) },
             singleLine = true,
             keyboardOptions =

@@ -128,20 +128,6 @@ class ShareCardsTest {
     }
 
     @Test
-    fun nomsMasques() {
-        val masked =
-            content(victory).let { c ->
-                c.copy(teams = c.teams.mapIndexed { i, t -> t.copy(name = "Joueur ${i + 1}") })
-            }
-        capture(
-            "podium_noms_masques",
-            masked.copy(hero = masked.teams.first()),
-            ShareTemplate.PODIUM,
-            ShareFormat.STORY,
-        )
-    }
-
-    @Test
     fun `l'image capturee fait exactement 1080 x 1920`() {
         var captured: GraphicsLayer? = null
         compose.setContent {

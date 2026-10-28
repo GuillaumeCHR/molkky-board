@@ -169,9 +169,11 @@ sealed interface GameEffect {
         val points: Int,
     ) : GameEffect
 
-    /** Dépassement de la cible : retour au score [resetTo]. */
+    /** Dépassement de la cible par [team] : de [from] points (au-delà de la cible), retour au score [resetTo]. */
     data class Overshoot(
         val resetTo: Int,
+        val team: TeamUi? = null,
+        val from: Int = resetTo,
     ) : GameEffect
 
     data class Eliminated(

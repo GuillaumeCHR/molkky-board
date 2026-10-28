@@ -59,7 +59,7 @@
     <string name="notification_permission_text">A discreet notification shows the round, who is throwing and the scores, so you can get back to the game in one tap. Everything stays on the phone.</string>
     <string name="notification_permission_allow">Continue</string>
     <string name="notification_permission_later">Later</string>
-    <string name="settings_coming_hint">Intro impact, “12!”, victory and elimination: home-made sounds, silent in silent and vibrate mode.</string>
+    <string name="settings_coming_hint">Intro impact, “12!”, victory and elimination: home-made sounds, muted only in silent mode.</string>
     <string name="settings_about">About</string>
     <string name="settings_rules">Game rules</string>
     <string name="settings_rules_hint">Setting up the pins, scoring, exactly 50, misses, frequently asked questions.</string>
@@ -106,9 +106,11 @@
     <string name="about_version">Version %1$s</string>
     <string name="about_publisher">A Yogi Studio app</string>
     <string name="about_privacy_title">Privacy</string>
+    <string name="about_privacy_headline">No data collected. Molkky Board does not even have Internet access.</string>
     <string name="about_privacy_no_ads">Molkky Board contains no ads, no ad trackers, no audience measurement tools, and sells no data.</string>
-    <string name="about_privacy_local">Everything stays on your phone: the app does not even request Internet access.</string>
+    <string name="about_privacy_local">Everything stays on your phone, except what you choose to share yourself.</string>
     <string name="about_privacy_control">You can back up, export or delete your data at any time, in Settings › Data.</string>
+    <string name="about_privacy_open_source">Built with open source libraries (list below).</string>
     <string name="about_credits">Credits</string>
     <string name="about_licenses">Open source libraries</string>
     <string name="about_licenses_list">List of libraries</string>

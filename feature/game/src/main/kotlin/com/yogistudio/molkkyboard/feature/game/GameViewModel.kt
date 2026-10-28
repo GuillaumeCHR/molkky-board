@@ -249,7 +249,13 @@ class GameViewModel
             }
             when {
                 overshoot -> {
-                    effects.send(GameEffect.Overshoot(updated.score))
+                    effects.send(
+                        GameEffect.Overshoot(
+                            updated.score,
+                            snapshot.teamUi(updated, faces = avatars.value),
+                            from = team.score + points,
+                        ),
+                    )
                     announce(Announcement.Reset(updated.score))
                 }
 

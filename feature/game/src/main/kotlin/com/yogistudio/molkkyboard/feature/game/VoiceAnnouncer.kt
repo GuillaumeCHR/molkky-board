@@ -12,7 +12,8 @@ import androidx.compose.ui.platform.LocalContext
 
 /**
  * Annonces vocales par la synthèse vocale d'Android (moteur installé sur le téléphone, aucune requête de
- * l'application). Muettes si le téléphone est en silencieux ou en vibreur, et pendant TalkBack (doublon).
+ * l'application), au volume média. Muettes seulement si le téléphone est en silencieux (pas en vibreur), et
+ * pendant TalkBack (doublon). Une phrase demandée avant que le moteur soit prêt est lue dès qu'il l'est.
  */
 class VoiceAnnouncer(
     context: Context,
@@ -25,13 +26,26 @@ class VoiceAnnouncer(
     private val accessibility = appContext.getSystemService(AccessibilityManager::class.java)
     private var ready = false
     private var counter = 0
-    private val tts =
+
+    // Phrases demandées pendant l'initialisation du moteur (rappel sur le fil principal).
+    private val pending = mutableListOf<Triple<String, Float, Float>>()
+    private val tts: TextToSpeech =
         TextToSpeech(appContext) { status ->
             ready = status == TextToSpeech.SUCCESS
+            if (ready) pending.forEach { (text, rate, volume) -> say(text, rate, volume) }
+            pending.clear()
         }
 
     fun speak(text: String, rate: Float, volume: Float) {
-        if (!ready || muted()) return
+        if (muted()) return
+        if (!ready) {
+            if (pending.size < MAX_PENDING) pending += Triple(text, rate, volume)
+            return
+        }
+        say(text, rate, volume)
+    }
+
+    private fun say(text: String, rate: Float, volume: Float) {
         tts.language = locale
         tts.setSpeechRate(rate)
         val params = Bundle().apply { putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volume) }
@@ -39,11 +53,16 @@ class VoiceAnnouncer(
     }
 
     private fun muted(): Boolean =
-        audio?.ringerMode != AudioManager.RINGER_MODE_NORMAL || accessibility?.isTouchExplorationEnabled == true
+        audio?.ringerMode == AudioManager.RINGER_MODE_SILENT || accessibility?.isTouchExplorationEnabled == true
 
     fun shutdown() {
+        pending.clear()
         tts.stop()
         tts.shutdown()
+    }
+
+    private companion object {
+        const val MAX_PENDING = 3
     }
 }
 

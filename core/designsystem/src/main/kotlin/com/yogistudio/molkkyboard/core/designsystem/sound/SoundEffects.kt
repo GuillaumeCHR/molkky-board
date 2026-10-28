@@ -22,8 +22,8 @@ enum class Sound(
 }
 
 /**
- * Lecteur des effets sonores (désactivés par défaut, réglage « Sons »). Muet si le téléphone est en silencieux ou en
- * vibreur. Les sons sont courts et préchargés : aucun délai à la lecture.
+ * Lecteur des effets sonores (désactivés par défaut, réglage « Sons »). Muet seulement si le téléphone est en silencieux
+ * (en vibreur, ils jouent au volume du jeu). Les sons sont courts et préchargés : aucun délai à la lecture.
  */
 class SoundEffects(
     context: Context,
@@ -43,7 +43,7 @@ class SoundEffects(
     private val ids = Sound.entries.associateWith { pool.load(context.applicationContext, it.res, 1) }
 
     fun play(sound: Sound) {
-        if (audio?.ringerMode != AudioManager.RINGER_MODE_NORMAL) return
+        if (audio?.ringerMode == AudioManager.RINGER_MODE_SILENT) return
         ids[sound]?.let { pool.play(it, VOLUME, VOLUME, 1, 0, 1f) }
     }
 

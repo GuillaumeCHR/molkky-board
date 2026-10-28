@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -50,7 +49,6 @@ import com.yogistudio.molkkyboard.core.designsystem.component.BigActionButton
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionKind
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
-import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.stats.Moment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -62,7 +60,6 @@ data class ShareActions(
     val onMoment: (Int) -> Unit = {},
     val onTemplate: (ShareTemplate) -> Unit = {},
     val onFormat: (ShareFormat) -> Unit = {},
-    val onToggleMasked: (TeamId) -> Unit = {},
     val onText: (String) -> Unit = {},
 )
 
@@ -77,7 +74,6 @@ fun ShareScreen(onBack: () -> Unit, viewModel: ShareViewModel = hiltViewModel())
                 onMoment = viewModel::selectMoment,
                 onTemplate = viewModel::selectTemplate,
                 onFormat = viewModel::selectFormat,
-                onToggleMasked = viewModel::toggleMasked,
                 onText = viewModel::editText,
             ),
     )
@@ -96,8 +92,7 @@ fun ShareContentScreen(state: ShareUiState, actions: ShareActions) {
             if (!state.loading) Text(stringResource(R.string.share_nothing), Modifier.padding(MBDimens.ScreenPadding))
             return@Column
         }
-        val maskedName = maskedNameOf(context)
-        val content = snapshot.shareContent(moment, state.victory, state.choices.masked, maskedName, state.avatars)
+        val content = snapshot.shareContent(moment, state.victory, state.avatars)
         val text = state.choices.text ?: defaultText(context, content)
         Column(
             Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = MBDimens.ScreenPadding),
@@ -118,24 +113,6 @@ fun ShareContentScreen(state: ShareUiState, actions: ShareActions) {
                     FilterChip(state.choices.format == format, {
                         actions.onFormat(format)
                     }, label = { Text(stringResource(format.label())) })
-                }
-            }
-            if (state.teams.size > 1) {
-                Text(stringResource(R.string.share_consent), style = MaterialTheme.typography.bodyMedium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    state.teams.forEach { (id, name) ->
-                        val hidden = id in state.choices.masked
-                        val description = stringResource(if (hidden) R.string.share_show else R.string.share_hide, name)
-                        FilterChip(
-                            selected = !hidden,
-                            onClick = { actions.onToggleMasked(id) },
-                            label = { Text(name) },
-                            modifier =
-                                Modifier.semantics {
-                                    contentDescription = description
-                                },
-                        )
-                    }
                 }
             }
             OutlinedTextField(
@@ -294,8 +271,6 @@ private fun ShareButtons(context: Context, layer: GraphicsLayer, text: String, o
 }
 
 private fun fileName(): String = "molkky-board-${System.currentTimeMillis()}"
-
-private fun maskedNameOf(context: Context): (Int) -> String = { context.getString(R.string.share_masked_name, it) }
 
 @Composable
 private fun momentLabel(moment: Moment): String =

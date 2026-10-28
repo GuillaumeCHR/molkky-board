@@ -68,15 +68,12 @@ val Moment.team: TeamId
         }
 
 /**
- * Contenu d'une vignette pour [moment]. [masked] : équipes dont le nom est remplacé par « Joueur N » (vie
- * privée, avant de partager une partie avec d'autres joueurs). [victory] donne le chiffre clé (lancers, tour).
+ * Contenu d'une vignette pour [moment]. [victory] donne le chiffre clé (lancers, tour).
  * [avatars] : emoji des profils locaux.
  */
 fun GameSnapshot.shareContent(
     moment: Moment,
     victory: Moment.Victory?,
-    masked: Set<TeamId>,
-    maskedName: (Int) -> String,
     avatars: Map<String, String> = emptyMap(),
 ): ShareContent {
     val state = currentSet.replay.state
@@ -93,7 +90,7 @@ fun GameSnapshot.shareContent(
                 }
             ShareTeam(
                 id = id,
-                name = if (id in masked) maskedName(index + 1) else info?.name ?: id.value,
+                name = info?.name ?: id.value,
                 colorIndex = info?.colorIndex ?: 0,
                 avatar = avatar,
                 score = team.score,
@@ -111,6 +108,3 @@ fun GameSnapshot.shareContent(
         place = place,
     )
 }
-
-/** Lien de la vignette : la fiche de l'app (les liens profonds attendront un domaine). */
-const val STORE_URL = "https://play.google.com/store/apps/details?id=com.yogistudio.molkkyboard"

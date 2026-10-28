@@ -11,10 +11,6 @@
     <string name="share_format_square">Square 1:1</string>
     <string name="share_text_label">Caption</string>
     <string name="share_template_hint">Swipe to change the design</string>
-    <string name="share_consent">Are the other players happy to appear? Tap a name to hide it.</string>
-    <string name="share_masked_name">Player %1$d</string>
-    <string name="share_hide">Hide %1$s</string>
-    <string name="share_show">Show %1$s</string>
     <string name="share_chooser">Share the game</string>
     <string name="share_preview_description">Card preview: %1$s</string>
     <string name="share_nothing">Nothing to share for this game.</string>

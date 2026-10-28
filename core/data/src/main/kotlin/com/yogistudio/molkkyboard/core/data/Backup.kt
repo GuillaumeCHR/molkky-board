@@ -2,6 +2,7 @@ package com.yogistudio.molkkyboard.core.data
 
 import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.TeamLineup
+import com.yogistudio.molkkyboard.core.model.hasUnsafeChars
 import com.yogistudio.molkkyboard.core.scoring.MatchConfig
 import com.yogistudio.molkkyboard.core.scoring.MolkkoutThrow
 import com.yogistudio.molkkyboard.core.scoring.Outcome
@@ -104,7 +105,7 @@ internal val BackupJson: Json =
 
 /**
  * Contrôles d'un fichier venu de l'extérieur, donc non fiable : identifiants et textes bornés, sans caractères de
- * contrôle, manches contiguës, journaux rejouables et cohérents avec les équipes et joueurs de la partie.
+ * contrôle ni de mise en forme invisibles (inversion du sens de lecture…), manches contiguës, journaux rejouables et cohérents avec les équipes et joueurs de la partie.
  * Une règle par champ ou par bloc du fichier.
  */
 @Suppress("TooManyFunctions")
@@ -119,10 +120,10 @@ internal object BackupRules {
     fun id(value: String?): Boolean = value != null && ID.matches(value)
 
     fun text(value: String, max: Int = MAX_NAME): Boolean =
-        value.isNotBlank() && value.length <= max && value.none { it.isISOControl() }
+        value.isNotBlank() && value.length <= max && !value.hasUnsafeChars()
 
     fun optional(value: String?, max: Int): Boolean =
-        value == null || (value.length <= max && value.none { it.isISOControl() })
+        value == null || (value.length <= max && !value.hasUnsafeChars())
 
     fun color(value: Int): Boolean = value in 0 until MAX_COLOR
 

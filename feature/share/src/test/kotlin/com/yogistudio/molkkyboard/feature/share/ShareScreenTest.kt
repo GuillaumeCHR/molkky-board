@@ -111,24 +111,4 @@ class ShareScreenTest {
         assertTrue(state.moments.any { it is Moment.Victory })
         compose.onRoot().captureRoboImage("src/test/screenshots/ecran_partage.png")
     }
-
-    @Test
-    fun `masquer un joueur remplace son nom par Joueur N`() {
-        compose.setContent {
-            val state by vm.state.collectAsStateWithLifecycle()
-            MolkkyBoardTheme(reducedMotion = true) { ShareContentScreen(state, ShareActions()) }
-        }
-        compose.waitUntil(5_000) { !vm.state.value.loading }
-        vm.toggleMasked(TeamId("B"))
-        compose.waitUntil(5_000) { TeamId("B") in vm.state.value.choices.masked }
-        val state = vm.state.value
-        val content =
-            state.snapshot!!.shareContent(
-                state.moment!!,
-                state.victory,
-                state.choices.masked,
-                { "Joueur $it" },
-            )
-        assertEquals(listOf("Alice", "Joueur 2"), content.teams.map { it.name })
-    }
 }

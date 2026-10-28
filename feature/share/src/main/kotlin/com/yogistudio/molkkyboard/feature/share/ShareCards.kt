@@ -40,9 +40,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.EncodeHintType
-import com.google.zxing.qrcode.QRCodeWriter
 import com.yogistudio.molkkyboard.core.designsystem.component.ImpactBurst
 import com.yogistudio.molkkyboard.core.designsystem.component.MolkkyBoardLogotype
 import com.yogistudio.molkkyboard.core.designsystem.theme.BricolageGrotesque
@@ -125,7 +122,7 @@ internal fun keyFigure(content: ShareContent): String =
         is Moment.Eliminated -> stringResource(R.string.card_key_eliminated)
     }
 
-/** Signature systématique et discrète : logotype, QR code vers la fiche de l'app, date (et lieu s'il existe). */
+/** Signature systématique et discrète : « Comptez vos parties avec », logotype, date (et lieu s'il existe). */
 @Composable
 private fun Signature(content: ShareContent, dark: Boolean, compact: Boolean, modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -154,24 +151,6 @@ private fun Signature(content: ShareContent, dark: Boolean, compact: Boolean, mo
                     stringResource(R.string.card_hashtag),
                     style = body(10.sp, text.copy(alpha = 0.7f), FontWeight.SemiBold),
                 )
-            }
-        }
-        QrCode(STORE_URL, if (compact) 44.dp else 56.dp)
-    }
-}
-
-/** QR code dessiné en Canvas (zxing core, aucune connexion) ; fond clair pour rester lisible partout. */
-@Composable
-internal fun QrCode(text: String, size: Dp) {
-    val matrix =
-        remember(text) {
-            QRCodeWriter().encode(text, BarcodeFormat.QR_CODE, 0, 0, mapOf(EncodeHintType.MARGIN to 1))
-        }
-    Canvas(Modifier.size(size).background(Color.White, RoundedCornerShape(6.dp))) {
-        val cell = this.size.width / matrix.width
-        for (y in 0 until matrix.height) {
-            for (x in 0 until matrix.width) {
-                if (matrix[x, y]) drawRect(Ink, Offset(x * cell, y * cell), Size(cell + 0.5f, cell + 0.5f))
             }
         }
     }

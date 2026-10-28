@@ -64,10 +64,17 @@ internal fun AboutScreen(onBack: () -> Unit, onLicenses: () -> Unit) {
             Text(stringResource(R.string.about_publisher), style = MaterialTheme.typography.bodyLarge)
             YogiStudioLogo(markSize = 56.dp)
             AboutCard(R.string.about_privacy_title) {
+                // L'essentiel en tête, en gras : rien n'est collecté, et l'app ne peut de toute façon rien envoyer.
+                Text(
+                    stringResource(R.string.about_privacy_headline),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
                 listOf(
                     R.string.about_privacy_no_ads,
                     R.string.about_privacy_local,
                     R.string.about_privacy_control,
+                    R.string.about_privacy_open_source,
                 ).forEach {
                     Text(stringResource(it), style = MaterialTheme.typography.bodyLarge)
                 }

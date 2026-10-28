@@ -28,6 +28,7 @@
     <string name="game_winner">Victoire de %1$s !</string>
     <string name="game_ranking_line">%1$d. %2$s</string>
     <string name="game_new_game">Nouvelle partie</string>
+    <string name="end_finish">Terminer</string>
     <string name="game_home">Accueil</string>
     <string name="game_abandoned">Partie abandonnée</string>
     <string name="game_scores_button">Scores</string>

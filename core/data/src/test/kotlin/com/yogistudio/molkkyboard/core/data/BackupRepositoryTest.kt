@@ -238,6 +238,23 @@ class BackupRepositoryTest {
         }
 
     @Test
+    fun `un nom qui inverse le sens de lecture est refuse a la restauration`() =
+        runTest {
+            playedGame()
+            val file = BackupJson.decodeFromString<BackupFile>(source.backup.exportText())
+            val tampered =
+                file.copy(
+                    games =
+                        file.games.map { g ->
+                            g.copy(teams = g.teams.map { it.copy(name = "Léa\u202Ezob") })
+                        },
+                )
+            val report = phone().backup.restoreText(BackupJson.encodeToString(tampered))
+            assertEquals(0, report.gamesAdded)
+            assertEquals(1, report.gamesInvalid)
+        }
+
+    @Test
     fun `tout supprimer vide la base et les photos, sans toucher aux reglages`() =
         runTest {
             playedGame()

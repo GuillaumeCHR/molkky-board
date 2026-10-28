@@ -99,6 +99,7 @@ import com.yogistudio.molkkyboard.core.designsystem.component.PinGrid
 import com.yogistudio.molkkyboard.core.designsystem.component.PlayerChip
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPad
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
+import com.yogistudio.molkkyboard.core.designsystem.component.RollingNumber
 import com.yogistudio.molkkyboard.core.designsystem.component.RoundBadge
 import com.yogistudio.molkkyboard.core.designsystem.component.ScoreRing
 import com.yogistudio.molkkyboard.core.designsystem.component.ScoreboardRow
@@ -162,8 +163,7 @@ fun GameScreen(
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var overshoot by remember { mutableStateOf<Int?>(null) }
-    var shakeKey by remember { mutableIntStateOf(0) }
+    var overshoot by remember { mutableStateOf<OvershootShow?>(null) }
     var twelve by remember { mutableStateOf<TwelveShow?>(null) }
     var elimination by remember { mutableStateOf<EliminationShow?>(null) }
     var victory by remember { mutableStateOf<VictoryShow?>(null) }
@@ -192,8 +192,7 @@ fun GameScreen(
 
                 is GameEffect.Overshoot -> {
                     haptic.performHapticFeedback(HapticFeedbackType.Reject)
-                    overshoot = effect.resetTo
-                    shakeKey++
+                    overshoot = OvershootShow(effect.team, effect.from, effect.resetTo, ++animationKey)
                 }
 
                 is GameEffect.PlayerJoined,
@@ -295,7 +294,6 @@ fun GameScreen(
         snackbar = snackbar,
         overshoot = overshoot,
         onOvershootShown = { overshoot = null },
-        shakeKey = shakeKey,
         twelve = twelve,
         onTwelveDone = { twelve = null },
         elimination = elimination,
@@ -362,9 +360,8 @@ fun GameContent(
     state: GameUiState,
     actions: GameActions,
     snackbar: SnackbarHostState = remember { SnackbarHostState() },
-    overshoot: Int? = null,
+    overshoot: OvershootShow? = null,
     onOvershootShown: () -> Unit = {},
-    shakeKey: Int = 0,
     twelve: TwelveShow? = null,
     onTwelveDone: () -> Unit = {},
     elimination: EliminationShow? = null,
@@ -394,7 +391,7 @@ fun GameContent(
                 }, onOpenPlacement = { showPlacement = true })
                 if (state.loading) return@Column
                 ScoresStrip(state, onOpen = { showScoreboard = true })
-                ActiveCard(state, shakeKey)
+                ActiveCard(state)
                 PreviewLine(state, actions)
                 // Pendant « 12 ! », les quilles de la grille s'effacent (elles s'envolent) puis reviennent en fondu.
                 val pinsAlpha by animateFloatAsState(if (twelve != null) TWELVE_PINS_ALPHA else 1f, label = "pins")
@@ -550,28 +547,18 @@ private fun GameTopBar(
     }
 }
 
-/** Le joueur actif en très grand : jauge, score, nom, ratés. Tremble en cas de dépassement de la cible. */
+/** Le joueur actif en très grand : jauge, score, nom, ratés. */
 @Composable
-private fun ActiveCard(state: GameUiState, shakeKey: Int) {
+private fun ActiveCard(state: GameUiState) {
     val team = state.currentTeam ?: return
     val colors = MolkkyBoardTheme.colors.teams
-    val shake = remember { Animatable(0f) }
-    val reduced = MolkkyBoardTheme.reducedMotion
-    LaunchedEffect(shakeKey) {
-        if (shakeKey == 0 || reduced) return@LaunchedEffect
-        // « Shake » horizontal, puis le score retombe (compteur qui défile vers le bas).
-        listOf(-18f, 16f, -12f, 9f, -5f, 0f).forEach {
-            shake.animateTo(it, spring(dampingRatio = Spring.DampingRatioHighBouncy, stiffness = Spring.StiffnessHigh))
-        }
-    }
     Surface(
         shape = RoundedCornerShape(32.dp),
         color = MaterialTheme.colorScheme.surface,
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = MBDimens.ScreenPadding, vertical = 6.dp)
-                .offset { IntOffset(shake.value.dp.roundToPx(), 0) },
+                .padding(horizontal = MBDimens.ScreenPadding, vertical = 6.dp),
     ) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             ScoreRing(
@@ -740,22 +727,48 @@ private fun ActionButtons(state: GameUiState, actions: GameActions, anchors: Gui
     }
 }
 
+/** Un dépassement à mettre en scène : l'équipe qui a dépassé, son score au-delà de la cible et le score de repli. */
+data class OvershootShow(
+    val team: TeamUi?,
+    val from: Int,
+    val resetTo: Int,
+    val key: Int,
+)
+
 /**
- * Dépassement de la cible, façon « dommage, raté » : un autocollant corail « Aïe ! Retour à 25 » surgit en
- * penchant, pendant que la carte tremble et que le score dégringole.
+ * Dépassement de la cible, façon « dommage, raté » : un autocollant corail « Aïe ! » surgit en penchant, avec le
+ * nom de celui qui a dépassé et son score qui dégringole (55 → 25) pendant que l'autocollant tremble. La carte du
+ * joueur actif montre déjà le joueur suivant : c'est l'autocollant qui porte le joueur fautif.
  */
 @Composable
-private fun OvershootSticker(resetTo: Int?, onShown: () -> Unit, modifier: Modifier) {
+private fun OvershootSticker(show: OvershootShow?, onShown: () -> Unit, modifier: Modifier) {
     var visible by remember { mutableStateOf(false) }
-    var value by remember { mutableIntStateOf(0) }
-    LaunchedEffect(resetTo) {
-        if (resetTo == null) return@LaunchedEffect
-        value = resetTo
+    var current by remember { mutableStateOf<OvershootShow?>(null) }
+    var score by remember { mutableIntStateOf(0) }
+    val shake = remember { Animatable(0f) }
+    val reduced = MolkkyBoardTheme.reducedMotion
+    LaunchedEffect(show) {
+        if (show == null) return@LaunchedEffect
+        current = show
+        score = if (reduced) show.resetTo else show.from
         visible = true
+        if (!reduced) {
+            delay(STICKER_DROP_DELAY_MS)
+            // « Shake » horizontal, puis le score retombe (compteur qui défile vers le bas).
+            score = show.resetTo
+            listOf(-18f, 16f, -12f, 9f, -5f, 0f).forEach {
+                shake.animateTo(
+                    it,
+                    spring(dampingRatio = Spring.DampingRatioHighBouncy, stiffness = Spring.StiffnessHigh),
+                )
+            }
+        }
         delay(STICKER_MS)
         visible = false
         onShown()
     }
+    val shown = current ?: return
+    val colors = MolkkyBoardTheme.colors.teams
     AnimatedVisibility(
         visible = visible,
         modifier = modifier,
@@ -772,15 +785,30 @@ private fun OvershootSticker(resetTo: Int?, onShown: () -> Unit, modifier: Modif
             color = MolkkyBoardTheme.colors.coral,
             contentColor = MolkkyBoardTheme.colors.onCoral,
             shadowElevation = 8.dp,
-            modifier = Modifier.rotate(-8f),
+            modifier = Modifier.offset { IntOffset(shake.value.dp.roundToPx(), 0) }.rotate(-8f),
         ) {
             Column(
                 Modifier.padding(horizontal = 32.dp, vertical = 18.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(stringResource(R.string.game_overshoot_title), style = MolkkyBoardTheme.typography.scoreLarge)
+                shown.team?.let { team ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Box(Modifier.size(12.dp).background(colors[team.colorIndex % colors.size].fill, CircleShape))
+                        Text(
+                            team.name,
+                            style = MaterialTheme.typography.titleLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        RollingNumber(score, MolkkyBoardTheme.typography.scoreSmall)
+                    }
+                }
                 Text(
-                    stringResource(R.string.game_overshoot_subtitle, value),
+                    stringResource(R.string.game_overshoot_subtitle, shown.resetTo),
                     style = MaterialTheme.typography.titleLarge,
                 )
             }
@@ -790,7 +818,8 @@ private fun OvershootSticker(resetTo: Int?, onShown: () -> Unit, modifier: Modif
 
 private const val DOUBLE_VIBRATION_GAP_MS = 180L
 private const val TWELVE_PINS_ALPHA = 0.1f
-private const val STICKER_MS = 1_600L
+private const val STICKER_MS = 1_400L
+private const val STICKER_DROP_DELAY_MS = 350L
 private const val LOG_MESSAGE_MS = 4_000L
 
 private const val LARGE_FONT_SCALE = 1.3f
