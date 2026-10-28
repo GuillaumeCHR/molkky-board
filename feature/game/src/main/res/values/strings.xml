@@ -230,4 +230,11 @@
     <string name="ready_placement">Voir le placement</string>
     <string name="ready_go">C\'est parti</string>
     <string name="ready_never_again">Ne plus afficher</string>
+    <string name="end_decisive_starter">Une manche partout : %1$s a marqué le plus de points sur les deux manches et commence la belle. À égalité de points, un Mölkkout aurait désigné qui commence.</string>
+    <string name="rules_molkkout_title">La belle et le Mölkkout</string>
+    <string name="rules_molkkout">À une manche partout, l\'équipe qui a marqué le plus de points sur les manches jouées commence la belle. En cas d\'égalité de points, un Mölkkout la départage : les quilles 6, 4, 12, 10 et 8 sont alignées à 3,5 m et remises debout après chaque lancer ; les équipes lancent à tour de rôle (3 lancers en solo, 2 chacun à deux, 1 chacun à trois et plus) et le plus haut total commence la belle. En mode Officiel « Règlement de tournoi IMO », les manches alternent simplement, sans Mölkkout.</string>
+    <string name="rules_demo_molkkout_line">5 quilles alignées : 6, 4, 12, 10, 8</string>
+    <string name="rules_demo_molkkout_a">Équipe A : la 12 seule, 12 points</string>
+    <string name="rules_demo_molkkout_b">Quilles relevées. Équipe B : deux quilles, 2 points</string>
+    <string name="rules_demo_molkkout_end">Plus haut total : A commence la belle</string>
 </resources>

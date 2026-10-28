@@ -234,6 +234,16 @@ class GameEndViewModelTest {
             vm.nextSet()
             val second = vm.awaitState { !it.finished && it.round == 1 && it.end == null }
             assertEquals("Bruno", second.currentTeam?.name)
+            assertNull("pas de belle après la 1re manche", end.match.decisiveStarter)
+            // 2e manche : Bruno gagne, Alice marque 12 ; à 1-1, Alice (62 points contre 54) commence la belle.
+            repeat(4) {
+                play(12)
+                play(3)
+            }
+            play(2)
+            val decider = vm.awaitState { it.end?.match?.nextSet == 3 }.end!!.match!!
+            assertEquals("Alice", decider.decisiveStarter)
+            assertNull(decider.molkkout)
         }
 
     @Test

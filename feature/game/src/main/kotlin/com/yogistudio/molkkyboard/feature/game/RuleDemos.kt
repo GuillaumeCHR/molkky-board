@@ -154,6 +154,31 @@ internal fun MissesDemo() {
     }
 }
 
+/** Mölkkout : cinq quilles alignées, remises en place après chaque lancer ; le plus haut total gagne. */
+@Composable
+internal fun MolkkoutDemo() {
+    var replay by remember { mutableIntStateOf(0) }
+    val step = rememberDemoStep(MOLKKOUT_STEPS, replay)
+    val knocked =
+        when (step) {
+            1 -> setOf(12)
+            2 -> setOf(4, 10)
+            else -> emptySet()
+        }
+    val caption =
+        when (step) {
+            0 -> stringResource(R.string.rules_demo_molkkout_line)
+            1 -> stringResource(R.string.rules_demo_molkkout_a)
+            2 -> stringResource(R.string.rules_demo_molkkout_b)
+            else -> stringResource(R.string.rules_demo_molkkout_end)
+        }
+    DemoFrame(caption, onReplay = { replay++ }) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            MOLKKOUT_ORDER.forEach { PinView(number = it, knocked = it in knocked, onToggle = null, size = 48.dp) }
+        }
+    }
+}
+
 private const val DEMO_CYCLES = 2
 private const val DEMO_STEP_MS = 1_100L
 private val DEMO_HEIGHT = 130.dp
@@ -164,3 +189,4 @@ private const val OVERSHOOT_THROW = 5
 private const val OVERSHOOT_RESET = 25
 private const val TARGET = 50
 private const val MISS_STEPS = 4
+private const val MOLKKOUT_STEPS = 4

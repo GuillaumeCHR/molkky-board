@@ -115,6 +115,11 @@ private val PARTS =
             R.string.rules_part_together,
             listOf(
                 RuleItem(R.string.rules_teams_title, R.string.rules_teams),
+                RuleItem(
+                    R.string.rules_molkkout_title,
+                    R.string.rules_molkkout,
+                    key = "6 4 12 10 8",
+                ) { MolkkoutDemo() },
                 RuleItem(R.string.rules_variants_title, R.string.rules_variants),
             ),
         ),

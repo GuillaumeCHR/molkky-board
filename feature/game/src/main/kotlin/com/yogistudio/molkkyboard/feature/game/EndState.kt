@@ -4,6 +4,7 @@ import com.yogistudio.molkkyboard.core.data.GameSnapshot
 import com.yogistudio.molkkyboard.core.data.toStatsGame
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.scoring.MatchStatus
+import com.yogistudio.molkkyboard.core.scoring.NextStarter
 import com.yogistudio.molkkyboard.core.stats.PERFECT_GAME_THROWS
 import com.yogistudio.molkkyboard.core.stats.SetSummary
 import com.yogistudio.molkkyboard.core.stats.series
@@ -40,6 +41,8 @@ data class MatchUi(
     /** Numéro de la prochaine manche à jouer (le Mölkkout éventuel une fois joué). */
     val nextSet: Int?,
     val molkkout: MolkkoutUi?,
+    /** Belle à venir sans Mölkkout : l'équipe qui la commence (plus de points sur les manches précédentes). */
+    val decisiveStarter: String? = null,
 )
 
 /** Mölkkout en cours : il désigne l'équipe qui commence la belle. */
@@ -138,5 +141,19 @@ private fun GameSnapshot.matchUi(byId: Map<TeamId, TeamUi>): MatchUi? {
         winner = (status as? MatchStatus.Finished)?.winner?.let(byId::get),
         nextSet = (status as? MatchStatus.NextSet)?.number,
         molkkout = molkkout,
+        decisiveStarter = decisiveStarter(status, wins, byId),
     )
+}
+
+private fun GameSnapshot.decisiveStarter(
+    status: MatchStatus,
+    wins: Map<TeamId, Int>,
+    byId: Map<TeamId, TeamUi>,
+): String? {
+    val next = status as? MatchStatus.NextSet ?: return null
+    val decisive =
+        matchConfig.nextStarter == NextStarter.DecisiveByPoints &&
+            next.order.size == 2 &&
+            next.order.all { (wins[it] ?: 0) == matchConfig.setsToWin - 1 }
+    return if (decisive) byId[next.order.first()]?.name else null
 }

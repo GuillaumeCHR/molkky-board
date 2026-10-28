@@ -230,4 +230,11 @@
     <string name="ready_placement">See the setup</string>
     <string name="ready_go">Let\'s go</string>
     <string name="ready_never_again">Don\'t show again</string>
+    <string name="end_decisive_starter">One set each: %1$s scored the most points over both sets and starts the decider. On equal points, a Mölkkout would have decided who starts.</string>
+    <string name="rules_molkkout_title">The decider and the Mölkkout</string>
+    <string name="rules_molkkout">At one set each, the team that scored the most points over the sets played starts the decider. If points are equal, a Mölkkout settles it: pins 6, 4, 12, 10 and 8 are lined up 3.5 m away and stood back up after each throw; teams throw in turn (3 throws solo, 2 each in pairs, 1 each for three or more) and the highest total starts the decider. With the Official “IMO tournament rules”, sets simply alternate, without a Mölkkout.</string>
+    <string name="rules_demo_molkkout_line">5 pins in a line: 6, 4, 12, 10, 8</string>
+    <string name="rules_demo_molkkout_a">Team A: pin 12 alone, 12 points</string>
+    <string name="rules_demo_molkkout_b">Pins stood back up. Team B: two pins, 2 points</string>
+    <string name="rules_demo_molkkout_end">Highest total: A starts the decider</string>
 </resources>

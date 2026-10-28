@@ -218,6 +218,10 @@ private fun MatchCard(match: MatchUi) {
                 }
             }
         }
+        // La belle se joue : on dit qui la commence et pourquoi (le Mölkkout n'arrive qu'à égalité de points).
+        match.decisiveStarter?.let {
+            Text(stringResource(R.string.end_decisive_starter, it), style = MaterialTheme.typography.bodyMedium)
+        }
     }
 }
 
@@ -281,7 +285,7 @@ private fun MolkkoutCard(molkkout: MolkkoutUi, actions: GameActions) {
     }
 }
 
-private val MOLKKOUT_ORDER = listOf(6, 4, 12, 10, 8).also { order -> check(order.toSet() == MOLKKOUT_PINS) }
+internal val MOLKKOUT_ORDER = listOf(6, 4, 12, 10, 8).also { order -> check(order.toSet() == MOLKKOUT_PINS) }
 
 @Composable
 private fun SeriesCard(series: SeriesUi) {
