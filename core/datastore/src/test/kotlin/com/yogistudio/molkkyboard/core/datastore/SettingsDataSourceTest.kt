@@ -51,8 +51,6 @@ class SettingsDataSourceTest {
                 assertTrue(awaitItem().voiceAnnouncements)
                 source.setSounds(true)
                 assertTrue(awaitItem().sounds)
-                source.setShortIntro(true)
-                assertTrue(awaitItem().shortIntro)
                 source.setOnboardingDone(true)
                 assertTrue(awaitItem().onboardingDone)
             }
@@ -85,12 +83,10 @@ class SettingsDataSourceTest {
         }
 
     @Test
-    fun `intro courte proposee a partir du deuxieme lancement`() =
+    fun `les lancements sont comptes`() =
         runTest(UnconfinedTestDispatcher()) {
             val source = source()
-            assertFalse(source.recordLaunch().canChooseShortIntro)
-            val second = source.recordLaunch()
-            assertEquals(2, second.launchCount)
-            assertTrue(second.canChooseShortIntro)
+            assertEquals(1, source.recordLaunch().launchCount)
+            assertEquals(2, source.recordLaunch().launchCount)
         }
 }

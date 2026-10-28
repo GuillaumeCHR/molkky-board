@@ -27,8 +27,6 @@ interface SettingsRepository {
 
     suspend fun setNotificationPrompted()
 
-    suspend fun setShortIntro(enabled: Boolean)
-
     suspend fun setOnboardingDone(done: Boolean)
 
     suspend fun setPlayfulRules(config: GameConfig)
@@ -78,10 +76,6 @@ class DataStoreSettingsRepository
 
         override suspend fun setNotificationPrompted() {
             source.setNotificationPrompted()
-        }
-
-        override suspend fun setShortIntro(enabled: Boolean) {
-            source.setShortIntro(enabled)
         }
 
         override suspend fun setOnboardingDone(done: Boolean) {

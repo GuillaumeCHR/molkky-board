@@ -194,8 +194,6 @@ class GuidedFirstGameTest {
 
         override suspend fun setNotificationPrompted() = Unit
 
-        override suspend fun setShortIntro(enabled: Boolean) = Unit
-
         override suspend fun setOnboardingDone(done: Boolean) =
             settings.emit(
                 settings.value.copy(onboardingDone = done),

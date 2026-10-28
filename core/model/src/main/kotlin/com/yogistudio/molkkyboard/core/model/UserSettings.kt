@@ -23,8 +23,6 @@ data class UserSettings(
     /** L'autorisation d'afficher les notifications a déjà été proposée (on ne la redemande pas à chaque partie). */
     val notificationPrompted: Boolean = false,
     val sounds: Boolean = false,
-    /** Intro courte (≈ 1,5 s), proposée à partir du deuxième lancement. */
-    val shortIntro: Boolean = false,
     val launchCount: Int = 0,
     val onboardingDone: Boolean = false,
     /** Carte « Prêts à jouer ? » : `null` = automatique (les [READY_CARD_GAMES] premières parties). */
@@ -34,9 +32,6 @@ data class UserSettings(
     /** Exceptions par défaut des nouvelles parties en mode Ludique (`RULES.md` § 8.1), sans surcharge par équipe. */
     val playfulRules: GameConfig = GameConfig.Playful,
 ) {
-    /** La version courte de l'intro n'est proposée qu'à partir du deuxième lancement. */
-    val canChooseShortIntro: Boolean get() = launchCount >= 2
-
     /** La carte s'affiche d'office aux premières parties, puis seulement si on l'a réactivée. */
     val showReadyCard: Boolean get() = readyCard ?: (gamesStarted < READY_CARD_GAMES)
 

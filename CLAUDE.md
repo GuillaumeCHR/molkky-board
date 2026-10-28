@@ -1,7 +1,10 @@
 # Molkky Board — prompt de référence
 
-> Prompt de référence : copie intégrale de `01-specifications-molkky-board.md` (version du 2026-10-28,
-> « Partie à côté », qui remplace celle du 2026-10-26). Les versions précédentes restent dans l'historique git.
+> Prompt de référence : `01-specifications-molkky-board.md` (version du 2026-10-28, « Partie à côté »), **mis à jour
+> d'après les retours des tests sur téléphone** (27-28 octobre) : coach et mode débutant supprimés, placement en vue
+> globale, intro courte retirée, icône podium au lieu du geste, emblèmes au trait au lieu des emoji, vignettes sans QR
+> code ni masquage des noms, voix et sons coupés en silencieux seulement, écran en portrait, code publié sous GPL v3.
+> Les passages concernés sont marqués « (retour du test) ». Les versions précédentes restent dans l'historique git.
 > Les décisions prises au fil des phases sont dans la section `## Décisions` en fin de fichier ;
 > le pourquoi des choix est raconté dans `02-journal-decisions.md`.
 
@@ -73,7 +76,7 @@ sur chacun de ces points. Nos différenciateurs :
 - **multi-téléphones en temps réel** (rare sur Android) : rejoindre une partie en moins de 10 secondes
   via QR code, **sans compte ni serveur** quand les téléphones sont côte à côte ;
 - **aucune publicité, aucun traceur**, aucune donnée collectée en mode sans compte ;
-- équipes nommées avec Hall of Fame, mode famille, coach de fin de partie, annonces vocales ;
+- équipes nommées avec Hall of Fame, mode famille, annonces vocales ;
 - **partage social** : chaque partie devient en deux taps une vignette ou un mini-reel prêt à publier,
   qui fait connaître l'app et invite à rejoindre une partie.
 
@@ -160,7 +163,7 @@ Produis `docs/ARCHITECTURE.md` et un plan d'implémentation découpé en jalons.
 ### Création de partie
 - Joueurs ou équipes nommées (voir « Équipes nommées »), options de règles repliées dans « Règles avancées »
 - **Ordre de passage par glisser-déposer**, quel que soit l'ordre d'ajout des joueurs
-- Profils de joueurs locaux réutilisables, avec avatar **emoji ou mascotte** par défaut
+- Profils de joueurs locaux réutilisables, avec un **emblème au trait** par défaut (banque de 16 icônes, retour du test)
   (aucune photo nécessaire) et photo **depuis l'appareil photo ou la galerie** en option
 - Le bouton « Lancer la partie » devient évident dès que deux joueurs sont ajoutés
 
@@ -174,8 +177,8 @@ Produis `docs/ARCHITECTURE.md` et un plan d'implémentation découpé en jalons.
   aucun tap accidentel ne doit faire passer au joueur suivant
 - Score de chacun bien visible, joueur courant mis en avant, ratés consécutifs (0/3)
 - **Rappel du tour courant** (« Tour 1 », « Tour 2 »…) toujours visible près du joueur actif
-- **Tableau des scores en temps réel**, ouvert d'un glissement vers le haut sur le bandeau des scores
-  (ou d'un tap sur ce bandeau) : score courant de chaque joueur ou équipe, sans quitter la partie
+- **Tableau des scores en temps réel**, ouvert par l'**icône podium** à gauche du bandeau des scores
+  (ou d'un tap sur ce bandeau) ; pas de geste de glissement (retour du test) : score courant de chaque joueur ou équipe, sans quitter la partie
 - **Animation d'élimination** quand un joueur ou une équipe fait son troisième raté consécutif
 - **Undo** du dernier lancer en un tap (bouton dédié), avec snackbar. Pas de geste de balayage pour
   l'undo, afin qu'il ne puisse pas être confondu avec l'ouverture du tableau des scores
@@ -296,7 +299,7 @@ Présente-moi le résultat, les limites rencontrées et les versions de biblioth
 
 | Message | Sens | Contenu |
 |---|---|---|
-| `JOIN_REQUEST` | invité → hôte | jeton d'invitation, pseudo, avatar emoji ou mascotte |
+| `JOIN_REQUEST` | invité → hôte | jeton d'invitation, pseudo, emblème au trait |
 | `JOIN_PENDING` | hôte → invité | — |
 | `WELCOME` | hôte → invité | jeton de session, rôle, joueur associé, identifiant de partie, journal complet, dernier numéro |
 | `JOIN_REJECTED` | hôte → invité | motif : refusé, jeton expiré ou déjà utilisé, partie pleine, version incompatible |
@@ -329,7 +332,7 @@ Présente-moi le résultat, les limites rencontrées et les versions de biblioth
 - **Validation par l'hôte de chaque événement** avec la même fonction que la validation serveur de la
   phase 4 : appareil accepté, droits, tour, lancer cohérent ; champs texte bornés et sans caractères
   de contrôle ; limitation de débit par téléphone
-- Seuls le pseudo, l'avatar emoji ou mascotte et les événements de jeu transitent. **Les photos de
+- Seuls le pseudo, l'emblème au trait et les événements de jeu transitent. **Les photos de
   joueurs ne sont jamais transmises** : les autres téléphones affichent l'avatar
 - Aucune crypto maison : TLS standard (Conscrypt) et primitives Tink
 
@@ -509,10 +512,10 @@ généreuses. Ni skeuomorphisme ni texture bois réaliste : on évoque le bois p
      ou le pavé rapide selon le mode, avec une bascule discrète entre les deux ;
    - un aperçu en direct, « +7 → 38 », avant validation ;
    - en bas, deux gros boutons : « Raté » (corail) et « Valider » (safran) ;
-   - un bandeau horizontal avec les autres joueurs et leur score, muni d'une poignée qui invite à le
-     tirer vers le haut ;
+   - un bandeau horizontal avec les autres joueurs et leur score, précédé d'une **icône podium** qui ouvre le
+     tableau des scores (retour du test : le geste de glissement ne fonctionnait pas) ;
    - en partie multi-téléphones, une petite pastille de connexion (« 3 téléphones » ou « Hors ligne ») ;
-   - le **tableau des scores** : en glissant le bandeau vers le haut (ou en le touchant), une feuille
+   - le **tableau des scores** : en touchant l'icône podium ou le bandeau, une feuille
      (bottom sheet) monte et couvre l'écran de saisie. Elle affiche :
      - le numéro du tour en titre ;
      - une ligne par joueur ou équipe, **classée par score** : rang, pastille de couleur et emblème,
@@ -529,16 +532,20 @@ généreuses. Ni skeuomorphisme ni texture bois réaliste : on évoque le bois p
    chaque lancer modifiable ou supprimable
 5. **Fin de partie** : animation de victoire, classement, stats de la manche, bouton « Revanche »
 6. **Stats** : graphiques Vico, records personnels
-7. **Réglages** : mode de saisie, annonces vocales, sons, version courte de l'intro,
-   revoir la prise en main, « Plein soleil », données (export, suppression)
+7. **Réglages** : mode de saisie, annonces vocales, sons, revoir la prise en main, « Plein soleil »,
+   données (sauvegarde, export, suppression)
 8. **À propos** : logotype Molkky Board, version, mention « Yogi Studio », encart « Vie privée »
    (voir « Sécurité et vie privée »), crédits (bibliothèques open source via AboutLibraries, polices),
-   liens vers la politique de confidentialité, les conditions d'utilisation et le site de l'app
+   carte « Licence et contact » (logiciel libre sous GNU GPL v3, lien vers le code source, noms et logos réservés,
+   contact **yogistudiofr@gmail.com** avec un bouton « Écrire à Yogi Studio »), liens vers la politique de
+   confidentialité, les conditions d'utilisation et le site de l'app
 9. **Inviter / Rejoindre** (partie à côté) : voir « Phase 3 bis — Interface »
 
 ### Mouvement et retours
 - Physique de ressort (`spring`) partout ; aucune animation linéaire
 - La quille bascule avec une légère rotation quand on la sélectionne
+- À chaque lancer validé, les quilles touchées s'envolent hors de la grille (≈ 0,4 s) puis reviennent (retour du
+  test) ; le « 12 » garde sa propre animation
 - Le score défile comme un compteur quand il change, y compris lors d'un recalcul après correction
 - En cas de dépassement de 50, un « shake » horizontal suivi de la retombée animée à 25
 - Lancer à 12 points : animation « 12 ! » (voir « Animation “12 !” »)
@@ -554,6 +561,8 @@ généreuses. Ni skeuomorphisme ni texture bois réaliste : on évoque le bois p
 - Grandes tailles de police prises en charge jusqu'au facteur 2,0 sans troncature
 - Descriptions TalkBack sur chaque quille et chaque score
 - Écran maintenu allumé pendant une partie (`keepScreenOn`)
+- Écran bloqué en **portrait** (retour du test : le paysage boguait ; mode paysage en V2)
+- Contrôles d'accessibilité automatiques (Accessibility Test Framework via Roborazzi) dans les tests
 
 👉 Avant de coder les écrans, crée le module `core:designsystem` (thème, tokens, typographie,
 composants de base : PinView, QuickPad, ScoreRing, PlayerChip, BigActionButton, RoundBadge,
@@ -593,8 +602,8 @@ clair/sombre, et montre-moi les captures Roborazzi pour validation.
 - S'il existe une partie en cours, l'accueil propose de la reprendre en premier
 - Durée totale de l'animation : **4,5 s maximum**, passable d'un tap à tout moment
   (on saute alors à la transition vers le menu)
-- À partir du deuxième lancement, proposer dans les réglages une version courte (environ 1,5 s :
-  strike puis logotype) ; l'animation complète reste la valeur par défaut
+- Pas de version courte (retour du test) : l'intro complète est toujours jouée, passable d'un tap ; la signature
+  Yogi Studio dure environ 1,5 s
 - « Réduire les animations » activé : simple fondu du logo Yogi Studio vers le menu (environ 1 s)
 
 ### Storyboard (≈ 4,5 s, entièrement en Canvas Compose, sans librairie d'animation externe)
@@ -637,7 +646,7 @@ Les quilles restent **entières** : elles ne se brisent pas, elles s'envolent.
   seconde, critère WCAG 2.3.1), et le fond safran remplace un flash blanc plein écran
 - Résultat déterministe (graine aléatoire fixe) pour que les tests de capture Roborazzi soient stables
 - Fonctionne en mode clair et sombre (fond `#14201A` en sombre)
-- Son d'impact optionnel, désactivé par défaut, respectant le mode silencieux du téléphone
+- Son d'impact optionnel, désactivé par défaut, coupé en mode silencieux (pas en vibreur)
 - Test UI : vérifier qu'un tap passe bien l'animation et que le menu s'affiche même si le chargement échoue
 - Montre-moi une capture de chacune des 5 étapes (via `android screen capture` ou Roborazzi),
   dont l'image d'impact figée, avant de finaliser les réglages de timing
@@ -715,14 +724,15 @@ Les quilles restent **entières** : elles ne se brisent pas, elles s'envolent.
 - Option « Annonces vocales » en synthèse vocale Android hors ligne, désactivée par défaut :
   « Tour 4 », « Au tour de Léa, il lui faut 7 », « Retour à 25 ! », « Léa est éliminée »,
   « Victoire de l'équipe Les Bouleaux »
-- Volume et débit réglables ; respecte le mode silencieux ; pas d'annonce pendant TalkBack si cela fait doublon
+- Volume et débit réglables ; coupées **en mode silencieux seulement** (elles jouent en vibreur, retour du test) ;
+  pas d'annonce pendant TalkBack si cela fait doublon
 - En partie multi-téléphones, les annonces ne sont jouées que sur le téléphone de l'organisateur
   par défaut, pour éviter l'écho (réglable)
 
-### Coach de fin de partie
-- À partir de 38 points, afficher ce qu'il faut pour gagner (« Il te faut 7 : la quille 7 seule, ou 7 quilles »),
-  surligner la quille gagnante sur la grille, et signaler la zone de danger quand le risque de dépasser 50 est élevé
-- Désactivable dans les réglages
+### Coach de fin de partie — supprimé (retour du test, 2026-10-27)
+- Jugé envahissant : ni « Il te faut 7 », ni quille surlignée, ni zone de danger. À la place, la **tension avant la
+  sanction** : à un raté de l'élimination (ou du retour en arrière en Ludique), la carte du joueur bat comme un
+  cœur avec « Dernière chance · 1 raté = éliminé »
 
 ### Guide des règles et placement des quilles
 Objectif : quelqu'un qui n'a jamais joué doit pouvoir installer le jeu et lancer une partie
@@ -751,11 +761,10 @@ correcte avec l'app seule.
 - La **formation de départ** est affichée telle que vue depuis la ligne de lancer, quilles serrées en
   4 rangées (selon les règles officielles : 1-2 devant, puis 3-10-4, puis 5-11-12-6, et 7-9-8 au fond ;
   **vérifie cette formation dans les sources de la phase 1**)
-- Mode **« Placer les quilles »** pas à pas : les quilles apparaissent une par une à leur position,
-  avec leur numéro en grand, pour que l'on puisse les poser au fur et à mesure ; boutons « Suivant » / « Tout afficher »
+- Les **12 quilles d'emblée**, en vue épurée depuis la ligne de lancer (retour du test : le pas à pas était trop
+  long et sans plus-value)
 - Indication de la **distance de lancer** (3 à 4 mètres selon les règles retenues) avec un repère concret
   (« environ 4 grands pas d'adulte »), et rappel qu'on peut la réduire en mode famille
-- Option « Vue depuis le côté » pour aider à aligner les rangées
 
 **Actions rapides pour les débutants**
 - **Rappel en début de partie** : après « Lancer la partie », une carte « Prêts à jouer ? » propose
@@ -764,16 +773,14 @@ correcte avec l'app seule.
 - **Bouton « Quilles »** permanent mais discret sur l'écran de jeu : ouvre le schéma de placement en
   surimpression (bottom sheet) sans quitter la partie, utile entre deux manches
 - **Entre deux manches** : rappel « Replacez les quilles en formation de départ » avec le schéma miniature
-- **Mode débutant** (proposé à la première partie, désactivable) : après chaque lancer validé, petit
-  rappel contextuel non bloquant (« Relevez les quilles là où elles sont tombées »), et explication en une
-  phrase lors du premier retour à 25 ou du premier deuxième raté consécutif
+- **Pas de mode débutant** (retour du test : trop de messages)
 - **Raccourcis de l'icône de l'app** (appui long sur l'icône) : « Nouvelle partie », « Placer les quilles »,
   « Règles du jeu », « Rejoindre une partie »
-- Accès aux règles depuis le coach de fin de partie et depuis l'explication d'une élimination
+- Accès aux règles depuis le menu de jeu et depuis l'explication d'une élimination (« Pourquoi ? ») ; la belle et
+  le Mölkkout ont leur section et leur démo, et l'écran de fin explique qui commence la belle
 
 **Contraintes**
 - Les textes de règles sont des chaînes externalisées, prêtes pour la traduction
-- Annonces vocales : lecture possible du placement pas à pas (« Quille 1 à gauche devant… »)
 - TalkBack : chaque quille du schéma a une description de sa position (« Quille 12, troisième rangée, au centre droit »)
 - Captures Roborazzi du schéma de placement et de chaque illustration de règle
 
@@ -849,9 +856,10 @@ publication doit donner envie d'installer Molkky Board ou de rejoindre une parti
   d'un swipe dans l'aperçu
 - Contenu : titre du moment, noms et couleurs des équipes, emblèmes ou avatars, score, chiffre clé
   (« 50 en 7 lancers », « victoire au tour 6 »), date, lieu s'il a été saisi
-- Signature systématique et discrète : logotype **Molkky Board** et un **QR code** ou un lien court
-  (vers la fiche de l'app, ou vers une invitation à rejoindre le groupe si l'auteur le choisit).
-  Ce QR code n'est **jamais** un QR d'invitation à une partie à côté en cours
+- Signature systématique et discrète : « Comptez vos parties avec » et le logotype **Molkky Board**, **sans QR
+  code** (retour du test). Une vignette ne porte jamais de QR d'invitation à une partie à côté
+- **Photo du moment** (façon Strava) : photo prise ou choisie par l'auteur, plein cadre, avec le moment, l'équipe,
+  le score, les lancers et le tour en blanc ; aucune permission, rien n'est conservé, aucune métadonnée
 - Rendu directement depuis des composables Compose capturés en bitmap (`GraphicsLayer`), sans serveur
 
 ### Mini-vidéos (reels / stories)
@@ -884,11 +892,9 @@ publication doit donner envie d'installer Molkky Board ou de rejoindre une parti
 - Pas de récompense contre le partage et pas de relances insistantes : une seule suggestion par partie
 
 ### Vie privée (prioritaire sur la viralité)
-- Par défaut, les vignettes n'affichent **que les pseudos et les avatars emoji ou mascotte**, jamais de photo
-- Les photos de joueurs n'apparaissent que si l'auteur l'active explicitement, pour la vignette en cours
-- Avant de partager une partie qui contient d'autres joueurs, rappel discret :
-  « Les autres joueurs sont d'accord pour apparaître ? », avec possibilité de masquer un nom
-  (remplacé par « Joueur 2 »)
+- Les vignettes n'affichent **que les pseudos et les emblèmes**, jamais les photos de profil des joueurs (seule la
+  photo du moment, choisie par l'auteur, peut y figurer)
+- **Pas de masquage des noms** (retour du test : jugé inutile)
 - Aucune métadonnée de localisation dans les fichiers générés (EXIF supprimées)
 - **Aucun SDK de tracking** : la mesure de la viralité, si elle est souhaitée, se limite à un compteur
   anonyme d'ouvertures des liens d'invitation côté serveur, sans identifiant de l'utilisateur ni de l'appareil.
@@ -970,7 +976,7 @@ Les recommandations de la **CNIL** pour les applications mobiles servent de réf
   téléphone, aucun trafic réseau ; en partie à côté, uniquement du trafic chiffré vers les autres
   téléphones de la partie, sur le réseau local, et **aucun trafic vers Internet**
   (vérifiable : test automatisé et logcat, voir « Tests et preuves »)
-- En partie à côté, seuls le pseudo, l'avatar emoji ou mascotte et les événements de jeu sont transmis ;
+- En partie à côté, seuls le pseudo, l'emblème au trait et les événements de jeu sont transmis ;
   jamais de photo, jamais d'identifiant de l'appareil
 - Mode compte : seulement l'e-mail (pour l'authentification), un pseudo, l'avatar et les données de parties.
   L'e-mail n'est **jamais** visible des autres joueurs
@@ -1093,9 +1099,9 @@ fausse, préviens-moi au lieu de modifier le texte.
   sur le site, avec une adresse de contact dédiée
 
 ### Ouverture (P3)
-- Étudier la publication du code en **open source** et une distribution sur **F-Droid**, qui apportent
-  une preuve forte de l'absence de traceurs. La partie à côté, entièrement open source et sans Play
-  services, reste compatible avec F-Droid
+- **Fait le 2026-10-28** : code publié sous **GNU GPL v3** sur un dépôt GitHub public ; noms, logos et icône hors
+  licence (`TRADEMARKS.md`). Reste à étudier la distribution sur **F-Droid** (preuve forte de l'absence de traceurs ;
+  la partie à côté, entièrement open source et sans Play services, y reste compatible)
 
 ---
 
@@ -1108,7 +1114,7 @@ avec cette section.
 ### Décisions déjà prises
 - **Compte développeur personnel**, nom de développeur affiché : **Yogi Studio**
   (frais uniques de 25 $, vérification d'identité faite par moi dans la Play Console)
-- Adresse e-mail de contact publique **dédiée** (pas mon adresse personnelle) : à me rappeler de créer
+- Adresse e-mail de contact publique **dédiée** : **yogistudiofr@gmail.com** (créée le 2026-10-28)
 - **Aucun revenu** : app gratuite, sans publicité, sans achat intégré, sans abonnement
 - Statut au sens du DSA européen : **non-commerçant**
 - **Public cible : adultes et adolescents, pas les enfants.** Tranches d'âge déclarées : 13 ans et plus
@@ -1449,3 +1455,5 @@ et tiens-la à jour jusqu'à la publication.
 - 2026-10-28 — **Licence : GNU GPL v3 « ou toute version ultérieure »** (choix du porteur du projet ; remplace D2 « code privé »). `LICENSE` (texte officiel), `TRADEMARKS.md` (noms « Molkky Board » et « Yogi Studio », logos et icône hors licence ; un dérivé redistribué change de nom, d'icône et d'identifiant), section Licence du README. Compatible F-Droid. Restent à faire : passer le dépôt en public (sur accord explicite), mention de la licence dans À propos, en-têtes de licence éventuels dans les fichiers source, accord de contribution si des contributions extérieures sont acceptées.
 - 2026-10-28 — **Dépôt GitHub public** (`GuillaumeCHR/molkky-board`, GPL v3). Avant publication : historique réécrit (auteur → adresse « noreply » GitHub, journal de plantage JVM retiré), push forcé, tag `v0.6.0` déplacé ; ce dépôt local signe désormais avec l'adresse « noreply ». Sauvegarde de l'historique d'origine : `~/molkky-avant-nettoyage-2026-10-28.bundle`. À propos mentionne la licence.
 - 2026-10-28 — **Adresse de contact dédiée : yogistudiofr@gmail.com** : destinataire des retours et rapports de plantage (`SUPPORT_EMAIL`), ligne « Contact » d'À propos, README, `TRADEMARKS.md`, `SECURITY.md` (divulgation de vulnérabilités).
+- 2026-10-28 — **Spec de CLAUDE.md alignée sur les retours des tests** (passages marqués « retour du test ») : coach et mode débutant supprimés, placement en vue globale, intro courte retirée (code compris), icône podium, emblèmes au trait, vignettes sans QR ni masquage, voix et sons coupés en silencieux seulement, portrait, envol des quilles, tension avant la sanction, photo du moment, GPL v3, contact. `01-specifications-molkky-board.md` reste la version d'origine.
+- 2026-10-28 — À propos : carte « Licence et contact » (GPL v3, lien vers le code source, marques réservées, yogistudiofr@gmail.com et bouton « Écrire à Yogi Studio »).

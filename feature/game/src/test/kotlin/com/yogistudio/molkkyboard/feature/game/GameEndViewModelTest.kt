@@ -288,8 +288,6 @@ class GameEndViewModelTest {
 
         override suspend fun setNotificationPrompted() = Unit
 
-        override suspend fun setShortIntro(enabled: Boolean) = Unit
-
         override suspend fun setOnboardingDone(done: Boolean) = Unit
 
         override suspend fun setPlayfulRules(config: GameConfig) =

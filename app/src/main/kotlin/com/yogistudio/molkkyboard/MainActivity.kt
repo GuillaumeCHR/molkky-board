@@ -42,8 +42,8 @@ class MainActivity : AppCompatActivity() {
     private val target = MutableStateFlow<LaunchTarget?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // L'écran de démarrage système ne reste que le temps de lire les réglages (intro courte ou complète).
-        installSplashScreen().setKeepOnScreenCondition { startupLoader.state.value.shortIntro == null }
+        // L'écran de démarrage système ne reste que le temps de lire les réglages (sons de l'intro).
+        installSplashScreen().setKeepOnScreenCondition { !startupLoader.state.value.settingsRead }
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) {
             readTarget(intent)

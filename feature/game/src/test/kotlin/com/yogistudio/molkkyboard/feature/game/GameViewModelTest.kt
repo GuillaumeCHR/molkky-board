@@ -547,7 +547,8 @@ class GameViewModelTest {
                 assertEquals(GameEffect.Edited, awaitItem())
             }
             assertEquals("Alice", vm.awaitState { !it.finished }.currentTeam?.name)
-            assertEquals(gameId, games.observeOngoingGameId().first())
+            // La réouverture suit le nouvel état observé, un instant après « Corrigé ».
+            assertEquals(gameId, games.observeOngoingGameId().first { it != null })
         }
 
     @Test
@@ -577,7 +578,7 @@ class GameViewModelTest {
             }
             val state = vm.awaitState { !it.finished }
             assertEquals(3, state.teams.first { it.name == "Alice" }.score)
-            assertEquals(gameId, games.observeOngoingGameId().first())
+            assertEquals(gameId, games.observeOngoingGameId().first { it != null })
         }
 
     @Test
@@ -677,8 +678,6 @@ class GameViewModelTest {
         override suspend fun setOngoingNotification(enabled: Boolean) = Unit
 
         override suspend fun setNotificationPrompted() = Unit
-
-        override suspend fun setShortIntro(enabled: Boolean) = Unit
 
         override suspend fun setOnboardingDone(done: Boolean) = Unit
 

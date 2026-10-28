@@ -125,7 +125,6 @@ fun MolkkyBoardNavHost(
                     val logotype = with(shared) { sharedLogotype(this@composable) }
                     IntroScreen(
                         loadState = startup.load,
-                        short = startup.shortIntro == true,
                         sounds = startup.sounds,
                         onFinished = {
                             navController.navigate(HomeRoute) { popUpTo<IntroRoute> { inclusive = true } }

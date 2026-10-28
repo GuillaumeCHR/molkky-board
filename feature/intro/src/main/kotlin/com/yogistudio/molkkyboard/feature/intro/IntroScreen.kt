@@ -60,7 +60,6 @@ enum class IntroLoadState {
  * Un tap passe directement au logotype. Avec « Réduire les animations », simple fondu du logo Yogi Studio.
  *
  * @param logotype logotype Molkky Board ; l'appelant y applique l'élément partagé vers l'accueil.
- * @param short version courte : impact puis logotype (≈ 1,6 s), sans la signature sauf si le chargement traîne.
  * @param frameTimeMs fige l'intro à cet instant (aperçus et captures) au lieu de la jouer.
  * @param sounds réglage « Sons » : le choc de l'impact (muet en silencieux).
  */
@@ -70,14 +69,13 @@ fun IntroScreen(
     onFinished: () -> Unit,
     logotype: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier,
-    short: Boolean = false,
     frameTimeMs: Long? = null,
     sounds: Boolean = false,
 ) {
     val reduced = MolkkyBoardTheme.reducedMotion
     val end = if (reduced) IntroTimeline.REDUCED_END else IntroTimeline.END
     val hold = if (reduced) IntroTimeline.REDUCED_END / 2 else IntroTimeline.SIGNATURE_END
-    val startTime = frameTimeMs ?: if (short && !reduced) IntroTimeline.SHORT_START else 0L
+    val startTime = frameTimeMs ?: 0L
     val elapsed = remember { mutableLongStateOf(startTime) }
     val currentLoad by rememberUpdatedState(loadState)
     val currentOnFinished by rememberUpdatedState(onFinished)
@@ -87,7 +85,6 @@ fun IntroScreen(
         IntroClock(
             elapsed,
             reduced,
-            short,
             hold,
             end,
             { currentLoad.done },
@@ -155,7 +152,6 @@ fun IntroScreen(
 private fun IntroClock(
     elapsed: MutableLongState,
     reduced: Boolean,
-    short: Boolean,
     hold: Long,
     end: Long,
     loaded: () -> Boolean,
@@ -173,11 +169,6 @@ private fun IntroClock(
                 val before = elapsed.longValue
                 var next = before + (now - last)
                 last = now
-                // Version courte : après l'explosion, directement au logotype (ou à la signature si on attend).
-                val crossesJump = before < IntroTimeline.SHORT_JUMP && next >= IntroTimeline.SHORT_JUMP
-                if (short && !reduced && crossesJump) {
-                    next = if (currentLoaded()) IntroTimeline.LOGOTYPE_IN else hold
-                }
                 // On attend le chargement sur la signature : jamais de menu à moitié prêt.
                 if (!currentLoaded() && next > hold) next = maxOf(before, hold)
                 if (!reduced && before < IntroTimeline.IMPACT && next >= IntroTimeline.IMPACT) {

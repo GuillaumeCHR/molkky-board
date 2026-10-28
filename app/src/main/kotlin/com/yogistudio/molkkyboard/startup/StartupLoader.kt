@@ -21,11 +21,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import com.yogistudio.molkkyboard.core.designsystem.R as DesignR
 
-/** Ce que le démarrage a appris : état du chargement, intro courte ou non, partie en cours à reprendre. */
+/** Ce que le démarrage a appris : état du chargement, réglages lus, partie en cours à reprendre. */
 data class StartupState(
     val load: IntroLoadState = IntroLoadState.Loading,
-    /** `null` tant que les réglages ne sont pas lus : l'écran de démarrage système reste affiché. */
-    val shortIntro: Boolean? = null,
+    /** Faux tant que les réglages ne sont pas lus : l'écran de démarrage système reste affiché. */
+    val settingsRead: Boolean = false,
     val ongoingGameId: String? = null,
     /** Réglage « Sons » : le choc de l'intro n'est joué que s'il est activé. */
     val sounds: Boolean = false,
@@ -56,11 +56,7 @@ class StartupLoader
                     runCatching {
                         val current = settings.recordLaunch()
                         mutableState.update {
-                            it.copy(
-                                // Intro courte retirée des Réglages (2026-10-27) : toujours l'intro complète.
-                                shortIntro = false,
-                                sounds = current.sounds,
-                            )
+                            it.copy(settingsRead = true, sounds = current.sounds)
                         }
                         val ongoing = games.observeOngoingGameId().first()
                         preloadFonts()
@@ -71,7 +67,7 @@ class StartupLoader
                         onSuccess = { state.copy(load = IntroLoadState.Ready, ongoingGameId = it) },
                         onFailure = {
                             Timber.w(it, "Chargement de démarrage incomplet")
-                            state.copy(load = IntroLoadState.Failed, shortIntro = state.shortIntro ?: false)
+                            state.copy(load = IntroLoadState.Failed, settingsRead = true)
                         },
                     )
                 }

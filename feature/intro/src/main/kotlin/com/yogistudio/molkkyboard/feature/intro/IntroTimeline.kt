@@ -28,12 +28,6 @@ internal object IntroTimeline {
     /** Fin des trajectoires précalculées des quilles. */
     const val SIMULATION_END = STRIKE_END
 
-    /** Version courte (réglage, à partir du 2e lancement) : on part juste avant l'impact… */
-    const val SHORT_START = 950L
-
-    /** … et, l'envol passé, on saute directement au logotype (≈ 1,7 s au total). */
-    const val SHORT_JUMP = 1_700L
-
     /** Version « Réduire les animations » : simple fondu du logo Yogi Studio. */
     const val REDUCED_END = 1_000L
 }

@@ -77,11 +77,11 @@ internal fun AboutScreen(onBack: () -> Unit, onLicenses: () -> Unit) {
                     R.string.about_privacy_local,
                     R.string.about_privacy_control,
                     R.string.about_privacy_open_source,
-                    R.string.about_license,
                 ).forEach {
                     Text(stringResource(it), style = MaterialTheme.typography.bodyLarge)
                 }
             }
+            LicenseCard()
             if (BuildConfig.FEEDBACK) {
                 val subject = stringResource(R.string.about_feedback_subject)
                 val body = stringResource(R.string.about_feedback_body, deviceSummary())
@@ -126,3 +126,36 @@ internal fun LicensesScreen(onBack: () -> Unit) {
         LibrariesContainer(libraries, Modifier.fillMaxSize())
     }
 }
+
+/** Licence GPL v3, code source public, marques réservées et adresse de contact de Yogi Studio. */
+@Composable
+private fun LicenseCard() {
+    val context = LocalContext.current
+    val subject = stringResource(R.string.about_contact_subject)
+    AboutCard(R.string.about_license_title) {
+        listOf(R.string.about_license, R.string.about_license_trademarks).forEach {
+            Text(stringResource(it), style = MaterialTheme.typography.bodyLarge)
+        }
+        Text(stringResource(R.string.about_source, SOURCE_URL), style = MaterialTheme.typography.bodyLarge)
+        OutlinedButton(
+            onClick = { openUrl(context, SOURCE_URL) },
+            modifier = Modifier.heightIn(min = MBDimens.MinTouch),
+        ) { Text(stringResource(R.string.about_source_button)) }
+        Text(stringResource(R.string.about_contact, SUPPORT_EMAIL), style = MaterialTheme.typography.bodyLarge)
+        OutlinedButton(
+            onClick = { composeEmail(context, subject, "") },
+            modifier = Modifier.heightIn(min = MBDimens.MinTouch),
+        ) { Text(stringResource(R.string.about_contact_button)) }
+    }
+}
+
+/** Ouvre le navigateur du téléphone (l'app elle-même n'a pas accès à Internet). */
+private fun openUrl(context: android.content.Context, url: String) {
+    try {
+        context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+    } catch (_: android.content.ActivityNotFoundException) {
+        // Aucun navigateur : l'adresse reste lisible à l'écran.
+    }
+}
+
+private const val SOURCE_URL = "https://github.com/GuillaumeCHR/molkky-board"

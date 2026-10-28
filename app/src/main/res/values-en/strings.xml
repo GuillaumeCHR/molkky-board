@@ -112,7 +112,6 @@
     <string name="about_privacy_local">Everything stays on your phone, except what you choose to share yourself.</string>
     <string name="about_privacy_control">You can back up, export or delete your data at any time, in Settings › Data.</string>
     <string name="about_privacy_open_source">Built with open source libraries (list below).</string>
-    <string name="about_license">Molkky Board is free software, licensed under the GNU GPL v3. The Molkky Board and Yogi Studio names and logos remain reserved.</string>
     <string name="about_credits">Credits</string>
     <string name="about_licenses">Open source libraries</string>
     <string name="about_licenses_list">List of libraries</string>
@@ -177,4 +176,11 @@
     <string name="credits_thanks_pin12">To pin no. 12, always in the middle, always aimed at, rarely hit alone.</string>
     <string name="credits_outro">No pins were harmed in the making of this app. They all flew away of their own free will.</string>
     <string name="credits_post_credits">Post-credits scene: ✨ … somewhere, far in the back of the screen, a pin is still twinkling.</string>
+    <string name="about_license_title">Licence and contact</string>
+    <string name="about_license">Molkky Board is free software, licensed under the GNU GPL v3 (or any later version): you may study, modify and redistribute it under its terms. It comes with no warranty.</string>
+    <string name="about_license_trademarks">The Molkky Board and Yogi Studio names, their logos and the app icon are not covered by the licence.</string>
+    <string name="about_source">Source code: %1$s</string>
+    <string name="about_source_button">View the source code</string>
+    <string name="about_contact_button">Write to Yogi Studio</string>
+    <string name="about_contact_subject">Molkky Board</string>
 </resources>

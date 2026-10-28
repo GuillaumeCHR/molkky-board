@@ -46,8 +46,6 @@ class SettingsDataSource
 
         suspend fun setSounds(enabled: Boolean) = dataStore.edit { it[Keys.SOUNDS] = enabled }
 
-        suspend fun setShortIntro(enabled: Boolean) = dataStore.edit { it[Keys.SHORT_INTRO] = enabled }
-
         suspend fun setOnboardingDone(done: Boolean) = dataStore.edit { it[Keys.ONBOARDING_DONE] = done }
 
         suspend fun setReadyCard(enabled: Boolean) = dataStore.edit { it[Keys.READY_CARD] = enabled }
@@ -74,7 +72,6 @@ class SettingsDataSource
                 ongoingNotification = this[Keys.ONGOING_NOTIFICATION] ?: true,
                 notificationPrompted = this[Keys.NOTIFICATION_PROMPTED] ?: false,
                 sounds = this[Keys.SOUNDS] ?: false,
-                shortIntro = this[Keys.SHORT_INTRO] ?: false,
                 launchCount = this[Keys.LAUNCH_COUNT] ?: 0,
                 onboardingDone = this[Keys.ONBOARDING_DONE] ?: false,
                 readyCard = this[Keys.READY_CARD],
@@ -106,7 +103,6 @@ class SettingsDataSource
             val ONGOING_NOTIFICATION = booleanPreferencesKey("ongoing_notification")
             val NOTIFICATION_PROMPTED = booleanPreferencesKey("notification_prompted")
             val SOUNDS = booleanPreferencesKey("sounds")
-            val SHORT_INTRO = booleanPreferencesKey("short_intro")
             val LAUNCH_COUNT = intPreferencesKey("launch_count")
             val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
             val PLAYFUL_RULES = stringPreferencesKey("playful_rules")

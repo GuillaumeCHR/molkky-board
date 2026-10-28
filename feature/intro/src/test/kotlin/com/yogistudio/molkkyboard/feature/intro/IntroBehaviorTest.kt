@@ -23,12 +23,12 @@ class IntroBehaviorTest {
     private var finished = 0
     private var load by mutableStateOf(IntroLoadState.Loading)
 
-    private fun start(initial: IntroLoadState, reducedMotion: Boolean = false, short: Boolean = false) {
+    private fun start(initial: IntroLoadState, reducedMotion: Boolean = false) {
         load = initial
         compose.mainClock.autoAdvance = false
         compose.setContent {
             MolkkyBoardTheme(darkTheme = false, reducedMotion = reducedMotion) {
-                IntroScreen(loadState = load, onFinished = { finished++ }, logotype = {}, short = short)
+                IntroScreen(loadState = load, onFinished = { finished++ }, logotype = {})
             }
         }
     }
@@ -76,25 +76,6 @@ class IntroBehaviorTest {
     fun `animations reduites simple fondu d'environ une seconde`() {
         start(IntroLoadState.Ready, reducedMotion = true)
         advance(IntroTimeline.REDUCED_END + 300)
-        assertEquals(1, finished)
-    }
-
-    @Test
-    fun `version courte en moins de deux secondes`() {
-        start(IntroLoadState.Ready, short = true)
-        advance(1_300)
-        assertEquals(0, finished)
-        advance(600)
-        assertEquals(1, finished)
-    }
-
-    @Test
-    fun `version courte attend le chargement sur la signature`() {
-        start(IntroLoadState.Loading, short = true)
-        advance(3_000)
-        assertEquals(0, finished)
-        load = IntroLoadState.Ready
-        advance(IntroTimeline.END - IntroTimeline.SIGNATURE_END + 300)
         assertEquals(1, finished)
     }
 }
