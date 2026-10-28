@@ -14,11 +14,10 @@ import com.yogistudio.molkkyboard.core.scoring.getOrThrow
 import com.yogistudio.molkkyboard.core.scoring.reduce
 import com.yogistudio.molkkyboard.core.scoring.start
 
-/** Une équipe dans le clip : nom affiché (masqué si demandé), couleur ARGB, emoji. */
+/** Une équipe dans le clip : nom et couleur ARGB (le clip, dessiné en `Canvas`, n'a pas d'emblème). */
 data class ReelTeam(
     val name: String,
     val color: Int,
-    val avatar: String?,
 )
 
 enum class StepKind { POINTS, MISS, RESET, ELIMINATED, WIN }
@@ -55,7 +54,7 @@ data class ReelLabels(
 fun GameSnapshot.reelData(content: ShareContent, title: String, keyFigure: String, labels: ReelLabels): ReelData {
     val palette = TeamPalette.colors(dark = false)
     val index = content.teams.withIndex().associate { (i, team) -> team.id to i }
-    val teams = content.teams.map { ReelTeam(it.name, palette[it.colorIndex % palette.size].fill.toArgb(), it.avatar) }
+    val teams = content.teams.map { ReelTeam(it.name, palette[it.colorIndex % palette.size].fill.toArgb()) }
     val initial = start(config, currentSet.lineup).getOrNull()
     val steps = mutableListOf<ReelStep>()
     if (initial != null) {

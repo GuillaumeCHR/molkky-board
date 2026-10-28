@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yogistudio.molkkyboard.core.designsystem.component.AvatarGlyph
 import com.yogistudio.molkkyboard.core.designsystem.component.ImpactBurst
 import com.yogistudio.molkkyboard.core.designsystem.component.MolkkyBoardLogotype
 import com.yogistudio.molkkyboard.core.designsystem.theme.BricolageGrotesque
@@ -159,7 +160,7 @@ private fun Signature(content: ShareContent, dark: Boolean, compact: Boolean, mo
 @Composable
 private fun Avatar(team: ShareTeam, size: Dp) {
     Box(Modifier.size(size).background(teamColor(team.colorIndex), CircleShape), contentAlignment = Alignment.Center) {
-        Text(team.avatar ?: team.name.take(1).uppercase(), style = body((size.value * 0.5f).sp, Birch, FontWeight.Bold))
+        AvatarGlyph(team.avatar, team.name, Birch, size)
     }
 }
 

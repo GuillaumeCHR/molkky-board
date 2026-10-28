@@ -22,9 +22,9 @@ class ReelTest {
         ReelData(
             teams =
                 listOf(
-                    ReelTeam("Les Bouleaux", 0xFF3949AB.toInt(), "🌲"),
-                    ReelTeam("Alice", 0xFF00796B.toInt(), "🦊"),
-                    ReelTeam("Bruno", 0xFFA35200.toInt(), "🐻"),
+                    ReelTeam("Les Bouleaux", 0xFF3949AB.toInt()),
+                    ReelTeam("Alice", 0xFF00796B.toInt()),
+                    ReelTeam("Bruno", 0xFFA35200.toInt()),
                 ),
             steps =
                 listOf(

@@ -48,6 +48,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.yogistudio.molkkyboard.core.designsystem.component.AvatarGlyph
 import com.yogistudio.molkkyboard.core.designsystem.component.EliminatedStamp
 import com.yogistudio.molkkyboard.core.designsystem.component.ImpactBurst
 import com.yogistudio.molkkyboard.core.designsystem.component.MissIndicator
@@ -365,13 +366,7 @@ fun EliminationOverlay(
                             .background(color.fill.copy(alpha = 1f - fall.value * FALL_FADE), CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            show.team.name
-                                .take(1)
-                                .uppercase(),
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = color.onFill,
-                        )
+                        AvatarGlyph(show.team.avatar, show.team.name, color.onFill, FALLING_AVATAR)
                     }
                     Text(show.team.name, style = MaterialTheme.typography.headlineMedium, maxLines = 2)
                     MissIndicator(
@@ -509,3 +504,4 @@ private const val FALL_ANGLE = 70f
 private const val FALL_FADE = 1f
 private const val STAMP_START_SCALE = 2f
 private const val REDUCED_GREY = 0.45f
+private val FALLING_AVATAR = 64.dp

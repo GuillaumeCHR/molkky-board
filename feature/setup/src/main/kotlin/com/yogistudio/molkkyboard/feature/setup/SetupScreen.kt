@@ -64,15 +64,17 @@ import com.yogistudio.molkkyboard.core.data.PlayerProfile
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionButton
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionKind
 import com.yogistudio.molkkyboard.core.designsystem.component.GuideBubble
+import com.yogistudio.molkkyboard.core.designsystem.component.MBAvatar
 import com.yogistudio.molkkyboard.core.designsystem.component.MBDragHandle
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 import com.yogistudio.molkkyboard.core.designsystem.component.guideAnchor
 import com.yogistudio.molkkyboard.core.designsystem.component.rememberGuideAnchors
 import com.yogistudio.molkkyboard.core.designsystem.icon.PLAYER_AVATARS
 import com.yogistudio.molkkyboard.core.designsystem.icon.TEAM_EMBLEMS
-import com.yogistudio.molkkyboard.core.designsystem.icon.emblemSymbol
+import com.yogistudio.molkkyboard.core.designsystem.icon.emblemLabel
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
+import com.yogistudio.molkkyboard.core.designsystem.theme.TeamColor
 import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.RulesMode
@@ -340,7 +342,7 @@ private fun KnownProfiles(profiles: List<PlayerProfile>, onAdd: (PlayerProfile) 
                         colors[
                             profile.colorIndex %
                                 colors.size,
-                        ].fill,
+                        ],
                         36.dp,
                     )
                     Text("+ ${profile.name}", style = MaterialTheme.typography.titleSmall)
@@ -391,8 +393,13 @@ private fun PlayerRow(
                 )
             }
             val avatarLabel = stringResource(R.string.setup_change_avatar, player.name)
-            Box(Modifier.clip(CircleShape).clickable(onClickLabel = avatarLabel, onClick = onAvatar)) {
-                Avatar(player.avatar, player.photoUri, colors[player.colorIndex % colors.size].fill, 44.dp)
+            Box(
+                Modifier
+                    .clip(CircleShape)
+                    .clickable(onClickLabel = avatarLabel, onClick = onAvatar)
+                    .semantics { contentDescription = avatarLabel },
+            ) {
+                Avatar(player.avatar, player.photoUri, colors[player.colorIndex % colors.size], 44.dp)
             }
             Text(
                 player.name,
@@ -420,9 +427,9 @@ private fun PlayerRow(
     }
 }
 
-/** Avatar d'un joueur : sa photo si elle existe, sinon son emoji sur un disque à sa couleur. */
+/** Avatar d'un joueur : sa photo si elle existe, sinon son emblème au trait sur un disque à sa couleur. */
 @Composable
-fun Avatar(emoji: String, photoUri: String?, background: androidx.compose.ui.graphics.Color, size: Dp) {
+fun Avatar(emblem: String, photoUri: String?, color: TeamColor, size: Dp) {
     if (photoUri != null) {
         AsyncImage(
             model = photoUri,
@@ -431,22 +438,7 @@ fun Avatar(emoji: String, photoUri: String?, background: androidx.compose.ui.gra
             modifier = Modifier.size(size).clip(CircleShape),
         )
     } else {
-        Box(
-            Modifier.size(size).background(background.copy(alpha = AVATAR_ALPHA), CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                emoji,
-                style =
-                    if (size >
-                        40.dp
-                    ) {
-                        MaterialTheme.typography.headlineSmall
-                    } else {
-                        MaterialTheme.typography.titleMedium
-                    },
-            )
-        }
+        MBAvatar(emblem, name = "", color = color, size = size)
     }
 }
 
@@ -496,12 +488,13 @@ private fun TeamCard(
                 DragHandle(handle)
                 Text("$position.", style = MolkkyBoardTheme.typography.scoreSmall)
                 val emblemLabel = stringResource(R.string.setup_change_emblem, team.name)
-                val keys = TEAM_EMBLEMS.keys.toList()
+                val keys = TEAM_EMBLEMS
                 IconButton(
                     onClick = { actions.onTeamEmblem(team.id, keys[(keys.indexOf(team.emblem) + 1) % keys.size]) },
                     modifier = Modifier.size(MBDimens.MinTouch).semantics { contentDescription = emblemLabel },
                 ) {
-                    Text(emblemSymbol(team.emblem), style = MaterialTheme.typography.headlineSmall)
+                    val teamColors = MolkkyBoardTheme.colors.teams
+                    MBAvatar(team.emblem, team.name, teamColors[team.colorIndex % teamColors.size], EMBLEM_SIZE)
                 }
                 OutlinedTextField(
                     value = team.name,
@@ -536,7 +529,7 @@ private fun TeamCard(
                             stringResource(
                                 R.string.setup_known_team,
                                 namesList(names),
-                                "${emblemSymbol(known.emblem)} ${known.name}",
+                                known.name,
                             ),
                             style = MaterialTheme.typography.bodyLarge,
                         )
@@ -664,7 +657,7 @@ private fun TeamAddRow(team: SetupTeam, state: SetupUiState, actions: SetupActio
                             colors[
                                 profile.colorIndex %
                                     colors.size,
-                            ].fill,
+                            ],
                             32.dp,
                         )
                         Text("+ ${profile.name}", style = MaterialTheme.typography.titleSmall)
@@ -873,8 +866,10 @@ private fun AvatarSheet(player: SetupPlayer, actions: SetupActions, onDismiss: (
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                PLAYER_AVATARS.forEach { emoji ->
-                    val chosen = emoji == player.avatar && player.photoUri == null
+                val playerColor = MolkkyBoardTheme.colors.teams.let { it[player.colorIndex % it.size] }
+                PLAYER_AVATARS.forEach { emblem ->
+                    val chosen = emblem == player.avatar && player.photoUri == null
+                    val label = emblemLabel(emblem)
                     Box(
                         Modifier
                             .size(MBDimens.MinTouch)
@@ -887,14 +882,17 @@ private fun AvatarSheet(player: SetupPlayer, actions: SetupActions, onDismiss: (
                                 } else {
                                     MaterialTheme.colorScheme.surface
                                 },
-                            ).clickable {
-                                actions.onAvatar(player.id, emoji)
+                            ).clickable(onClickLabel = label) {
+                                actions.onAvatar(player.id, emblem)
                                 if (player.photoUri != null) actions.onRemovePhoto(player.id)
                                 onDismiss()
-                            }.semantics { selected = chosen },
+                            }.semantics {
+                                selected = chosen
+                                contentDescription = label
+                            },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(emoji, style = MaterialTheme.typography.headlineSmall)
+                        MBAvatar(emblem, player.name, playerColor, AVATAR_CHOICE)
                     }
                 }
             }
@@ -938,6 +936,8 @@ private fun Label(text: Int) {
     )
 }
 
-private const val AVATAR_ALPHA = 0.35f
 private const val KNOWN_ALPHA = 0.3f
 private const val FAMILY_STEP = 5
+
+private val EMBLEM_SIZE = 36.dp
+private val AVATAR_CHOICE = 44.dp

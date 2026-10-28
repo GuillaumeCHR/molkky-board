@@ -429,7 +429,7 @@ class SetupViewModel
                         existing.map { it.colorIndex },
                         index,
                     ),
-                emblem = firstFree(TEAM_EMBLEMS.keys.toList(), existing.map { it.emblem }, index),
+                emblem = firstFree(TEAM_EMBLEMS, existing.map { it.emblem }, index),
             )
 
         private fun freeName(teamNames: List<String>, existing: List<SetupTeam>, index: Int): String =

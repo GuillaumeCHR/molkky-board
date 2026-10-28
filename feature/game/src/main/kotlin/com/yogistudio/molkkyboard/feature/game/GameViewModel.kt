@@ -14,7 +14,6 @@ import com.yogistudio.molkkyboard.core.data.StatsRepository
 import com.yogistudio.molkkyboard.core.data.memberKey
 import com.yogistudio.molkkyboard.core.data.toStatsGame
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
-import com.yogistudio.molkkyboard.core.designsystem.icon.emblemSymbol
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.MissPenalty
 import com.yogistudio.molkkyboard.core.model.Overshoot
@@ -652,12 +651,12 @@ internal fun GameSnapshot.teamUi(
     faces: Map<String, String> = emptyMap(),
 ): TeamUi {
     val info = team(team.id)
-    // Joueur seul : l'emoji de son profil ; équipe : son emblème.
+    // Joueur seul : l'emblème de son profil ; équipe : le sien (clés de `LineEmblems`).
     val avatar =
         if (team.players.size == 1) {
             players.firstOrNull { it.id == team.players.first() }?.profileId?.let(faces::get)
         } else {
-            info?.emblem?.let(::emblemSymbol)
+            info?.emblem
         }
     return TeamUi(
         id = team.id,

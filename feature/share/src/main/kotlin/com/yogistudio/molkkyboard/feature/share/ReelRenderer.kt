@@ -47,7 +47,7 @@ class ReelRenderer(
     private val out = BooleanArray(data.teams.size)
 
     /** Libellés préparés une fois (pas de chaîne construite pendant le rendu). */
-    private val rowLabels = data.teams.map { listOfNotNull(it.avatar, it.name).joinToString(" ").take(NAME_MAX) }
+    private val rowLabels = data.teams.map { it.name.take(NAME_MAX) }
 
     /** Carton final : classement par score final (le vainqueur d'abord). */
     private val outroOrder =

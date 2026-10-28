@@ -1,7 +1,6 @@
 package com.yogistudio.molkkyboard.feature.share
 
 import com.yogistudio.molkkyboard.core.data.GameSnapshot
-import com.yogistudio.molkkyboard.core.designsystem.icon.emblemSymbol
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.targetFor
 import com.yogistudio.molkkyboard.core.stats.Moment
@@ -86,7 +85,7 @@ fun GameSnapshot.shareContent(
                 if (team.players.size == 1) {
                     players.firstOrNull { it.id == team.players.first() }?.profileId?.let(avatars::get)
                 } else {
-                    info?.emblem?.let(::emblemSymbol)
+                    info?.emblem
                 }
             ShareTeam(
                 id = id,

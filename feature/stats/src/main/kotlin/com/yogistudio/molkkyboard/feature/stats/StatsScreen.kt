@@ -46,6 +46,7 @@ import com.patrykandpatrick.vico.compose.common.Fill
 import com.patrykandpatrick.vico.compose.common.component.LineComponent
 import com.yogistudio.molkkyboard.core.data.PlayerRepository
 import com.yogistudio.molkkyboard.core.data.StatsRepository
+import com.yogistudio.molkkyboard.core.designsystem.component.AvatarGlyph
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
@@ -148,7 +149,10 @@ fun StatsContent(state: StatsUiState, onBack: () -> Unit = {}, onSelect: (Player
                     FilterChip(
                         selected = player.id == state.selected,
                         onClick = { onSelect(player.id) },
-                        label = { Text(listOfNotNull(player.avatar, player.name).joinToString(" ")) },
+                        label = { Text(player.name) },
+                        leadingIcon = {
+                            AvatarGlyph(player.avatar, player.name, MaterialTheme.colorScheme.primary, CHIP_AVATAR)
+                        },
                     )
                 }
             }
@@ -307,3 +311,5 @@ private const val PERCENT = 100
 private const val CHART_SETS = 20
 private const val CHART_HEIGHT = 200
 private const val COLUMN_WIDTH = 12
+
+private val CHIP_AVATAR = 30.dp

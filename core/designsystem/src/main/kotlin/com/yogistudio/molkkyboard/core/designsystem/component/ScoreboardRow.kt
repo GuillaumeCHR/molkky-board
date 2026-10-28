@@ -57,6 +57,8 @@ fun ScoreboardRow(
     active: Boolean = false,
     status: String? = null,
     members: List<String> = emptyList(),
+    /** Emblème au trait du joueur ou de l'équipe (clé de `LineEmblems`) ; l'initiale s'il manque. */
+    avatar: String? = null,
 ) {
     var expanded by rememberSaveable(name) { mutableStateOf(false) }
     val out = status != null
@@ -92,7 +94,7 @@ fun ScoreboardRow(
                 modifier = Modifier.widthIn(min = 28.dp),
             )
             Box(Modifier.size(36.dp).background(color.fill, CircleShape), contentAlignment = Alignment.Center) {
-                Text(name.take(1).uppercase(), style = MaterialTheme.typography.titleMedium, color = color.onFill)
+                AvatarGlyph(avatar, name, color.onFill, AVATAR_SIZE)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
@@ -126,3 +128,5 @@ fun ScoreboardRow(
 
 private const val ACTIVE_ALPHA = 0.32f
 private const val OUT_ALPHA = 0.55f
+
+private val AVATAR_SIZE = 36.dp

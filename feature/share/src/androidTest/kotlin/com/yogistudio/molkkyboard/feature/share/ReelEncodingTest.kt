@@ -20,8 +20,8 @@ class ReelEncodingTest {
             ReelData(
                 teams =
                     listOf(
-                        ReelTeam("Alice", 0xFF3949AB.toInt(), "🦊"),
-                        ReelTeam("Bruno", 0xFF00796B.toInt(), "🐻"),
+                        ReelTeam("Alice", 0xFF3949AB.toInt()),
+                        ReelTeam("Bruno", 0xFF00796B.toInt()),
                     ),
                 steps =
                     (1..9).map {

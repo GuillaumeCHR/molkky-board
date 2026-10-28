@@ -98,6 +98,7 @@ import com.yogistudio.molkkyboard.core.designsystem.component.FitRollingNumber
 import com.yogistudio.molkkyboard.core.designsystem.component.FitToScreen
 import com.yogistudio.molkkyboard.core.designsystem.component.GuideAnchors
 import com.yogistudio.molkkyboard.core.designsystem.component.GuideBubble
+import com.yogistudio.molkkyboard.core.designsystem.component.MBAvatar
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 import com.yogistudio.molkkyboard.core.designsystem.component.MissIndicator
 import com.yogistudio.molkkyboard.core.designsystem.component.PinGrid
@@ -622,8 +623,9 @@ private fun ActiveCard(state: GameUiState) {
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     itemVerticalAlignment = Alignment.CenterVertically,
                 ) {
+                    MBAvatar(team.avatar, team.name, colors[team.colorIndex % colors.size], AVATAR_SIZE)
                     Text(
-                        listOfNotNull(team.avatar, team.name).joinToString(" "),
+                        team.name,
                         style = MaterialTheme.typography.headlineMedium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -883,6 +885,7 @@ private fun OvershootSticker(show: OvershootShow?, onShown: () -> Unit, modifier
 }
 
 private val ALL_PINS = (1..12).toSet()
+private val AVATAR_SIZE = 36.dp
 private const val TENSION_BEATS = 3
 private const val TENSION_BEAT_MS = 110
 private const val TENSION_PAUSE_MS = 420L

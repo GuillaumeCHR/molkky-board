@@ -83,6 +83,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.yogistudio.molkkyboard.core.designsystem.component.AvatarGlyph
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionButton
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionKind
 import com.yogistudio.molkkyboard.core.designsystem.component.FitRollingNumber
@@ -223,21 +224,19 @@ internal fun ScoreboardSheet(state: GameUiState, onDismiss: () -> Unit) {
                             else -> stringResource(R.string.game_left)
                         },
                     members = team.members,
+                    avatar = team.avatar,
                 )
             }
         }
     }
 }
 
-/** Avatar d'une puce : emoji du joueur ou emblème de l'équipe, sinon l'initiale. */
+/** Avatar d'une puce : emblème au trait du joueur ou de l'équipe, sinon l'initiale. */
 @Composable
 private fun AvatarBadge(team: TeamUi, onFill: Color) {
-    Text(
-        team.avatar ?: team.name.take(1).uppercase(),
-        style = MaterialTheme.typography.titleMedium,
-        color = onFill,
-    )
+    AvatarGlyph(team.avatar, team.name, onFill, BADGE_SIZE)
 }
 
 private const val OUT_ALPHA = 0.45f
+private val BADGE_SIZE = 32.dp
 private val CHIP_MAX_WIDTH = 200.dp

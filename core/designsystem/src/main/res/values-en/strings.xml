@@ -22,4 +22,20 @@
     <string name="ds_guide_step">Getting started · %1$d of %2$d</string>
     <string name="ds_guide_skip">Skip the guide</string>
     <string name="ds_guide_done">Got it!</string>
+    <string name="ds_emblem_pin">Pin</string>
+    <string name="ds_emblem_leaf">Leaf</string>
+    <string name="ds_emblem_bolt">Bolt</string>
+    <string name="ds_emblem_wave">Wave</string>
+    <string name="ds_emblem_star">Star</string>
+    <string name="ds_emblem_sun">Sun</string>
+    <string name="ds_emblem_mountain">Mountain</string>
+    <string name="ds_emblem_flame">Flame</string>
+    <string name="ds_emblem_tree">Fir tree</string>
+    <string name="ds_emblem_crown">Crown</string>
+    <string name="ds_emblem_anchor">Anchor</string>
+    <string name="ds_emblem_heart">Heart</string>
+    <string name="ds_emblem_moon">Moon</string>
+    <string name="ds_emblem_snowflake">Snowflake</string>
+    <string name="ds_emblem_fish">Fish</string>
+    <string name="ds_emblem_bird">Bird</string>
 </resources>
