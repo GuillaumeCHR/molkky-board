@@ -18,7 +18,7 @@ publication**.
 |---|---|---|
 | Compte développeur personnel « Yogi Studio » (25 $, identité vérifiée) | ⬜ 👤 | |
 | Adresse de contact publique dédiée | ✅ | yogistudiofr@gmail.com |
-| Clé d'envoi créée et sauvegardée | 🟡 👤 | créée le 2026-10-28 (empreinte SHA-256 `71:A7:37:72:…:54:A8:DF:B0`) ; sauvegarde à faire, `docs/RELEASE.md` § 2 |
+| Clé d'envoi créée et sauvegardée | ✅ | créée le 2026-10-28 (empreinte SHA-256 `71:A7:37:72:…:54:A8:DF:B0`) ; archive chiffrée (gpg AES-256) sur le NAS et par e-mail |
 | Play App Signing accepté | ⬜ 👤 | au premier envoi |
 
 ## Application
