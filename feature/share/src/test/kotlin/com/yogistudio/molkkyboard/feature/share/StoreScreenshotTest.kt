@@ -14,16 +14,22 @@ import org.robolectric.annotation.GraphicsMode
 import java.time.LocalDateTime
 import java.time.ZoneId
 
-/** Vignette de partage en anglais pour la fiche du Play Store. */
+/** Vignette de partage de la fiche du Play Store, en français et en anglais. */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(qualifiers = "en-w411dp-h891dp-xxhdpi")
 class StoreScreenshotTest {
     @get:Rule
     val compose = createComposeRule()
 
     @Test
-    fun podium() {
+    @Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
+    fun podiumFrancais() = podium("fr", "Les Bouleaux", "Les Quillards", "Plage du Moulin")
+
+    @Test
+    @Config(qualifiers = "en-w411dp-h891dp-xxhdpi")
+    fun podiumAnglais() = podium("en", "The Birches", "Pin Pirates", "Mill Beach")
+
+    private fun podium(lang: String, winner: String, third: String, place: String) {
         val day =
             LocalDateTime
                 .of(2026, 10, 27, 15, 0)
@@ -32,9 +38,9 @@ class StoreScreenshotTest {
                 .toEpochMilli()
         val teams =
             listOf(
-                ShareTeam(TeamId("t0"), "The Birches", 0, "🌲", 50, out = false),
+                ShareTeam(TeamId("t0"), winner, 0, "🌲", 50, out = false),
                 ShareTeam(TeamId("t1"), "Alice", 1, "🦊", 43, out = false),
-                ShareTeam(TeamId("t2"), "Pin Pirates", 2, "⚡", 38, out = false),
+                ShareTeam(TeamId("t2"), third, 2, "⚡", 38, out = false),
             )
         val content =
             ShareContent(
@@ -45,9 +51,9 @@ class StoreScreenshotTest {
                 throws = 7,
                 round = 6,
                 playedAt = day,
-                place = "Mill Beach",
+                place = place,
             )
         compose.setContent { ShareCard(content, ShareTemplate.PODIUM, ShareFormat.STORY) }
-        compose.onRoot().captureRoboImage("src/test/screenshots/store/share_card.png")
+        compose.onRoot().captureRoboImage("src/test/screenshots/store/share_card_$lang.png")
     }
 }

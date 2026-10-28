@@ -63,8 +63,8 @@ publication**.
 | Point | Statut | Note |
 |---|---|---|
 | Titre (30), description courte (80), longue (4 000) | ⬜ | |
-| Icône 512 × 512, image de présentation 1 024 × 500 | ⬜ | |
-| 4 captures ou plus (accueil, jeu, fin de partie, Hall of Fame) | 🟡 | anglais fait (8 images 1080 × 1920, `docs/store/screenshots/en`, `tools/store/compose_screenshots.py`) ; français à faire |
+| Icône 512 × 512, image de présentation 1 024 × 500 | 🟡 | image de présentation faite (fr, en : `docs/store/screenshots/<langue>/feature-graphic.png`) ; icône 512 × 512 à exporter |
+| 4 captures ou plus (accueil, jeu, fin de partie, Hall of Fame) | ✅ | 8 images 1080 × 1920 en français et en anglais (`docs/store/screenshots/fr`, `en`), produites par `tools/store/compose_screenshots.py` |
 | Vignette de partage d'exemple | ⬜ | |
 | « Plusieurs téléphones, sans compte ni Internet » mis en avant | ⬜ | |
 

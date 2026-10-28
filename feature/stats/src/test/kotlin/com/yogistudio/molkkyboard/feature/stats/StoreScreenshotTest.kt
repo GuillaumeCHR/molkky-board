@@ -15,10 +15,9 @@ import org.robolectric.annotation.GraphicsMode
 import java.time.LocalDateTime
 import java.time.ZoneId
 
-/** Hall of Fame en anglais pour la fiche du Play Store. */
+/** Hall of Fame de la fiche du Play Store, en français et en anglais. */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(qualifiers = "en-w411dp-h891dp-xxhdpi")
 class StoreScreenshotTest {
     @get:Rule
     val compose = createComposeRule()
@@ -31,7 +30,14 @@ class StoreScreenshotTest {
             .toEpochMilli()
 
     @Test
-    fun hallOfFame() {
+    @Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
+    fun hallOfFameFrancais() = hallOfFame("fr", "Chloé")
+
+    @Test
+    @Config(qualifiers = "en-w411dp-h891dp-xxhdpi")
+    fun hallOfFameAnglais() = hallOfFame("en", "Chloe")
+
+    private fun hallOfFame(lang: String, chloe: String) {
         val hall =
             HallUiState(
                 loading = false,
@@ -39,7 +45,7 @@ class StoreScreenshotTest {
                     listOf(
                         WinsEntry("a", "Alice", 1, 5, 8, day, "g1"),
                         WinsEntry("b", "Bruno", 1, 3, 8, day, "g2"),
-                        WinsEntry("c", "Chloe", 1, 1, 6, day, null),
+                        WinsEntry("c", chloe, 1, 1, 6, day, null),
                     ),
                 fastest =
                     listOf(
@@ -48,6 +54,6 @@ class StoreScreenshotTest {
                     ),
             )
         compose.setContent { MolkkyBoardTheme(darkTheme = false, reducedMotion = true) { HallOfFameContent(hall) } }
-        compose.onRoot().captureRoboImage("src/test/screenshots/store/hall_of_fame.png")
+        compose.onRoot().captureRoboImage("src/test/screenshots/store/hall_of_fame_$lang.png")
     }
 }

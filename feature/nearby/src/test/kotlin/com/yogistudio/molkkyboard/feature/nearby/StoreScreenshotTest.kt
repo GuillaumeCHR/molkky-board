@@ -19,16 +19,25 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-/** Écran « Inviter » en anglais (QR code, demande d'arrivée, téléphone connecté) pour la fiche du Play Store. */
+/**
+ * Écran « Inviter » (QR code, demande d'arrivée, téléphone connecté) pour la fiche du Play Store, en français et en
+ * anglais.
+ */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(qualifiers = "en-w411dp-h891dp-xxhdpi")
 class StoreScreenshotTest {
     @get:Rule
     val compose = createComposeRule()
 
     @Test
-    fun inviter() {
+    @Config(qualifiers = "fr-w411dp-h891dp-xxhdpi")
+    fun inviterFrancais() = inviter("fr", "Chloé")
+
+    @Test
+    @Config(qualifiers = "en-w411dp-h891dp-xxhdpi")
+    fun inviterAnglais() = inviter("en", "Chloe")
+
+    private fun inviter(lang: String, chloe: String) {
         // Lien factice : adresse privée, empreinte et jeton fictifs (aucun réseau n'est ouvert).
         val link = "molkkyboard://join#v=1&h=192.168.49.1&p=48213&fp=${"ab".repeat(32)}&t=${"cd".repeat(16)}"
         val state =
@@ -38,15 +47,15 @@ class StoreScreenshotTest {
                 link = link,
                 networkMode = NetworkMode.HOTSPOT,
                 ssid = "DIRECT-MolkkyBoard",
-                candidates = listOf(JoinCandidate(ConnectionId(2L), "Chloe", null)),
+                candidates = listOf(JoinCandidate(ConnectionId(2L), chloe, null)),
                 guests = listOf(GuestDevice(DeviceId("d1"), "Bruno", PlayerId("b"), ConnectionId(1L), "token")),
             )
-        val players = listOf(PartyPlayer(PlayerId("b"), "Bruno"), PartyPlayer(PlayerId("c"), "Chloe"))
+        val players = listOf(PartyPlayer(PlayerId("b"), "Bruno"), PartyPlayer(PlayerId("c"), chloe))
         compose.setContent {
             MolkkyBoardTheme(darkTheme = false, reducedMotion = true) {
                 InviteContent(state, players, true, NetworkMode.HOTSPOT, {}, {}, {}, InviteActions())
             }
         }
-        compose.onRoot().captureRoboImage("src/test/screenshots/store/invite.png")
+        compose.onRoot().captureRoboImage("src/test/screenshots/store/invite_$lang.png")
     }
 }
