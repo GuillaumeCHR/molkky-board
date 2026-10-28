@@ -83,6 +83,7 @@ internal fun SettingsScreen(
     onAbout: () -> Unit,
     onPlayfulRules: () -> Unit,
     onRules: () -> Unit,
+    onReplayGuide: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
@@ -145,8 +146,12 @@ internal fun SettingsScreen(
             )
             SettingsLink(
                 R.string.settings_guide,
-                if (settings.onboardingDone) R.string.settings_guide_hint else R.string.settings_guide_pending,
-                viewModel::replayGuide,
+                R.string.settings_guide_hint,
+                // Les bulles sont réactivées puis la prise en main se rejoue tout de suite, sur une nouvelle partie.
+                {
+                    viewModel.replayGuide()
+                    onReplayGuide()
+                },
             )
             SettingsSwitch(
                 R.string.settings_voice,

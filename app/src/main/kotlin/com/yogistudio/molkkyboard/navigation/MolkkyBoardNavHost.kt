@@ -157,6 +157,7 @@ fun MolkkyBoardNavHost(
                         onAbout = { navController.navigate(AboutRoute) },
                         onPlayfulRules = { navController.navigate(PlayfulRulesRoute) },
                         onRules = { navController.navigate(RulesRoute) },
+                        onReplayGuide = { navController.navigate(SetupRoute) },
                     )
                 }
                 composable<AboutRoute> {

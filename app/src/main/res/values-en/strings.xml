@@ -44,8 +44,7 @@
     <string name="settings_sounds">Sounds</string>
     <string name="settings_voice_hint">“Round 4”, “Léa to throw, needs 7”, “Back to 25!”… using the phone\'s text-to-speech. Silent in silent mode and with TalkBack.</string>
     <string name="settings_guide">Replay the walkthrough</string>
-    <string name="settings_guide_hint">The 4 help bubbles will come back in the next game.</string>
-    <string name="settings_guide_pending">The help bubbles will show in the next game.</string>
+    <string name="settings_guide_hint">Replays the 4 help bubbles on a new game.</string>
     <string name="settings_voice_rate">Speech rate</string>
     <string name="settings_voice_volume">Speech volume</string>
     <string name="settings_notification">Game in progress notification</string>
