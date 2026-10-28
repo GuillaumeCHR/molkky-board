@@ -240,4 +240,5 @@
     <string name="game_last_chance">Dernière chance</string>
     <string name="game_last_chance_eliminate">1 raté = éliminé</string>
     <string name="game_last_chance_reset">1 raté = retour à %1$d</string>
+    <string name="rules_go_to">Aller à la partie « %1$s »</string>
 </resources>

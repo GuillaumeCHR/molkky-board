@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -48,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -62,6 +64,7 @@ import com.yogistudio.molkkyboard.core.data.PlayerProfile
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionButton
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionKind
 import com.yogistudio.molkkyboard.core.designsystem.component.GuideBubble
+import com.yogistudio.molkkyboard.core.designsystem.component.MBDragHandle
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 import com.yogistudio.molkkyboard.core.designsystem.component.guideAnchor
 import com.yogistudio.molkkyboard.core.designsystem.component.rememberGuideAnchors
@@ -240,7 +243,7 @@ fun SetupContent(state: SetupUiState, actions: SetupActions) {
         }
     }
     if (editingPlayful) {
-        ModalBottomSheet(onDismissRequest = { editingPlayful = false }) {
+        ModalBottomSheet(onDismissRequest = { editingPlayful = false }, dragHandle = { MBDragHandle() }) {
             Column(
                 modifier =
                     Modifier
@@ -672,19 +675,20 @@ private fun TeamAddRow(team: SetupTeam, state: SetupUiState, actions: SetupActio
     }
 }
 
-/** Les 8 couleurs d'équipe, en pastilles. */
+/** Les 8 couleurs d'équipe, en pastilles (un choix unique, lu comme des boutons radio). */
 @Composable
 private fun ColorPicker(current: Int, onSelect: (Int) -> Unit) {
     val colors = MolkkyBoardTheme.colors.teams
-    Row(Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    // Cibles de 56 dp (zones tactiles de la spec) : les pastilles passent à la ligne si la carte est étroite.
+    FlowRow(Modifier.padding(horizontal = 8.dp)) {
         colors.forEachIndexed { index, color ->
             val label = stringResource(R.string.setup_color, index + 1)
             Box(
                 Modifier
-                    .size(36.dp)
+                    .size(MBDimens.MinTouch)
                     .clip(CircleShape)
-                    .clickable(onClickLabel = label) { onSelect(index) }
-                    .semantics { selected = index == current },
+                    .selectable(selected = index == current, role = Role.RadioButton) { onSelect(index) }
+                    .semantics { contentDescription = label },
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
@@ -855,7 +859,7 @@ private fun AvatarSheet(player: SetupPlayer, actions: SetupActions, onDismiss: (
             uri?.let { actions.onPhoto(player.id, it) }
             onDismiss()
         }
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(onDismissRequest = onDismiss, dragHandle = { MBDragHandle() }) {
         Column(
             Modifier
                 .navigationBarsPadding()

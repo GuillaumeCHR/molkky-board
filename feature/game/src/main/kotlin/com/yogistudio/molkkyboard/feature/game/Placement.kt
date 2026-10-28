@@ -43,6 +43,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.yogistudio.molkkyboard.core.designsystem.component.MBDragHandle
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 import com.yogistudio.molkkyboard.core.designsystem.component.PIN_FORMATION
 import com.yogistudio.molkkyboard.core.designsystem.component.PinGrid
@@ -103,6 +104,7 @@ private fun android.content.Context.placementLabel(pin: Int): String {
 @Composable
 internal fun PlacementSheet(onDismiss: () -> Unit) {
     ModalBottomSheet(
+        dragHandle = { MBDragHandle() },
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {

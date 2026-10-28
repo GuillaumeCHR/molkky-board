@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionButton
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionKind
+import com.yogistudio.molkkyboard.core.designsystem.component.MBDragHandle
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.PlayerId
@@ -71,6 +72,7 @@ internal fun PlayersSheet(
     var newName by rememberSaveable { mutableStateOf("") }
     val editable = !state.finished && !state.abandoned
     ModalBottomSheet(
+        dragHandle = { MBDragHandle() },
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {

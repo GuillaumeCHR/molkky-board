@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionButton
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionKind
 import com.yogistudio.molkkyboard.core.designsystem.component.FitToScreen
+import com.yogistudio.molkkyboard.core.designsystem.component.MBDragHandle
 import com.yogistudio.molkkyboard.core.designsystem.component.PinGrid
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPad
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
@@ -75,6 +76,7 @@ internal fun LogSheet(
     var editing by remember { mutableStateOf(initialEditing) }
     var deleting by remember { mutableStateOf<LogItemUi?>(null) }
     ModalBottomSheet(
+        dragHandle = { MBDragHandle() },
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {

@@ -1,9 +1,15 @@
 package com.yogistudio.molkkyboard.feature.setup
 
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.RoborazziATFAccessibilityCheckOptions
+import com.github.takahirom.roborazzi.RoborazziATFAccessibilityChecker
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.checkRoboAccessibility
+import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
 import com.yogistudio.molkkyboard.core.data.KnownTeam
 import com.yogistudio.molkkyboard.core.data.PlayerProfile
 import com.yogistudio.molkkyboard.core.designsystem.icon.PLAYER_AVATARS
@@ -32,6 +38,7 @@ class SetupScreenshotTest {
     private fun capture(name: String, state: SetupUiState) {
         compose.setContent { MolkkyBoardTheme(reducedMotion = true) { SetupContent(state, SetupActions()) } }
         compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
+        compose.onRoot().assertAccessible()
     }
 
     @Test
@@ -89,3 +96,14 @@ class SetupScreenshotTest {
     @Test
     fun guideAjouterLesJoueurs() = capture("guide_ajouter_joueurs", SetupUiState(guide = true))
 }
+
+/** Contrôles d'accessibilité automatiques (ATF via Roborazzi) : échec sur toute erreur (cible tactile, libellé…). */
+@OptIn(ExperimentalRoborazziApi::class)
+private fun SemanticsNodeInteraction.assertAccessible() =
+    checkRoboAccessibility(
+        roborazziATFAccessibilityCheckOptions =
+            RoborazziATFAccessibilityCheckOptions(
+                checker = RoborazziATFAccessibilityChecker(preset = AccessibilityCheckPreset.LATEST),
+                failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Error,
+            ),
+    )

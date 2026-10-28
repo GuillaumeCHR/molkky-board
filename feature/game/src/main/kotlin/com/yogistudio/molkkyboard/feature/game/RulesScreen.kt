@@ -33,9 +33,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.yogistudio.molkkyboard.core.designsystem.component.MBDragHandle
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
@@ -57,6 +59,7 @@ fun RulesScreen(onBack: () -> Unit) {
 @Composable
 internal fun RulesSheet(onDismiss: () -> Unit) {
     ModalBottomSheet(
+        dragHandle = { MBDragHandle() },
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
@@ -188,9 +191,12 @@ fun RulesContent(modifier: Modifier = Modifier) {
             // Sommaire : un tap fait défiler jusqu'à la partie.
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PARTS.forEach { part ->
+                    // TalkBack distingue l'entrée du sommaire de l'intertitre du même nom.
+                    val goTo = stringResource(R.string.rules_go_to, stringResource(part.title))
                     AssistChip(
                         onClick = { scope.launch { requesters.getValue(part.title).bringIntoView() } },
                         label = { Text(stringResource(part.title)) },
+                        modifier = Modifier.semantics { contentDescription = goTo },
                     )
                 }
             }

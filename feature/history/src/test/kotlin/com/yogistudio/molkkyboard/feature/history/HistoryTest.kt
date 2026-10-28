@@ -1,12 +1,18 @@
 package com.yogistudio.molkkyboard.feature.history
 
 import android.content.Context
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.RoborazziATFAccessibilityCheckOptions
+import com.github.takahirom.roborazzi.RoborazziATFAccessibilityChecker
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.checkRoboAccessibility
+import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
 import com.yogistudio.molkkyboard.core.data.GamePlayer
 import com.yogistudio.molkkyboard.core.data.GameTeam
 import com.yogistudio.molkkyboard.core.data.NewGame
@@ -124,6 +130,7 @@ class HistoryTest {
             val state = HistoryUiState(loading = false, items = games.observeHistory().first().map { it.toItem() })
             compose.setContent { MolkkyBoardTheme(reducedMotion = true) { HistoryContent(state, {}, {}) } }
             compose.onRoot().captureRoboImage("src/test/screenshots/historique.png")
+            compose.onRoot().assertAccessible()
         }
 
     @Test
@@ -132,5 +139,17 @@ class HistoryTest {
             MolkkyBoardTheme(reducedMotion = true) { HistoryContent(HistoryUiState(loading = false), {}, {}) }
         }
         compose.onRoot().captureRoboImage("src/test/screenshots/historique_vide.png")
+        compose.onRoot().assertAccessible()
     }
 }
+
+/** Contrôles d'accessibilité automatiques (ATF via Roborazzi) : échec sur toute erreur (cible tactile, libellé…). */
+@OptIn(ExperimentalRoborazziApi::class)
+private fun SemanticsNodeInteraction.assertAccessible() =
+    checkRoboAccessibility(
+        roborazziATFAccessibilityCheckOptions =
+            RoborazziATFAccessibilityCheckOptions(
+                checker = RoborazziATFAccessibilityChecker(preset = AccessibilityCheckPreset.LATEST),
+                failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Error,
+            ),
+    )

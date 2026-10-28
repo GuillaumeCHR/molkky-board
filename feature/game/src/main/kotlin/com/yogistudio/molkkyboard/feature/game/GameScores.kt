@@ -89,6 +89,7 @@ import com.yogistudio.molkkyboard.core.designsystem.component.FitRollingNumber
 import com.yogistudio.molkkyboard.core.designsystem.component.FitToScreen
 import com.yogistudio.molkkyboard.core.designsystem.component.GuideAnchors
 import com.yogistudio.molkkyboard.core.designsystem.component.GuideBubble
+import com.yogistudio.molkkyboard.core.designsystem.component.MBDragHandle
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 import com.yogistudio.molkkyboard.core.designsystem.component.MissIndicator
 import com.yogistudio.molkkyboard.core.designsystem.component.PinGrid
@@ -179,6 +180,7 @@ internal fun ScoresStrip(state: GameUiState, onOpen: () -> Unit) {
 internal fun ScoreboardSheet(state: GameUiState, onDismiss: () -> Unit) {
     val colors = MolkkyBoardTheme.colors.teams
     ModalBottomSheet(
+        dragHandle = { MBDragHandle() },
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {

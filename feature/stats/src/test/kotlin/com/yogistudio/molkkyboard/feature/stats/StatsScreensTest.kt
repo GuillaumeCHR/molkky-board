@@ -2,11 +2,17 @@ package com.yogistudio.molkkyboard.feature.stats
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.RoborazziATFAccessibilityCheckOptions
+import com.github.takahirom.roborazzi.RoborazziATFAccessibilityChecker
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.checkRoboAccessibility
+import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.stats.FastestEntry
@@ -80,6 +86,7 @@ class StatsScreensTest {
     fun `hall of fame joueurs`() {
         compose.setContent { MolkkyBoardTheme(reducedMotion = true) { HallOfFameContent(hall) } }
         compose.onRoot().captureRoboImage("src/test/screenshots/hall_of_fame_joueurs.png")
+        compose.onRoot().assertAccessible()
     }
 
     @Test
@@ -98,6 +105,7 @@ class StatsScreensTest {
             }
         }
         compose.onRoot().captureRoboImage("src/test/screenshots/hall_of_fame_equipes_police_200.png")
+        compose.onRoot().assertAccessible()
     }
 
     @Test
@@ -108,6 +116,7 @@ class StatsScreensTest {
             ) { HallOfFameContent(HallUiState(loading = false)) }
         }
         compose.onRoot().captureRoboImage("src/test/screenshots/hall_of_fame_vide.png")
+        compose.onRoot().assertAccessible()
     }
 
     @Test
@@ -129,5 +138,17 @@ class StatsScreensTest {
             )
         compose.setContent { MolkkyBoardTheme(reducedMotion = true) { StatsContent(state) } }
         compose.onRoot().captureRoboImage("src/test/screenshots/statistiques.png")
+        compose.onRoot().assertAccessible()
     }
 }
+
+/** Contrôles d'accessibilité automatiques (ATF via Roborazzi) : échec sur toute erreur (cible tactile, libellé…). */
+@OptIn(ExperimentalRoborazziApi::class)
+private fun SemanticsNodeInteraction.assertAccessible() =
+    checkRoboAccessibility(
+        roborazziATFAccessibilityCheckOptions =
+            RoborazziATFAccessibilityCheckOptions(
+                checker = RoborazziATFAccessibilityChecker(preset = AccessibilityCheckPreset.LATEST),
+                failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Error,
+            ),
+    )
