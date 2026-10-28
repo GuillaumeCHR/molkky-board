@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.molkkyboard.android.feature)
+    alias(libs.plugins.roborazzi)
 }
 
 android {

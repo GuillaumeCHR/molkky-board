@@ -55,10 +55,12 @@ import com.yogistudio.molkkyboard.core.designsystem.component.BigActionKind
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
+import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.nearby.NearbyError
 import com.yogistudio.molkkyboard.core.nearby.NearbyRole
 import com.yogistudio.molkkyboard.core.nearby.NearbyState
 import com.yogistudio.molkkyboard.core.nearby.NetworkMode
+import com.yogistudio.molkkyboard.core.sync.DeviceId
 import com.yogistudio.molkkyboard.core.sync.GuestDevice
 import com.yogistudio.molkkyboard.core.sync.JoinCandidate
 
@@ -76,7 +78,50 @@ fun InviteScreen(gameId: String, onBack: () -> Unit, viewModel: NearbyViewModel 
             // Refusées : le partage échoue avec un message clair, la partie continue sur ce téléphone.
             viewModel.share(gameId, mode)
         }
-    val sharing = state.role == NearbyRole.HOST && state.gameId == gameId
+    InviteContent(
+        state = state,
+        players = players,
+        sharing = state.role == NearbyRole.HOST && state.gameId == gameId,
+        mode = mode,
+        onMode = { mode = it },
+        onStart = { permissions.launch(sharePermissions(mode)) },
+        onBack = onBack,
+        actions =
+            InviteActions(
+                accept = viewModel::accept,
+                acceptAsNewPlayer = viewModel::acceptAsNewPlayer,
+                acceptAsReferee = viewModel::acceptAsReferee,
+                refuse = viewModel::refuse,
+                exclude = viewModel::exclude,
+                renew = viewModel::renewInvite,
+                stop = viewModel::stop,
+            ),
+    )
+}
+
+/** Actions de l'organisateur sur l'écran « Inviter » (sans valeur : rien ne se passe, pour les captures). */
+internal class InviteActions(
+    val accept: (JoinCandidate, PlayerId) -> Unit = { _, _ -> },
+    val acceptAsNewPlayer: (JoinCandidate) -> Unit = {},
+    val acceptAsReferee: (JoinCandidate) -> Unit = {},
+    val refuse: (JoinCandidate) -> Unit = {},
+    val exclude: (DeviceId) -> Unit = {},
+    val renew: () -> Unit = {},
+    val stop: () -> Unit = {},
+)
+
+@Composable
+@Suppress("LongParameterList")
+internal fun InviteContent(
+    state: NearbyState,
+    players: List<PartyPlayer>,
+    sharing: Boolean,
+    mode: NetworkMode,
+    onMode: (NetworkMode) -> Unit,
+    onStart: () -> Unit,
+    onBack: () -> Unit,
+    actions: InviteActions,
+) {
     Column(Modifier.fillMaxSize()) {
         MBTopBar(stringResource(R.string.invite_title), onBack)
         Column(
@@ -93,10 +138,10 @@ fun InviteScreen(gameId: String, onBack: () -> Unit, viewModel: NearbyViewModel 
                 Section(R.string.invite_section_invite) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterChip(mode == NetworkMode.HOTSPOT, {
-                            mode = NetworkMode.HOTSPOT
+                            onMode(NetworkMode.HOTSPOT)
                         }, { Text(stringResource(R.string.invite_hotspot)) })
                         FilterChip(mode == NetworkMode.SAME_WIFI, {
-                            mode = NetworkMode.SAME_WIFI
+                            onMode(NetworkMode.SAME_WIFI)
                         }, { Text(stringResource(R.string.invite_same_wifi)) })
                     }
                     Hint(
@@ -111,20 +156,20 @@ fun InviteScreen(gameId: String, onBack: () -> Unit, viewModel: NearbyViewModel 
                     state.error?.let { ErrorText(it) }
                     BigActionButton(
                         stringResource(R.string.invite_start),
-                        { permissions.launch(sharePermissions(mode)) },
+                        onStart,
                         BigActionKind.Primary,
                         Modifier.fillMaxWidth(),
                     )
                 }
             } else {
-                Sharing(state, players, viewModel)
+                Sharing(state, players, actions)
             }
         }
     }
 }
 
 @Composable
-private fun Sharing(state: NearbyState, players: List<PartyPlayer>, viewModel: NearbyViewModel) {
+private fun Sharing(state: NearbyState, players: List<PartyPlayer>, actions: InviteActions) {
     val link = state.link
     if (state.starting || link == null) {
         CircularProgressIndicator()
@@ -132,7 +177,7 @@ private fun Sharing(state: NearbyState, players: List<PartyPlayer>, viewModel: N
         return
     }
     KeepBright()
-    state.candidates.forEach { CandidateCard(it, players, viewModel) }
+    state.candidates.forEach { CandidateCard(it, players, actions) }
     Section(R.string.invite_section_invite) {
         Text(stringResource(R.string.invite_scan), style = MaterialTheme.typography.bodyLarge)
         val description = stringResource(R.string.invite_qr_description)
@@ -146,15 +191,15 @@ private fun Sharing(state: NearbyState, players: List<PartyPlayer>, viewModel: N
             Image(bitmap.asImageBitmap(), contentDescription = null, modifier = Modifier.size(QR_SIZE.dp))
         }
         state.ssid?.let { Hint(R.string.invite_network, it) }
-        TextButton(onClick = viewModel::renewInvite, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+        TextButton(onClick = actions.renew, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
             Text(stringResource(R.string.invite_renew))
         }
     }
     Section(R.string.invite_section_phones) {
         Text(stringResource(R.string.invite_phones, state.guestsOnline), style = MaterialTheme.typography.titleSmall)
         if (state.guests.isEmpty()) Hint(R.string.invite_no_guest)
-        state.guests.forEach { GuestRow(it, players, viewModel) }
-        OutlinedButton(onClick = viewModel::stop, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+        state.guests.forEach { GuestRow(it, players, actions) }
+        OutlinedButton(onClick = actions.stop, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
             Text(stringResource(R.string.invite_stop))
         }
     }
@@ -162,7 +207,7 @@ private fun Sharing(state: NearbyState, players: List<PartyPlayer>, viewModel: N
 
 /** Un téléphone invité : pseudo, état, joueur qu'il saisit, et « Déconnecter ». */
 @Composable
-private fun GuestRow(guest: GuestDevice, players: List<PartyPlayer>, viewModel: NearbyViewModel) {
+private fun GuestRow(guest: GuestDevice, players: List<PartyPlayer>, actions: InviteActions) {
     Surface(
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceVariant,
@@ -179,7 +224,7 @@ private fun GuestRow(guest: GuestDevice, players: List<PartyPlayer>, viewModel: 
             )
             if (player != null) Hint(R.string.invite_guest_player, player) else Hint(R.string.invite_guest_referee)
             TextButton(
-                onClick = { viewModel.exclude(guest.device) },
+                onClick = { actions.exclude(guest.device) },
                 modifier = Modifier.align(Alignment.End).heightIn(min = MBDimens.MinTouch),
             ) {
                 Text(stringResource(R.string.invite_exclude), color = MolkkyBoardTheme.colors.coralText)
@@ -209,7 +254,7 @@ private fun Section(title: Int, content: @Composable ColumnScope.() -> Unit) {
 
 /** « 🦊 Léa veut rejoindre la partie » : associer à un joueur, ajouter un nouveau joueur, ou refuser. */
 @Composable
-private fun CandidateCard(candidate: JoinCandidate, players: List<PartyPlayer>, viewModel: NearbyViewModel) {
+private fun CandidateCard(candidate: JoinCandidate, players: List<PartyPlayer>, actions: InviteActions) {
     Surface(
         shape = MaterialTheme.shapes.large,
         color = MolkkyBoardTheme.colors.saffron.copy(alpha = CANDIDATE_ALPHA),
@@ -223,24 +268,24 @@ private fun CandidateCard(candidate: JoinCandidate, players: List<PartyPlayer>, 
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 players.forEach { player ->
                     OutlinedButton(onClick = {
-                        viewModel.accept(candidate, player.id)
+                        actions.accept(candidate, player.id)
                     }, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
                         Text(stringResource(R.string.invite_is_player, player.name))
                     }
                 }
                 OutlinedButton(onClick = {
-                    viewModel.acceptAsNewPlayer(candidate)
+                    actions.acceptAsNewPlayer(candidate)
                 }, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
                     Text(stringResource(R.string.invite_new_player))
                 }
                 // Arbitre : compte les points de tout le monde sans jouer.
                 OutlinedButton(onClick = {
-                    viewModel.acceptAsReferee(candidate)
+                    actions.acceptAsReferee(candidate)
                 }, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
                     Text(stringResource(R.string.invite_referee))
                 }
                 TextButton(
-                    onClick = { viewModel.refuse(candidate) },
+                    onClick = { actions.refuse(candidate) },
                     modifier = Modifier.heightIn(min = MBDimens.MinTouch),
                 ) {
                     Text(stringResource(R.string.invite_refuse), color = MolkkyBoardTheme.colors.coralText)

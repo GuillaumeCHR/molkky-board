@@ -64,7 +64,7 @@ publication**.
 |---|---|---|
 | Titre (30), description courte (80), longue (4 000) | ⬜ | |
 | Icône 512 × 512, image de présentation 1 024 × 500 | ⬜ | |
-| 4 captures ou plus (accueil, jeu, fin de partie, Hall of Fame) | ⬜ | depuis Roborazzi |
+| 4 captures ou plus (accueil, jeu, fin de partie, Hall of Fame) | 🟡 | anglais fait (8 images 1080 × 1920, `docs/store/screenshots/en`, `tools/store/compose_screenshots.py`) ; français à faire |
 | Vignette de partage d'exemple | ⬜ | |
 | « Plusieurs téléphones, sans compte ni Internet » mis en avant | ⬜ | |
 
