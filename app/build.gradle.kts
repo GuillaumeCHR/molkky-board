@@ -1,3 +1,5 @@
+import com.android.build.api.artifact.SingleArtifact
+
 plugins {
     alias(libs.plugins.molkkyboard.android.application)
     alias(libs.plugins.molkkyboard.android.compose)
@@ -79,16 +81,19 @@ abstract class CheckNoInternetPermission : DefaultTask() {
     fun check() {
         val forbidden = "android.permission.INTERNET"
         if (forbidden in manifest.get().asFile.readText()) {
-            throw GradleException("$forbidden est déclarée dans le manifeste fusionné : l'engagement « aucune requête réseau » serait faux.")
+            throw GradleException(
+                "$forbidden est déclarée dans le manifeste fusionné : « aucune requête réseau » serait faux.",
+            )
         }
     }
 }
 
 androidComponents {
     onVariants { variant ->
+        val name = "check${variant.name.replaceFirstChar { it.uppercase() }}NoInternet"
         val check =
-            tasks.register<CheckNoInternetPermission>("check${variant.name.replaceFirstChar { it.uppercase() }}NoInternet") {
-                manifest.set(variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.MERGED_MANIFEST))
+            tasks.register<CheckNoInternetPermission>(name) {
+                manifest.set(variant.artifacts.get(SingleArtifact.MERGED_MANIFEST))
             }
         tasks.named("check") { dependsOn(check) }
     }
