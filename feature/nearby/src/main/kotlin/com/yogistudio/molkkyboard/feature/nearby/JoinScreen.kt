@@ -2,6 +2,7 @@ package com.yogistudio.molkkyboard.feature.nearby
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -89,6 +90,7 @@ fun JoinScreen(
         )
     }
     val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { camera = it }
+    val join = rememberJoin(viewModel)
     Column(Modifier.fillMaxSize()) {
         MBTopBar(stringResource(R.string.join_title), onBack)
         Column(
@@ -131,7 +133,7 @@ fun JoinScreen(
                         stringResource(R.string.join_go),
                         {
                             submitted = true
-                            viewModel.join(link, nickname)
+                            join(link, nickname)
                         },
                         BigActionKind.Primary,
                         Modifier.fillMaxWidth(),
@@ -142,6 +144,25 @@ fun JoinScreen(
             }
             state.error?.takeIf { submitted }?.let { ErrorText(it) }
             state.rejection?.takeIf { submitted }?.let { Rejection(it) }
+        }
+    }
+}
+
+/** Android 17 : l'accès au réseau local est une permission, demandée au moment de rejoindre. Refusée, la connexion
+ * échoue avec un message clair. */
+@Composable
+private fun rememberJoin(viewModel: NearbyViewModel): (String, String) -> Unit {
+    var pending by remember { mutableStateOf<Pair<String, String>?>(null) }
+    val localNetwork =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+            pending?.let { (link, nickname) -> viewModel.join(link, nickname) }
+        }
+    return { link, nickname ->
+        if (Build.VERSION.SDK_INT >= ANDROID_17) {
+            pending = link to nickname
+            localNetwork.launch(ACCESS_LOCAL_NETWORK)
+        } else {
+            viewModel.join(link, nickname)
         }
     }
 }
