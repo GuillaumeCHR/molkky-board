@@ -14,15 +14,15 @@ internal object IntroTimeline {
     /** 3a. Image d'impact figée (≈ 100 ms) : aplat safran, éclat radial, quilles en silhouettes. */
     const val FREEZE_END = 1_200L
 
-    /** 3b. L'envol : quilles intactes projetées hors champ, le mölkky retombe. */
-    const val STRIKE_END = 2_400L
+    /** 3b. L'envol : quilles intactes projetées hors champ, le mölkky retombe (l'écran est vide vers 2,1 s). */
+    const val STRIKE_END = 2_100L
 
-    /** 4. La signature Yogi Studio ; on y reste tant que le chargement n'est pas fini. */
-    const val SIGNATURE_END = 3_500L
+    /** 4. La signature Yogi Studio (≈ 1,5 s, retour du test) ; on y reste tant que le chargement n'est pas fini. */
+    const val SIGNATURE_END = 3_600L
 
     /** 5. Le logotype Molkky Board claque au centre, puis le menu apparaît. */
-    const val LOGOTYPE_IN = 3_500L
-    const val LOGOTYPE_SHOWN = 3_900L
+    const val LOGOTYPE_IN = 3_600L
+    const val LOGOTYPE_SHOWN = 3_950L
     const val END = 4_500L
 
     /** Fin des trajectoires précalculées des quilles. */

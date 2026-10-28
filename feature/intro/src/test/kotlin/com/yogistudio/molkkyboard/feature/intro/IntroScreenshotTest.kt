@@ -54,10 +54,10 @@ class IntroScreenshotTest {
     fun etape3Scintillement() = capture("intro_3c_scintillement", 1_950)
 
     @Test
-    fun etape4Signature() = capture("intro_4_signature", 3_150)
+    fun etape4Signature() = capture("intro_4_signature", 3_250)
 
     @Test
-    fun etape5Logotype() = capture("intro_5_logotype", 3_700)
+    fun etape5Logotype() = capture("intro_5_logotype", 3_800)
 
     @Test
     fun etape3ImpactSombre() = capture("intro_3_impact_sombre", 1_150, dark = true)
