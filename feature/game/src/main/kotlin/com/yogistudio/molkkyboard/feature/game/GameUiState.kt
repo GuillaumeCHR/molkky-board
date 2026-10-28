@@ -2,6 +2,7 @@ package com.yogistudio.molkkyboard.feature.game
 
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.model.InputMode
+import com.yogistudio.molkkyboard.core.model.MissPenalty
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.scoring.EventId
@@ -98,6 +99,8 @@ data class GameUiState(
     val round: Int = 1,
     /** Le prochain raté de l'équipe au tour serait sanctionné (élimination ou retour en arrière). */
     val missWarning: Boolean = false,
+    /** Sanction qui attend l'équipe au tour si [missWarning] (élimination ou retour à un score). */
+    val missPenalty: MissPenalty? = null,
     /** Personne n'a encore lancé dans le tour : l'ordre de passage peut changer. */
     val betweenRounds: Boolean = true,
     /** Nouvel ordre demandé en plein tour, appliqué au début du tour suivant. */

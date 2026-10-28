@@ -237,4 +237,7 @@
     <string name="rules_demo_molkkout_a">Team A: pin 12 alone, 12 points</string>
     <string name="rules_demo_molkkout_b">Pins stood back up. Team B: two pins, 2 points</string>
     <string name="rules_demo_molkkout_end">Highest total: A starts the decider</string>
+    <string name="game_last_chance">Last chance</string>
+    <string name="game_last_chance_eliminate">1 miss = out</string>
+    <string name="game_last_chance_reset">1 miss = back to %1$d</string>
 </resources>

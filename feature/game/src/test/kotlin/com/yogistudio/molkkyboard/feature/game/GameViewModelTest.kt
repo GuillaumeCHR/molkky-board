@@ -17,6 +17,7 @@ import com.yogistudio.molkkyboard.core.data.memberKey
 import com.yogistudio.molkkyboard.core.database.MolkkyBoardDatabase
 import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.InputMode
+import com.yogistudio.molkkyboard.core.model.MissPenalty
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.TeamLineup
@@ -310,10 +311,13 @@ class GameViewModelTest {
             play()
             val second = vm.awaitState { it.round == 2 && it.currentTeam?.name == "Bruno" }
             assertEquals(false, second.missWarning)
+            assertEquals(null, second.missPenalty)
             play(1)
             val warned = vm.awaitState { it.round == 3 }
             assertEquals("Alice", warned.currentTeam?.name)
             assertTrue(warned.missWarning)
+            // N3 : la carte annonce la sanction qui attend le joueur (règles officielles : élimination).
+            assertEquals(MissPenalty.Eliminate, warned.missPenalty)
         }
 
     @Test
@@ -423,7 +427,9 @@ class GameViewModelTest {
             play(1)
             val vm = viewModel()
             backgroundScope.launchCollect(vm)
-            assertEquals(false, vm.awaitState { it.currentTeam?.name == "Alice" }.missWarning)
+            val calm = vm.awaitState { it.currentTeam?.name == "Alice" }
+            assertEquals(false, calm.missWarning)
+            assertEquals(null, calm.missPenalty)
             vm.toggleMiss()
             val preview = vm.awaitState { it.selection == Selection.Miss }.preview
             assertEquals(Preview(PreviewKind.MISS, misses = 3), preview)

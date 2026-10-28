@@ -546,6 +546,13 @@ class GameViewModel
             val setState = replay.state
             val teamsUi = setState.teams.map { teamUi(it, active = it.id == setState.turn, faces = faces) }
             val current = setState.currentTeam
+            // Le prochain raté serait sanctionné (rien en Ludique « on continue », ni pour un joueur exempté).
+            val warning =
+                current != null &&
+                    config.missLimit > 1 &&
+                    current.misses == config.missLimit - 1 &&
+                    config.onMissLimit != MissPenalty.Nothing &&
+                    !config.isExemptFromMissLimit(current.id)
             return GameUiState(
                 loading = false,
                 teams = teamsUi,
@@ -555,12 +562,8 @@ class GameViewModel
                 missLimit = config.missLimit,
                 round = setState.round,
                 betweenRounds = setState.betweenRounds,
-                missWarning =
-                    current != null &&
-                        config.missLimit > 1 &&
-                        current.misses == config.missLimit - 1 &&
-                        config.onMissLimit != MissPenalty.Nothing &&
-                        !config.isExemptFromMissLimit(current.id),
+                missWarning = warning,
+                missPenalty = config.onMissLimit.takeIf { warning },
                 inputMode = prefs.inputMode,
                 quickMode = mode,
                 selection = sel,

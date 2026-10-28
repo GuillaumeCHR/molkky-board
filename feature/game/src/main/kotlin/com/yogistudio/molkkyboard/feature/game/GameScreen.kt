@@ -6,9 +6,11 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -67,6 +69,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -78,8 +81,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -111,6 +116,7 @@ import com.yogistudio.molkkyboard.core.designsystem.sound.rememberSoundEffects
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.InputMode
+import com.yogistudio.molkkyboard.core.model.MissPenalty
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.scoring.EventId
@@ -563,18 +569,40 @@ private fun GameTopBar(
     }
 }
 
-/** Le joueur actif en très grand : jauge, score, nom, ratés. */
+/**
+ * Le joueur actif en très grand : jauge, score, nom, ratés. À un raté de la sanction, la carte se met sous
+ * tension : contour corail qui bat comme un cœur (trois battements, vibration légère) et bandeau « Dernière
+ * chance ». Contour fixe avec « Réduire les animations ». La saisie n'est jamais bloquée.
+ */
 @Composable
 private fun ActiveCard(state: GameUiState) {
     val team = state.currentTeam ?: return
     val colors = MolkkyBoardTheme.colors.teams
+    val tension = state.missWarning
+    val beat = remember { Animatable(1f) }
+    val reduced = MolkkyBoardTheme.reducedMotion
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(tension, team.id, team.misses) {
+        if (!tension || reduced) return@LaunchedEffect
+        repeat(TENSION_BEATS) {
+            // Battement de cœur : deux coups rapprochés, puis un silence.
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            beat.animateTo(TENSION_SCALE, tween(TENSION_BEAT_MS))
+            beat.animateTo(1f, tween(TENSION_BEAT_MS))
+            beat.animateTo(TENSION_SCALE_SMALL, tween(TENSION_BEAT_MS))
+            beat.animateTo(1f, tween(TENSION_BEAT_MS))
+            delay(TENSION_PAUSE_MS)
+        }
+    }
     Surface(
         shape = RoundedCornerShape(32.dp),
         color = MaterialTheme.colorScheme.surface,
+        border = if (tension) BorderStroke(TENSION_BORDER, MolkkyBoardTheme.colors.coral) else null,
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = MBDimens.ScreenPadding, vertical = 6.dp),
+                .padding(horizontal = MBDimens.ScreenPadding, vertical = 6.dp)
+                .scale(beat.value),
     ) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             ScoreRing(
@@ -615,7 +643,29 @@ private fun ActiveCard(state: GameUiState) {
                     limit = state.missLimit,
                     warning = state.missWarning,
                 )
+                state.missPenalty?.let { LastChance(it) }
             }
+        }
+    }
+}
+
+/** « Dernière chance : encore un raté = éliminé » (ou « = retour à 0 ») : la sanction qui attend le joueur. */
+@Composable
+private fun LastChance(penalty: MissPenalty) {
+    val text =
+        when (penalty) {
+            is MissPenalty.ResetScore -> stringResource(R.string.game_last_chance_reset, penalty.score)
+            else -> stringResource(R.string.game_last_chance_eliminate)
+        }
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = MolkkyBoardTheme.colors.coral,
+        contentColor = MolkkyBoardTheme.colors.onCoral,
+        modifier = Modifier.semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
+    ) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+            Text(stringResource(R.string.game_last_chance), style = MaterialTheme.typography.titleSmall)
+            Text(text, style = MaterialTheme.typography.labelLarge)
         }
     }
 }
@@ -833,6 +883,12 @@ private fun OvershootSticker(show: OvershootShow?, onShown: () -> Unit, modifier
 }
 
 private val ALL_PINS = (1..12).toSet()
+private const val TENSION_BEATS = 3
+private const val TENSION_BEAT_MS = 110
+private const val TENSION_PAUSE_MS = 420L
+private const val TENSION_SCALE = 1.03f
+private const val TENSION_SCALE_SMALL = 1.015f
+private val TENSION_BORDER = 3.dp
 private const val DOUBLE_VIBRATION_GAP_MS = 180L
 private const val TWELVE_PINS_ALPHA = 0.1f
 private const val STICKER_MS = 1_400L

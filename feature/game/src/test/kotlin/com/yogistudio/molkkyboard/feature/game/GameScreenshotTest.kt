@@ -13,6 +13,7 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.InputMode
+import com.yogistudio.molkkyboard.core.model.MissPenalty
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.scoring.EventId
@@ -133,7 +134,11 @@ class GameScreenshotTest {
     fun cartePretsAJouer() = capture("prets_a_jouer", playing.copy(readyCard = true))
 
     @Test
-    fun jeuTourEtAvertissement() = capture("jeu_tour_avertissement", playing.copy(round = 4, missWarning = true))
+    fun jeuTourEtAvertissement() =
+        capture(
+            "jeu_tour_avertissement",
+            playing.copy(round = 4, missWarning = true, missPenalty = MissPenalty.Eliminate),
+        )
 
     @Test
     fun tableauDesScores() {

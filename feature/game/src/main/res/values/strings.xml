@@ -237,4 +237,7 @@
     <string name="rules_demo_molkkout_a">Équipe A : la 12 seule, 12 points</string>
     <string name="rules_demo_molkkout_b">Quilles relevées. Équipe B : deux quilles, 2 points</string>
     <string name="rules_demo_molkkout_end">Plus haut total : A commence la belle</string>
+    <string name="game_last_chance">Dernière chance</string>
+    <string name="game_last_chance_eliminate">1 raté = éliminé</string>
+    <string name="game_last_chance_reset">1 raté = retour à %1$d</string>
 </resources>
