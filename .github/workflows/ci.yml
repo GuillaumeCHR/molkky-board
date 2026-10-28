@@ -38,6 +38,12 @@ jobs:
       - name: APK debug
         run: ./gradlew :app:assembleDebug
 
+      # « Traceurs : 0 » (générique, encart Vie privée) : signatures de code d'Exodus Privacy sur l'APK non minifié.
+      - name: Aucun traceur (signatures Exodus Privacy)
+        run: |
+          python3 -I tools/trackers/check_trackers.py --self-test
+          python3 -I tools/trackers/check_trackers.py app/build/outputs/apk/debug/app-debug.apk
+
       - name: Rapports de tests
         if: failure()
         uses: actions/upload-artifact@v7

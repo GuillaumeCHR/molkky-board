@@ -1,0 +1,2146 @@
+{
+ "source": "https://reports.exodus-privacy.eu.org/api/trackers",
+ "retrieved": "2026-10-28",
+ "trackers": [
+  {
+   "id": 1,
+   "name": "Teemo",
+   "code_signature": "com.databerries.|com.geolocstation."
+  },
+  {
+   "id": 2,
+   "name": "FidZup",
+   "code_signature": "com.fidzup."
+  },
+  {
+   "id": 3,
+   "name": "Audience Studio (Krux)",
+   "code_signature": "com.krux.androidsdk"
+  },
+  {
+   "id": 4,
+   "name": "Ad4Screen",
+   "code_signature": "com.ad4screen.sdk"
+  },
+  {
+   "id": 6,
+   "name": "Weborama",
+   "code_signature": "com.weborama."
+  },
+  {
+   "id": 7,
+   "name": "Smart",
+   "code_signature": "com.smartadserver."
+  },
+  {
+   "id": 8,
+   "name": "JW Player",
+   "code_signature": "com.longtailvideo.jwplayer."
+  },
+  {
+   "id": 9,
+   "name": "Loggly",
+   "code_signature": "com.github.tony19.timber.loggly|com.github.tony19.loggly|com.visiware.sync2ad.logger.loggly."
+  },
+  {
+   "id": 11,
+   "name": "OutBrain",
+   "code_signature": "com.outbrain."
+  },
+  {
+   "id": 12,
+   "name": "AppsFlyer",
+   "code_signature": "com.appsflyer."
+  },
+  {
+   "id": 13,
+   "name": "Ligatus",
+   "code_signature": ".LigatusManager|.LigatusViewClient|com.ligatus.android.adframework"
+  },
+  {
+   "id": 14,
+   "name": "Widespace",
+   "code_signature": "com.widespace."
+  },
+  {
+   "id": 15,
+   "name": "AppNexus",
+   "code_signature": "com.appnexus.opensdk."
+  },
+  {
+   "id": 16,
+   "name": "Localytics",
+   "code_signature": "com.localytics.android.|com.localytics.androidx|com.localytics.react."
+  },
+  {
+   "id": 17,
+   "name": "Braze (formerly Appboy)",
+   "code_signature": "com.appboy"
+  },
+  {
+   "id": 18,
+   "name": "mParticle",
+   "code_signature": "com.mparticle"
+  },
+  {
+   "id": 20,
+   "name": "S4M",
+   "code_signature": "com.sam4mobile.|.S4MAnalytic"
+  },
+  {
+   "id": 22,
+   "name": "Sizmek",
+   "code_signature": ".sizmek."
+  },
+  {
+   "id": 23,
+   "name": "Batch",
+   "code_signature": "com.batch.android."
+  },
+  {
+   "id": 24,
+   "name": "Sync2Ad",
+   "code_signature": "com.visiware.sync2ad.dmp."
+  },
+  {
+   "id": 25,
+   "name": "Flurry",
+   "code_signature": "com.flurry."
+  },
+  {
+   "id": 26,
+   "name": "HockeyApp",
+   "code_signature": "net.hockeyapp."
+  },
+  {
+   "id": 27,
+   "name": "Google CrashLytics",
+   "code_signature": "io.fabric.|com.crashlytics.|com.google.firebase.crashlytics|com.google.firebase.crash.|io.invertase.firebase.crashlytics."
+  },
+  {
+   "id": 28,
+   "name": "LeanPlum",
+   "code_signature": "com.leanplum."
+  },
+  {
+   "id": 29,
+   "name": "Tinder Analytics",
+   "code_signature": "com.tinder.analytics|com.tinder.ads"
+  },
+  {
+   "id": 30,
+   "name": "Schibsted",
+   "code_signature": ".schibsted."
+  },
+  {
+   "id": 31,
+   "name": "ATInternet",
+   "code_signature": "com.atinternet."
+  },
+  {
+   "id": 32,
+   "name": "Tealium",
+   "code_signature": ".tealium."
+  },
+  {
+   "id": 33,
+   "name": "Nexage",
+   "code_signature": "com.nexage.android.|org.nexage."
+  },
+  {
+   "id": 34,
+   "name": "Ogury Presage",
+   "code_signature": "io.presage."
+  },
+  {
+   "id": 35,
+   "name": "Twitter MoPub",
+   "code_signature": "com.mopub."
+  },
+  {
+   "id": 36,
+   "name": "Add Apt Tr",
+   "code_signature": "com.intentsoftware.addapptr."
+  },
+  {
+   "id": 37,
+   "name": "Vectaury",
+   "code_signature": "io.vectaury."
+  },
+  {
+   "id": 38,
+   "name": "Tune",
+   "code_signature": "com.tune|com.mobileapptracker"
+  },
+  {
+   "id": 39,
+   "name": "Pushwoosh",
+   "code_signature": "com.pushwoosh"
+  },
+  {
+   "id": 40,
+   "name": "Demdex",
+   "code_signature": "com.adobe.mobile.Analytics|com.adobe.mobile.Config."
+  },
+  {
+   "id": 41,
+   "name": "AdsWizz",
+   "code_signature": ".adswizz."
+  },
+  {
+   "id": 42,
+   "name": "ExactTarget",
+   "code_signature": "com.exacttarget."
+  },
+  {
+   "id": 43,
+   "name": "Omniture",
+   "code_signature": "com.omniture.|com.adobe.adms.measurement."
+  },
+  {
+   "id": 44,
+   "name": "OpenLocate",
+   "code_signature": "com.safegraph.|com.openlocate"
+  },
+  {
+   "id": 45,
+   "name": "TagCommander (Commanders Act.)",
+   "code_signature": "com.tagcommander."
+  },
+  {
+   "id": 47,
+   "name": "Facebook Audience",
+   "code_signature": "com.facebook.audiencenetwork"
+  },
+  {
+   "id": 48,
+   "name": "Google Analytics",
+   "code_signature": "com.google.android.apps.analytics.|com.google.android.gms.analytics.|com.google.analytics."
+  },
+  {
+   "id": 49,
+   "name": "Google Firebase Analytics",
+   "code_signature": "com.google.firebase.analytics.FirebaseAnalytics|com.google.android.gms.measurement.|com.google.firebase.firebase_analytics"
+  },
+  {
+   "id": 51,
+   "name": "Eulerian",
+   "code_signature": "com.eulerian.android.sdk"
+  },
+  {
+   "id": 52,
+   "name": "Adjust",
+   "code_signature": "com.adjust.sdk.|com.adjust.android.sdk."
+  },
+  {
+   "id": 53,
+   "name": "ChartBoost",
+   "code_signature": "com.chartboost.sdk."
+  },
+  {
+   "id": 54,
+   "name": "Backelite",
+   "code_signature": "com.backelite.android.|com.backelite.bkdroid."
+  },
+  {
+   "id": 55,
+   "name": "Areametrics",
+   "code_signature": "com.areametrics.areametricssdk|com.areametrics.nosdkandroid"
+  },
+  {
+   "id": 56,
+   "name": "ComScore",
+   "code_signature": "com.comscore."
+  },
+  {
+   "id": 57,
+   "name": "Cuebiq",
+   "code_signature": "com.cuebiq.cuebiqsdk.model.Collector|com.cuebiq.cuebiqsdk.receiver.CoverageReceiver"
+  },
+  {
+   "id": 58,
+   "name": "HelpShift",
+   "code_signature": "com.helpshift"
+  },
+  {
+   "id": 59,
+   "name": "Kontakt",
+   "code_signature": "com.kontakt.sdk.android."
+  },
+  {
+   "id": 60,
+   "name": "Locuslabs",
+   "code_signature": "com.locuslabs.sdk"
+  },
+  {
+   "id": 61,
+   "name": "Moat",
+   "code_signature": "com.moat.analytics.mobile."
+  },
+  {
+   "id": 62,
+   "name": "Segment",
+   "code_signature": "com.segment.analytics."
+  },
+  {
+   "id": 63,
+   "name": "Mobile Engagement",
+   "code_signature": "com.ubikod.capptain.|com.microsoft.azure.engagement."
+  },
+  {
+   "id": 64,
+   "name": "Colocator",
+   "code_signature": "net.crowdconnected.androidcolocator"
+  },
+  {
+   "id": 65,
+   "name": "Facebook Ads",
+   "code_signature": "com.facebook.ads"
+  },
+  {
+   "id": 66,
+   "name": "Facebook Analytics",
+   "code_signature": "com.facebook.appevents|com.facebook.marketing.|com.facebook.CampaignTrackingReceiver"
+  },
+  {
+   "id": 67,
+   "name": "Facebook Login",
+   "code_signature": "com.facebook.login"
+  },
+  {
+   "id": 68,
+   "name": "Facebook Notifications",
+   "code_signature": "com.facebook.notifications"
+  },
+  {
+   "id": 69,
+   "name": "Facebook Places",
+   "code_signature": "com.facebook.places"
+  },
+  {
+   "id": 70,
+   "name": "Facebook Share",
+   "code_signature": "com.facebook.share"
+  },
+  {
+   "id": 72,
+   "name": "AppLovin (MAX and SparkLabs)",
+   "code_signature": "com.applovin"
+  },
+  {
+   "id": 73,
+   "name": "Glispa Connect (Formerly Avocarrot)",
+   "code_signature": "com.avocarrot.sdk"
+  },
+  {
+   "id": 74,
+   "name": "NativeX",
+   "code_signature": "com.nativex"
+  },
+  {
+   "id": 75,
+   "name": "Baidu Maps",
+   "code_signature": "com.baidu.BaiduMap"
+  },
+  {
+   "id": 76,
+   "name": "WeChat Location",
+   "code_signature": "com.tencent.map.geolocation|com.tencent.mm.plugin.location.|com.tencent.mm.plugin.location_soso.|com.tencent.mm.plugin.location_google"
+  },
+  {
+   "id": 77,
+   "name": "HyperTrack",
+   "code_signature": "com.hypertrack|com.hypertracklive.|io.hypertrack"
+  },
+  {
+   "id": 78,
+   "name": "Uber Analytics",
+   "code_signature": "com.ubercab.analytics.|com.ubercab.library.metrics.analytics.|com.ubercab.client.core.analytics."
+  },
+  {
+   "id": 79,
+   "name": "Lisnr",
+   "code_signature": "com.lisnr."
+  },
+  {
+   "id": 80,
+   "name": "SilverPush",
+   "code_signature": "com.silverpush."
+  },
+  {
+   "id": 81,
+   "name": "Shopkick",
+   "code_signature": "com.shopkick.sdk.api.|com.shopkick.fetchers."
+  },
+  {
+   "id": 82,
+   "name": "Alphonso",
+   "code_signature": "tv.alphonso.service"
+  },
+  {
+   "id": 83,
+   "name": "Smaato",
+   "code_signature": "com.smaato."
+  },
+  {
+   "id": 84,
+   "name": "Scandit",
+   "code_signature": "com.scandit."
+  },
+  {
+   "id": 85,
+   "name": "Inrix",
+   "code_signature": "com.inrix.sdk"
+  },
+  {
+   "id": 86,
+   "name": "Signal360",
+   "code_signature": "com.signal360.sdk.core.|com.sonicnotify.sdk.core.|com.rnsignal360"
+  },
+  {
+   "id": 87,
+   "name": "TeleQuid",
+   "code_signature": "com.telequid."
+  },
+  {
+   "id": 88,
+   "name": "Retency",
+   "code_signature": "com.retency.sdk.android"
+  },
+  {
+   "id": 89,
+   "name": "MAdvertise",
+   "code_signature": "com.mngads.sdk|com.mngads.views|com.mngads."
+  },
+  {
+   "id": 90,
+   "name": "AdColony",
+   "code_signature": "com.adcolony.|com.jirbo.adcolony."
+  },
+  {
+   "id": 91,
+   "name": "AccountKit",
+   "code_signature": "com.facebook.accountkit"
+  },
+  {
+   "id": 92,
+   "name": "Amazon Advertisement",
+   "code_signature": "com.amazon.device.ads"
+  },
+  {
+   "id": 93,
+   "name": "Amazon Mobile Associates",
+   "code_signature": "com.amazon.device.associates"
+  },
+  {
+   "id": 94,
+   "name": "Radius Networks",
+   "code_signature": "com.radiusnetworks"
+  },
+  {
+   "id": 95,
+   "name": "Amazon Analytics (Amazon insights)",
+   "code_signature": "com.amazon.insights|com.amazonaws.mobileconnectors.pinpoint.analytics.|com.amazonaws.mobileconnectors.amazonmobileanalytics"
+  },
+  {
+   "id": 96,
+   "name": "Baidu APPX",
+   "code_signature": "com.baidu.appx"
+  },
+  {
+   "id": 97,
+   "name": "Baidu Location",
+   "code_signature": "com.baidu.location"
+  },
+  {
+   "id": 99,
+   "name": "Baidu Map",
+   "code_signature": "com.baidu.mapapi"
+  },
+  {
+   "id": 100,
+   "name": "Baidu Mobile Ads",
+   "code_signature": "com.baidu.mobads"
+  },
+  {
+   "id": 101,
+   "name": "Baidu Mobile Stat",
+   "code_signature": "com.baidu.mobstat"
+  },
+  {
+   "id": 102,
+   "name": "Estimote",
+   "code_signature": "com.estimote."
+  },
+  {
+   "id": 103,
+   "name": "Baidu Navigation",
+   "code_signature": "com.baidu.navi"
+  },
+  {
+   "id": 104,
+   "name": "Fyber",
+   "code_signature": "com.fyber."
+  },
+  {
+   "id": 105,
+   "name": "Google Tag Manager",
+   "code_signature": "com.google.tagmanager|com.google.android.gms.tagmanager"
+  },
+  {
+   "id": 106,
+   "name": "Inmobi",
+   "code_signature": "com.inmobi|in.inmobi."
+  },
+  {
+   "id": 107,
+   "name": "Millennial Media",
+   "code_signature": "com.millennialmedia."
+  },
+  {
+   "id": 108,
+   "name": "Snowplow",
+   "code_signature": "com.snowplowanalytics."
+  },
+  {
+   "id": 109,
+   "name": "Fyber SponsorPay",
+   "code_signature": "com.sponsorpay"
+  },
+  {
+   "id": 110,
+   "name": "Supersonic Ads",
+   "code_signature": "com.supersonic.adapters.supersonicads|com.supersonicads.sdk"
+  },
+  {
+   "id": 111,
+   "name": "Carnival",
+   "code_signature": "com.carnival.sdk|com.carnivalmobile"
+  },
+  {
+   "id": 112,
+   "name": "Tencent Map LBS",
+   "code_signature": "com.tencent.lbs"
+  },
+  {
+   "id": 113,
+   "name": "Tencent MobWin",
+   "code_signature": "com.tencent.mobwin"
+  },
+  {
+   "id": 114,
+   "name": "Tencent MTA",
+   "code_signature": "com.tencent.mta"
+  },
+  {
+   "id": 115,
+   "name": "Apptentive",
+   "code_signature": "com.apptentive."
+  },
+  {
+   "id": 116,
+   "name": "Tencent Stats",
+   "code_signature": "com.tencent.stat|com.tencent.wxop.stat"
+  },
+  {
+   "id": 117,
+   "name": "Tencent Weiyun",
+   "code_signature": "com.tencent.weiyun"
+  },
+  {
+   "id": 118,
+   "name": "MixPanel",
+   "code_signature": "com.mixpanel."
+  },
+  {
+   "id": 119,
+   "name": "Umeng Analytics",
+   "code_signature": "com.umeng.analytics"
+  },
+  {
+   "id": 120,
+   "name": "Umeng Feedback",
+   "code_signature": "com.umeng.fb"
+  },
+  {
+   "id": 121,
+   "name": "Unity3d Ads",
+   "code_signature": "com.unity3d.services|com.unity3d.ads"
+  },
+  {
+   "id": 122,
+   "name": "Countly",
+   "code_signature": "ly.count.android."
+  },
+  {
+   "id": 123,
+   "name": "Urbanairship",
+   "code_signature": "com.urbanairship"
+  },
+  {
+   "id": 124,
+   "name": "Yandex Ad",
+   "code_signature": "com.yandex.mobile.ads"
+  },
+  {
+   "id": 125,
+   "name": "Amplitude",
+   "code_signature": "com.amplitude."
+  },
+  {
+   "id": 126,
+   "name": "AppSee",
+   "code_signature": "com.appsee."
+  },
+  {
+   "id": 127,
+   "name": "Kochava",
+   "code_signature": "com.kochava.base.|com.kochava.android.tracker.|.kochavaccpa."
+  },
+  {
+   "id": 129,
+   "name": "Webtrends",
+   "code_signature": "com.webtrends.mobile.analytics.|com.webtrends.mobile.android"
+  },
+  {
+   "id": 130,
+   "name": "New Relic",
+   "code_signature": "com.newrelic.agent.|com.newrelic.mobile."
+  },
+  {
+   "id": 131,
+   "name": "AppAnalytics",
+   "code_signature": "io.appanalytics.sdk"
+  },
+  {
+   "id": 132,
+   "name": "Applause",
+   "code_signature": "com.applause.android."
+  },
+  {
+   "id": 133,
+   "name": "Quantcast",
+   "code_signature": "com.quantcast.measurement.service."
+  },
+  {
+   "id": 135,
+   "name": "Apptimize",
+   "code_signature": "com.apptimize."
+  },
+  {
+   "id": 136,
+   "name": "AppBrain",
+   "code_signature": "com.appbrain."
+  },
+  {
+   "id": 137,
+   "name": "Dynatrace",
+   "code_signature": "com.dynatrace.android.app|com.dynatrace.agent|com.dynatrace.tools"
+  },
+  {
+   "id": 138,
+   "name": "Matomo (Piwik)",
+   "code_signature": "org.piwik|org.piwik.mobile|org.matomo"
+  },
+  {
+   "id": 140,
+   "name": "AppMetrica",
+   "code_signature": "com.yandex.metrica."
+  },
+  {
+   "id": 142,
+   "name": "Singlespot",
+   "code_signature": "com.sptproximitykit."
+  },
+  {
+   "id": 143,
+   "name": "Sensoro",
+   "code_signature": "com.sensoro.beacon.kit.|com.sensoro.cloud"
+  },
+  {
+   "id": 144,
+   "name": "Sense360",
+   "code_signature": "com.sense360.android."
+  },
+  {
+   "id": 145,
+   "name": "Rubicon Project",
+   "code_signature": "com.rfm.sdk"
+  },
+  {
+   "id": 146,
+   "name": "ironSource",
+   "code_signature": "com.ironsource."
+  },
+  {
+   "id": 147,
+   "name": "Heyzap (bought by Fyber)",
+   "code_signature": "com.heyzap.sdk.ads.|com.heyzap.mediation."
+  },
+  {
+   "id": 148,
+   "name": "SAP CDC (Gigya)",
+   "code_signature": "com.gigya."
+  },
+  {
+   "id": 149,
+   "name": "Foresee",
+   "code_signature": "com.foresee.sdk.ForeSee"
+  },
+  {
+   "id": 150,
+   "name": "Fiksu",
+   "code_signature": "com.fiksu.asotracking"
+  },
+  {
+   "id": 151,
+   "name": "Ensighten",
+   "code_signature": "com.ensighten."
+  },
+  {
+   "id": 152,
+   "name": "Dynamic Yield",
+   "code_signature": "com.dynamicyield."
+  },
+  {
+   "id": 153,
+   "name": "BlueKai (acquired by Oracle)",
+   "code_signature": "com.bluekai.sdk."
+  },
+  {
+   "id": 154,
+   "name": "BlueConic",
+   "code_signature": "com.blueconic"
+  },
+  {
+   "id": 155,
+   "name": "Apteligent by VMWare (formerly Crittercism)",
+   "code_signature": "com.crittercism.app.Crittercism"
+  },
+  {
+   "id": 156,
+   "name": "AdFit (Daum)",
+   "code_signature": "com.kakao.adfit."
+  },
+  {
+   "id": 157,
+   "name": "Adform",
+   "code_signature": "com.adform.sdk."
+  },
+  {
+   "id": 158,
+   "name": "Adfurikun",
+   "code_signature": "jp.tjkapp.adfurikunsdk.|com.glossomads.sdk."
+  },
+  {
+   "id": 159,
+   "name": "Mobvista",
+   "code_signature": "com.mobvista."
+  },
+  {
+   "id": 160,
+   "name": "Placed",
+   "code_signature": "com.placed.client"
+  },
+  {
+   "id": 161,
+   "name": "Adot",
+   "code_signature": "com.adotmob"
+  },
+  {
+   "id": 162,
+   "name": "Appodeal",
+   "code_signature": "com.appodeal.ads.|com.appodealx."
+  },
+  {
+   "id": 163,
+   "name": "AppMonet",
+   "code_signature": "com.monet."
+  },
+  {
+   "id": 164,
+   "name": "Soomla",
+   "code_signature": "com.soomla."
+  },
+  {
+   "id": 165,
+   "name": "Adincube",
+   "code_signature": "com.adincube.sdk."
+  },
+  {
+   "id": 166,
+   "name": "Persona.ly",
+   "code_signature": "ly.persona.sdk"
+  },
+  {
+   "id": 167,
+   "name": "Branch",
+   "code_signature": "io.branch."
+  },
+  {
+   "id": 168,
+   "name": "Cheetah Ads",
+   "code_signature": "com.cmcm."
+  },
+  {
+   "id": 169,
+   "name": "Vungle",
+   "code_signature": "com.vungle.publisher.|com.vungle.warren."
+  },
+  {
+   "id": 170,
+   "name": "Criteo",
+   "code_signature": "com.criteo."
+  },
+  {
+   "id": 171,
+   "name": "Mapbox",
+   "code_signature": "com.mapbox.mapboxsdk.module.telemetry|com.mapbox.mapboxsdk.maps.TelemetryDefinition|com.mapbox.android.telemetry."
+  },
+  {
+   "id": 172,
+   "name": "Optimizely",
+   "code_signature": "com.optimizely."
+  },
+  {
+   "id": 173,
+   "name": "Taboola",
+   "code_signature": "com.taboola."
+  },
+  {
+   "id": 174,
+   "name": "CleverTap",
+   "code_signature": "com.clevertap."
+  },
+  {
+   "id": 175,
+   "name": "myTracker",
+   "code_signature": "com.my.tracker."
+  },
+  {
+   "id": 176,
+   "name": "Cloudmobi",
+   "code_signature": "com.cloudtech."
+  },
+  {
+   "id": 177,
+   "name": "ADLIB",
+   "code_signature": "com.mocoplex.adlib."
+  },
+  {
+   "id": 178,
+   "name": "Brightcove",
+   "code_signature": "com.brightcove"
+  },
+  {
+   "id": 179,
+   "name": "DOV-E",
+   "code_signature": "com.dv.DVSDK"
+  },
+  {
+   "id": 180,
+   "name": "InMarket",
+   "code_signature": "com.inmarket"
+  },
+  {
+   "id": 181,
+   "name": "Pilgrim by Foursquare",
+   "code_signature": "com.foursquare.pilgrim|com.foursquare.pilgrimsdk.android"
+  },
+  {
+   "id": 182,
+   "name": "OtherLevels",
+   "code_signature": "com.otherlevels."
+  },
+  {
+   "id": 183,
+   "name": "PubNative",
+   "code_signature": "net.pubnative"
+  },
+  {
+   "id": 184,
+   "name": "Appnext",
+   "code_signature": "com.appnext.sdk"
+  },
+  {
+   "id": 185,
+   "name": "MobFox",
+   "code_signature": "com.mobfox.|com.adsdk.sdk."
+  },
+  {
+   "id": 186,
+   "name": "ShallWeAD",
+   "code_signature": "com.jm.co.shallwead.sdk.|com.co.shallwead.sdk."
+  },
+  {
+   "id": 187,
+   "name": "deltaDNA",
+   "code_signature": "com.deltadna"
+  },
+  {
+   "id": 188,
+   "name": "Display",
+   "code_signature": "io.display."
+  },
+  {
+   "id": 189,
+   "name": "HyprMX",
+   "code_signature": "com.hyprmx.android.sdk."
+  },
+  {
+   "id": 190,
+   "name": "Bugly",
+   "code_signature": "com.tencent.bugly."
+  },
+  {
+   "id": 191,
+   "name": "Duapps",
+   "code_signature": "com.duapps."
+  },
+  {
+   "id": 192,
+   "name": "Swrve",
+   "code_signature": "com.swrve.sdk"
+  },
+  {
+   "id": 193,
+   "name": "OneSignal",
+   "code_signature": "com.onesignal."
+  },
+  {
+   "id": 194,
+   "name": "Appdynamics",
+   "code_signature": "com.appdynamics."
+  },
+  {
+   "id": 195,
+   "name": "Startapp",
+   "code_signature": "com.startapp."
+  },
+  {
+   "id": 196,
+   "name": "AerServ",
+   "code_signature": "com.aerserv.sdk."
+  },
+  {
+   "id": 197,
+   "name": "INFOnline",
+   "code_signature": "de.infonline."
+  },
+  {
+   "id": 198,
+   "name": "myTarget",
+   "code_signature": "com.my.target."
+  },
+  {
+   "id": 199,
+   "name": "Tapjoy",
+   "code_signature": "com.tapjoy."
+  },
+  {
+   "id": 200,
+   "name": "Mintegral",
+   "code_signature": "com.mintegral.|com.mbridge.msdk."
+  },
+  {
+   "id": 201,
+   "name": "Gimbal",
+   "code_signature": "com.gimbal.android"
+  },
+  {
+   "id": 202,
+   "name": "Conviva",
+   "code_signature": "com.conviva."
+  },
+  {
+   "id": 203,
+   "name": "Auditude",
+   "code_signature": "com.auditude.ads"
+  },
+  {
+   "id": 204,
+   "name": "Instreamatic (Adman)",
+   "code_signature": "com.instreamatic"
+  },
+  {
+   "id": 205,
+   "name": "GameAnalytics",
+   "code_signature": "com.gameanalytics.sdk"
+  },
+  {
+   "id": 206,
+   "name": "Instabug",
+   "code_signature": "com.instabug."
+  },
+  {
+   "id": 207,
+   "name": "Bugsnag",
+   "code_signature": "com.bugsnag."
+  },
+  {
+   "id": 208,
+   "name": "Moodmedia",
+   "code_signature": "com.moodmedia"
+  },
+  {
+   "id": 209,
+   "name": "Houndify",
+   "code_signature": "com.hound"
+  },
+  {
+   "id": 210,
+   "name": "OpenX",
+   "code_signature": "com.openx.view.plugplay|com.openx.android_sdk_openx"
+  },
+  {
+   "id": 211,
+   "name": "Taplytics",
+   "code_signature": "com.taplytics.sdk"
+  },
+  {
+   "id": 212,
+   "name": "Yinzcam Sobek",
+   "code_signature": "com.yinzcam.sobek"
+  },
+  {
+   "id": 213,
+   "name": "Ooyala",
+   "code_signature": "com.ooyala"
+  },
+  {
+   "id": 214,
+   "name": "Kiip",
+   "code_signature": "me.kiip.sdk"
+  },
+  {
+   "id": 215,
+   "name": "MobPower",
+   "code_signature": "com.mobpower."
+  },
+  {
+   "id": 216,
+   "name": "AdBuddiz",
+   "code_signature": "com.purplebrain.adbuddiz.sdk."
+  },
+  {
+   "id": 218,
+   "name": "Integral Ad Science",
+   "code_signature": "com.integralads.avid.library"
+  },
+  {
+   "id": 219,
+   "name": "AltBeacon",
+   "code_signature": "org.altbeacon.beacon.|com.altbeacon.beacon.|org.altbeacon.bluetooth."
+  },
+  {
+   "id": 220,
+   "name": "Salesforce Marketing Cloud",
+   "code_signature": "com.salesforce.marketingcloud"
+  },
+  {
+   "id": 221,
+   "name": "Mozilla Telemetry",
+   "code_signature": "org.mozilla.telemetry|org.mozilla.gecko.telemetry|mozilla.telemetry.glean.|org.mozilla.fenix.GleanMetrics|org.mozilla.fenix.components.metrics"
+  },
+  {
+   "id": 222,
+   "name": "nend",
+   "code_signature": "net.nend.android|net.nend.unity."
+  },
+  {
+   "id": 223,
+   "name": "Pusher",
+   "code_signature": "com.pusher.client."
+  },
+  {
+   "id": 224,
+   "name": "FreeWheel",
+   "code_signature": "tv.freewheel.ad."
+  },
+  {
+   "id": 225,
+   "name": "TNK Factory",
+   "code_signature": "com.tnkfactory.ad"
+  },
+  {
+   "id": 226,
+   "name": "Axonix",
+   "code_signature": "com.axonix.android.sdk|com.mobclix.android.sdk"
+  },
+  {
+   "id": 227,
+   "name": "Gemius HeatMap",
+   "code_signature": "com.gemius.sdk"
+  },
+  {
+   "id": 228,
+   "name": "YouAppi",
+   "code_signature": "com.youappi.sdk."
+  },
+  {
+   "id": 229,
+   "name": "Adobe Experience Cloud",
+   "code_signature": "com.adobe.marketing.mobile"
+  },
+  {
+   "id": 230,
+   "name": "Teads",
+   "code_signature": "tv.teads.|teads.tv."
+  },
+  {
+   "id": 231,
+   "name": "In Loco",
+   "code_signature": "com.inlocomedia.android"
+  },
+  {
+   "id": 232,
+   "name": "IQzone",
+   "code_signature": "com.iqzone"
+  },
+  {
+   "id": 233,
+   "name": "Bugfender",
+   "code_signature": "com.bugfender.sdk."
+  },
+  {
+   "id": 234,
+   "name": "Wootric",
+   "code_signature": "com.wootric.androidsdk."
+  },
+  {
+   "id": 235,
+   "name": "KIDOZ",
+   "code_signature": "com.kidoz.sdk"
+  },
+  {
+   "id": 236,
+   "name": "PubMatic",
+   "code_signature": "com.pubmatic.sdk"
+  },
+  {
+   "id": 237,
+   "name": "Kissmetrics",
+   "code_signature": "com.kissmetrics"
+  },
+  {
+   "id": 238,
+   "name": "Microsoft Visual Studio App Center Crashes",
+   "code_signature": "com.microsoft.appcenter.crashes"
+  },
+  {
+   "id": 239,
+   "name": "Webtrekk",
+   "code_signature": "com.webtrekk.webtrekksdk"
+  },
+  {
+   "id": 240,
+   "name": "Google Analytics Plugin (Cordova)",
+   "code_signature": "com.danielcwilson.plugins.analytics"
+  },
+  {
+   "id": 241,
+   "name": "Bugsee",
+   "code_signature": "com.bugsee.library.Bugsee"
+  },
+  {
+   "id": 242,
+   "name": "Splunk MINT",
+   "code_signature": "com.splunk.mint"
+  },
+  {
+   "id": 243,
+   "name": "Microsoft Visual Studio App Center Analytics",
+   "code_signature": "com.microsoft.appcenter.analytics|com.microsoft.azure.mobile.analytics"
+  },
+  {
+   "id": 244,
+   "name": "Nielsen",
+   "code_signature": "com.nielsen.app"
+  },
+  {
+   "id": 245,
+   "name": "Reveal Mobile",
+   "code_signature": "com.stepleaderdigital.reveal"
+  },
+  {
+   "id": 246,
+   "name": "Metrics",
+   "code_signature": "com.codahale.metrics"
+  },
+  {
+   "id": 247,
+   "name": "Repro",
+   "code_signature": "io.repro.android."
+  },
+  {
+   "id": 248,
+   "name": "Sensors Analytics",
+   "code_signature": "com.sensorsdata.analytics.android.sdk"
+  },
+  {
+   "id": 249,
+   "name": "Tenjin",
+   "code_signature": "com.tenjin.android."
+  },
+  {
+   "id": 250,
+   "name": "Tapstream",
+   "code_signature": "com.tapstream.sdk"
+  },
+  {
+   "id": 251,
+   "name": "Singular",
+   "code_signature": "com.singular.sdk"
+  },
+  {
+   "id": 252,
+   "name": "CallDorado",
+   "code_signature": "com.calldorado.android"
+  },
+  {
+   "id": 253,
+   "name": "UXCam",
+   "code_signature": "com.uxcam."
+  },
+  {
+   "id": 254,
+   "name": "Upsight",
+   "code_signature": "com.upsight.android"
+  },
+  {
+   "id": 255,
+   "name": "Appcelerator Analytics",
+   "code_signature": "com.appcelerator.aps.|org.appcelerator.titanium.analytics"
+  },
+  {
+   "id": 256,
+   "name": "Adbrix",
+   "code_signature": "com.igaworks.adbrix"
+  },
+  {
+   "id": 257,
+   "name": "Cauly",
+   "code_signature": "com.fsn.cauly|com.trid.tridad|com.cauly.android.ad."
+  },
+  {
+   "id": 258,
+   "name": "Tapdaq",
+   "code_signature": "com.tapdaq.sdk.|com.tapdaq.adapters."
+  },
+  {
+   "id": 259,
+   "name": "Verve",
+   "code_signature": "com.vervewireless.advert."
+  },
+  {
+   "id": 260,
+   "name": "Apsalar",
+   "code_signature": "com.apsalar.sdk."
+  },
+  {
+   "id": 261,
+   "name": "PingStart",
+   "code_signature": "com.pingstart.adsdk."
+  },
+  {
+   "id": 262,
+   "name": "Keen",
+   "code_signature": "io.keen.client."
+  },
+  {
+   "id": 263,
+   "name": "Revmob",
+   "code_signature": "com.revmob.ads."
+  },
+  {
+   "id": 264,
+   "name": "Emarsys Predict",
+   "code_signature": "com.emarsys.predict"
+  },
+  {
+   "id": 265,
+   "name": "Lotame",
+   "code_signature": "com.lotame.android"
+  },
+  {
+   "id": 266,
+   "name": "FollowAnalytics",
+   "code_signature": "com.followanalytics."
+  },
+  {
+   "id": 267,
+   "name": "Chartbeat",
+   "code_signature": "com.chartbeat.androidsdk"
+  },
+  {
+   "id": 268,
+   "name": "MoEngage",
+   "code_signature": "com.moengage."
+  },
+  {
+   "id": 269,
+   "name": "Altamob",
+   "code_signature": "com.altamob.sdk"
+  },
+  {
+   "id": 270,
+   "name": "Tealeaf",
+   "code_signature": "com.tl.uic.Tealeaf"
+  },
+  {
+   "id": 271,
+   "name": "AMoAd",
+   "code_signature": "com.amoad."
+  },
+  {
+   "id": 272,
+   "name": "AdAdapted",
+   "code_signature": "com.adadapted.android.sdk."
+  },
+  {
+   "id": 273,
+   "name": "AdMuing",
+   "code_signature": "com.admuing.danmaku."
+  },
+  {
+   "id": 274,
+   "name": "Adcash",
+   "code_signature": "com.adcash.mobileads."
+  },
+  {
+   "id": 275,
+   "name": "Admixer",
+   "code_signature": "com.admixer|net.admixer.sdk"
+  },
+  {
+   "id": 276,
+   "name": "Admost",
+   "code_signature": "admost.sdk.|admost.adserver."
+  },
+  {
+   "id": 277,
+   "name": "Alohalytics",
+   "code_signature": "org.alohalytics."
+  },
+  {
+   "id": 278,
+   "name": "Amobee",
+   "code_signature": "com.amobee."
+  },
+  {
+   "id": 279,
+   "name": "Anagog",
+   "code_signature": "com.anagog.jedai"
+  },
+  {
+   "id": 280,
+   "name": "Bazaarvoice",
+   "code_signature": "com.bazaarvoice.bvandroidsdk"
+  },
+  {
+   "id": 281,
+   "name": "BeaconsInSpace (Fysical)",
+   "code_signature": "com.beaconsinspace.android.beacon.detector."
+  },
+  {
+   "id": 282,
+   "name": "Conversant",
+   "code_signature": "com.conversantmedia|com.greystripe.android."
+  },
+  {
+   "id": 283,
+   "name": "Glympse",
+   "code_signature": "com.glympse.android."
+  },
+  {
+   "id": 284,
+   "name": "Herow",
+   "code_signature": "com.connecthings.herow"
+  },
+  {
+   "id": 285,
+   "name": "Placer",
+   "code_signature": "com.placer.client.Placer"
+  },
+  {
+   "id": 286,
+   "name": "PushSpring",
+   "code_signature": "com.pushspring.sdk.PushSpring"
+  },
+  {
+   "id": 287,
+   "name": "Pyze",
+   "code_signature": "com.pyze."
+  },
+  {
+   "id": 288,
+   "name": "Radar",
+   "code_signature": "io.radar.sdk.Radar"
+  },
+  {
+   "id": 289,
+   "name": "Roximity",
+   "code_signature": "com.roximity.sdk."
+  },
+  {
+   "id": 290,
+   "name": "Sentiance",
+   "code_signature": "com.sentiance.sdk."
+  },
+  {
+   "id": 291,
+   "name": "SmartLook",
+   "code_signature": "com.smartlook.sdk.smartlook."
+  },
+  {
+   "id": 292,
+   "name": "Square Metrics",
+   "code_signature": "com.beaconinside.proximitysdk.ProximityService"
+  },
+  {
+   "id": 293,
+   "name": "TalkingData",
+   "code_signature": "com.talkingdata.sdk.|com.tendcloud.tenddata.|com.talkingdata.appanalytics.|com.talkingdata.adtracking.|com.tendcloud.appcpa.|com.apptalkingdata.push.|com.gametalkingdata.push."
+  },
+  {
+   "id": 294,
+   "name": "flymob",
+   "code_signature": "com.flymob.sdk."
+  },
+  {
+   "id": 295,
+   "name": "AdFalcon",
+   "code_signature": "com.noqoush.adfalcon.android.sdk"
+  },
+  {
+   "id": 296,
+   "name": "Bitly",
+   "code_signature": "com.bitly.Bitly"
+  },
+  {
+   "id": 297,
+   "name": "Enhance",
+   "code_signature": "co.enhance.Enhance"
+  },
+  {
+   "id": 298,
+   "name": "Esri ArcGIS",
+   "code_signature": "com.esri.arcgisruntime."
+  },
+  {
+   "id": 299,
+   "name": "GIPHY Analytics",
+   "code_signature": "com.giphy.sdk.analytics|com.giphy.sdk.tracking"
+  },
+  {
+   "id": 300,
+   "name": "Heap",
+   "code_signature": "com.heapanalytics"
+  },
+  {
+   "id": 301,
+   "name": "Inneractive",
+   "code_signature": "com.inneractive.api.ads"
+  },
+  {
+   "id": 302,
+   "name": "MDOTM",
+   "code_signature": "com.mdotm.android"
+  },
+  {
+   "id": 303,
+   "name": "Metaps",
+   "code_signature": "com.metaps"
+  },
+  {
+   "id": 304,
+   "name": "Parse.ly",
+   "code_signature": "com.parsely.parselyandroid"
+  },
+  {
+   "id": 305,
+   "name": "Pollfish",
+   "code_signature": "com.pollfish"
+  },
+  {
+   "id": 306,
+   "name": "Qualtrics",
+   "code_signature": "com.qualtrics.digital."
+  },
+  {
+   "id": 307,
+   "name": "Tamoco",
+   "code_signature": "com.tamoco.sdk"
+  },
+  {
+   "id": 308,
+   "name": "Vpon",
+   "code_signature": "com.vpon.ads|com.vpadn.analytics|com.vpadn.ads.|com.vpadn.widget."
+  },
+  {
+   "id": 309,
+   "name": "YuMe",
+   "code_signature": "com.yume.android"
+  },
+  {
+   "id": 310,
+   "name": "Zapr",
+   "code_signature": "com.redbricklane.zapr"
+  },
+  {
+   "id": 311,
+   "name": "mediba",
+   "code_signature": "com.mediba.jp|mediba.ad.sdk.android.openx"
+  },
+  {
+   "id": 312,
+   "name": "Google AdMob",
+   "code_signature": "com.google.ads.|com.google.android.gms.ads.AdView|com.google.android.gms.ads.AdActivity|com.google.android.gms.ads.AdRequest|com.google.android.gms.ads.mediation|com.google.android.gms.ads.doubleclick|com.google.android.ads.|com.google.unity.ads.|com.google.android.gms.admob|com.google.firebase.firebase_ads."
+  },
+  {
+   "id": 313,
+   "name": "Unacast Pure",
+   "code_signature": "com.pure.internal.|com.pure.sdk."
+  },
+  {
+   "id": 314,
+   "name": "Factual",
+   "code_signature": "com.factual.engine|com.factual.Factual"
+  },
+  {
+   "id": 315,
+   "name": "Footmarks",
+   "code_signature": "com.footmarks.footmarkssdkm2"
+  },
+  {
+   "id": 316,
+   "name": "OzTAM",
+   "code_signature": "au.com.oztam."
+  },
+  {
+   "id": 317,
+   "name": "Receptiv (formerly Mediabrix)",
+   "code_signature": "com.mediabrix.android"
+  },
+  {
+   "id": 318,
+   "name": "Tutela",
+   "code_signature": "com.tutelatechnologies.sdk"
+  },
+  {
+   "id": 319,
+   "name": "Twine Data",
+   "code_signature": "com.twine.sdk"
+  },
+  {
+   "id": 320,
+   "name": "Verizon Ads",
+   "code_signature": "com.verizon.ads|com.verizondigitalmedia.mobile.|com.oath.mobile."
+  },
+  {
+   "id": 321,
+   "name": "adPOPcorn",
+   "code_signature": "com.igaworks.adpopcorn|com.igaworks.ssp."
+  },
+  {
+   "id": 322,
+   "name": "maio by i-mobile",
+   "code_signature": "jp.maio.sdk."
+  },
+  {
+   "id": 323,
+   "name": "360Dialog",
+   "code_signature": "com.threesixtydialog.sdk."
+  },
+  {
+   "id": 324,
+   "name": "ABTasty",
+   "code_signature": "com.abtasty"
+  },
+  {
+   "id": 325,
+   "name": "ACRCloud",
+   "code_signature": "com.acrcloud"
+  },
+  {
+   "id": 326,
+   "name": "Aarki",
+   "code_signature": "com.aarki"
+  },
+  {
+   "id": 327,
+   "name": "Actv8me",
+   "code_signature": "me.actv8"
+  },
+  {
+   "id": 328,
+   "name": "IAB Open Measurement",
+   "code_signature": "com.iab.omid.library|com.prime31.util.IabHelperImpl|com.prime31.IAB."
+  },
+  {
+   "id": 333,
+   "name": "Huawei Mobile Services (HMS) Core",
+   "code_signature": "com.huawei.hms.analytics|com.huawei.hms.location|com.huawei.hms.plugin.analytics|com.huawei.hms.plugin.ads|com.huawei.updatesdk.|com.huawei.agconnect.|com.huawei.hms.support.api.push.|com.huawei.hms.flutter.analytics."
+  },
+  {
+   "id": 334,
+   "name": "Akamai MAP",
+   "code_signature": "com.akamai.android.sdk.AkaMap"
+  },
+  {
+   "id": 336,
+   "name": "Mail.ru",
+   "code_signature": "ru.mail.mrgservice.advertising|ru.mail.mrgservice.analytics"
+  },
+  {
+   "id": 337,
+   "name": "Airpush",
+   "code_signature": "com.airpush."
+  },
+  {
+   "id": 338,
+   "name": "Alimama (formerly AdsMogo)",
+   "code_signature": "com.adsmogo.|com.alimama."
+  },
+  {
+   "id": 339,
+   "name": "AnySDK",
+   "code_signature": "com.anysdk.framework.AnalyticsWrapper|com.anysdk.framework.AdsWrapper"
+  },
+  {
+   "id": 340,
+   "name": "Button",
+   "code_signature": "com.usebutton.sdk."
+  },
+  {
+   "id": 341,
+   "name": "Carto (formerly Nutiteq)",
+   "code_signature": "com.nutiteq|com.carto"
+  },
+  {
+   "id": 342,
+   "name": "Didomi",
+   "code_signature": "io.didomi.sdk."
+  },
+  {
+   "id": 343,
+   "name": "JiGuang Aurora Mobile JPush",
+   "code_signature": "cn.jpush.android"
+  },
+  {
+   "id": 344,
+   "name": "Jumio",
+   "code_signature": "com.jumio.MobileSDK"
+  },
+  {
+   "id": 345,
+   "name": "Lenddo",
+   "code_signature": "com.lenddo.mobile"
+  },
+  {
+   "id": 346,
+   "name": "POKKT",
+   "code_signature": "com.pokkt.sdk."
+  },
+  {
+   "id": 347,
+   "name": "Prebid Mobile",
+   "code_signature": "org.prebid.mobile"
+  },
+  {
+   "id": 348,
+   "name": "SK planet Tad",
+   "code_signature": "com.skplanet.tad"
+  },
+  {
+   "id": 349,
+   "name": "Split",
+   "code_signature": "io.split.android."
+  },
+  {
+   "id": 350,
+   "name": "Exponea",
+   "code_signature": "com.infinario.android.infinariosdk.|com.exponea.sdk|com.sygic.aura."
+  },
+  {
+   "id": 351,
+   "name": "IPQualityScore",
+   "code_signature": "com.ipqualityscore."
+  },
+  {
+   "id": 352,
+   "name": "Opensignal",
+   "code_signature": "com.opensignal.datacollection."
+  },
+  {
+   "id": 353,
+   "name": "SignalFrame",
+   "code_signature": "com.wirelessregistry.observersdk."
+  },
+  {
+   "id": 354,
+   "name": "X-Mode",
+   "code_signature": "io.xmode.BcnConfig|io.xmode.locationsdk|io.mysdk."
+  },
+  {
+   "id": 355,
+   "name": "OneAudience",
+   "code_signature": "com.oneaudience.sdk."
+  },
+  {
+   "id": 356,
+   "name": "OpenBack",
+   "code_signature": "com.openback"
+  },
+  {
+   "id": 357,
+   "name": "PredicIO",
+   "code_signature": "com.telescope.android|io.predic.tracker"
+  },
+  {
+   "id": 358,
+   "name": "AdLocus",
+   "code_signature": "com.adlocus."
+  },
+  {
+   "id": 359,
+   "name": "Adcenix",
+   "code_signature": "com.adcenix."
+  },
+  {
+   "id": 360,
+   "name": "Admitad",
+   "code_signature": "ru.tachos.admitadstatisticsdk"
+  },
+  {
+   "id": 361,
+   "name": "AutoNavi / Amap",
+   "code_signature": "com.amap.api"
+  },
+  {
+   "id": 362,
+   "name": "IBM Digital Analytics",
+   "code_signature": "com.digitalanalytics."
+  },
+  {
+   "id": 363,
+   "name": "Pangle",
+   "code_signature": "com.bytedance|com.pgl|com.pangle.global"
+  },
+  {
+   "id": 364,
+   "name": "YOC VIS.X",
+   "code_signature": "com.yoc.visx"
+  },
+  {
+   "id": 365,
+   "name": "Ad Generation",
+   "code_signature": "com.socdm.d.adgeneration."
+  },
+  {
+   "id": 366,
+   "name": "Adjoe",
+   "code_signature": "io.adjoe.sdk.|io.adjoe.protection."
+  },
+  {
+   "id": 367,
+   "name": "AppVador",
+   "code_signature": "com.appvador.ads."
+  },
+  {
+   "id": 368,
+   "name": "Appodeal Stack",
+   "code_signature": "com.explorestack."
+  },
+  {
+   "id": 369,
+   "name": "AppsGeyser",
+   "code_signature": "com.appsgeyser.sdk|com.appsgeyser.multiTabApp.VideoPlayerActivity"
+  },
+  {
+   "id": 370,
+   "name": "BidMachine",
+   "code_signature": "io.bidmachine."
+  },
+  {
+   "id": 371,
+   "name": "BugSense",
+   "code_signature": "com.bugsense.trace."
+  },
+  {
+   "id": 372,
+   "name": "BuzzAd Benefit",
+   "code_signature": "com.buzzvil."
+  },
+  {
+   "id": 373,
+   "name": "GOM Factory AdPie",
+   "code_signature": "com.gomfactory.adpie."
+  },
+  {
+   "id": 374,
+   "name": "JumpTap",
+   "code_signature": "com.jumptap.adtag."
+  },
+  {
+   "id": 375,
+   "name": "LoopMe",
+   "code_signature": "com.loopme."
+  },
+  {
+   "id": 376,
+   "name": "Raygun",
+   "code_signature": "com.mindscapehq.android.raygun4android"
+  },
+  {
+   "id": 377,
+   "name": "RjFun",
+   "code_signature": "com.rjfun.cordova.ad|com.rjfun.cordova.admob"
+  },
+  {
+   "id": 378,
+   "name": "SuperAwesome",
+   "code_signature": "tv.superawesome.sdk|tv.superawesome.lib."
+  },
+  {
+   "id": 379,
+   "name": "TapResearch",
+   "code_signature": "com.tapr.sdk.|com.tapr.internal.|com.tapr.helpers."
+  },
+  {
+   "id": 380,
+   "name": "Tappx",
+   "code_signature": "com.tappx.sdk.android"
+  },
+  {
+   "id": 381,
+   "name": "ThinkingData Analytics",
+   "code_signature": "cn.thinkingdata."
+  },
+  {
+   "id": 382,
+   "name": "VKontakte SDK",
+   "code_signature": "com.vk.sdk.|com.vk.api.sdk."
+  },
+  {
+   "id": 383,
+   "name": "Virgo Mobile",
+   "code_signature": "com.virgo.ads."
+  },
+  {
+   "id": 384,
+   "name": "Zoho Analytics",
+   "code_signature": "com.zoho.zanalytics."
+  },
+  {
+   "id": 385,
+   "name": "fineboost",
+   "code_signature": "com.fineboost."
+  },
+  {
+   "id": 386,
+   "name": "Acuant",
+   "code_signature": "com.acuant.acuantcamera"
+  },
+  {
+   "id": 387,
+   "name": "Anvato (A Google Company)",
+   "code_signature": "com.anvato.androidsdk."
+  },
+  {
+   "id": 388,
+   "name": "Blesh",
+   "code_signature": "com.blesh.sdk."
+  },
+  {
+   "id": 389,
+   "name": "Bluecats",
+   "code_signature": "com.bluecats.sdk"
+  },
+  {
+   "id": 390,
+   "name": "CoolaData",
+   "code_signature": "com.cooladata.android."
+  },
+  {
+   "id": 391,
+   "name": "FLUZO",
+   "code_signature": "com.fluzo.sdk."
+  },
+  {
+   "id": 392,
+   "name": "Facebook Flipper",
+   "code_signature": "com.facebook.flipper"
+  },
+  {
+   "id": 393,
+   "name": "GPShopper",
+   "code_signature": "com.gpshopper"
+  },
+  {
+   "id": 394,
+   "name": "IndoorAtlas",
+   "code_signature": "com.indooratlas.android.sdk"
+  },
+  {
+   "id": 395,
+   "name": "Janrain",
+   "code_signature": "com.janrain.android|com.janrain.android.engage|com.janrain.android.capture"
+  },
+  {
+   "id": 396,
+   "name": "MOCA",
+   "code_signature": "com.innoquant.moca"
+  },
+  {
+   "id": 397,
+   "name": "Point Inside",
+   "code_signature": "com.pointinside"
+  },
+  {
+   "id": 398,
+   "name": "Proximi.io",
+   "code_signature": "io.proximi.proximiiolibrary"
+  },
+  {
+   "id": 399,
+   "name": "ScoreLoop",
+   "code_signature": "com.scoreloop.client.android"
+  },
+  {
+   "id": 400,
+   "name": "Alooma",
+   "code_signature": "com.github.aloomaio.androidsdk"
+  },
+  {
+   "id": 401,
+   "name": "Analytics by NPAW (Youbora Suite)",
+   "code_signature": "com.npaw.youbora."
+  },
+  {
+   "id": 402,
+   "name": "Beintoo",
+   "code_signature": "com.beintoo.nucleon"
+  },
+  {
+   "id": 403,
+   "name": "Bolts",
+   "code_signature": "com.parse.bolts"
+  },
+  {
+   "id": 404,
+   "name": "Cedexis Radar",
+   "code_signature": "com.cedexis"
+  },
+  {
+   "id": 405,
+   "name": "Cifrasoft",
+   "code_signature": "com.cifrasoft."
+  },
+  {
+   "id": 406,
+   "name": "Flowsense",
+   "code_signature": "com.flowsense.flowsensesdk."
+  },
+  {
+   "id": 407,
+   "name": "Geniee",
+   "code_signature": "jp.co.geniee.gnadsdk."
+  },
+  {
+   "id": 408,
+   "name": "Huq Sourcekit",
+   "code_signature": "io.huq.sourcekit."
+  },
+  {
+   "id": 409,
+   "name": "Insider",
+   "code_signature": "com.useinsider.insider"
+  },
+  {
+   "id": 410,
+   "name": "Mopinion",
+   "code_signature": "com.mopinion.mopinionsdk"
+  },
+  {
+   "id": 411,
+   "name": "OfferToro",
+   "code_signature": "com.offertoro.sdk."
+  },
+  {
+   "id": 412,
+   "name": "OpenTelemetry (OpenCensus, OpenTracing)",
+   "code_signature": "io.opencensus|io.opentelemetry"
+  },
+  {
+   "id": 413,
+   "name": "Snapchat Login Kit",
+   "code_signature": "com.snapchat.kit.sdk.SnapLogin"
+  },
+  {
+   "id": 414,
+   "name": "Zendrive",
+   "code_signature": "com.zendrive.sdk."
+  },
+  {
+   "id": 415,
+   "name": "fullstory",
+   "code_signature": "com.fullstory.instrumentation.|com.fullstory.util.|com.fullstory.jni.|com.fullstory.FS|com.fullstory.rust.|com.fullstory.FSSessionData"
+  },
+  {
+   "id": 416,
+   "name": "Pendo",
+   "code_signature": "sdk.insert.io.|sdk.pendo.io."
+  },
+  {
+   "id": 417,
+   "name": "Plexure",
+   "code_signature": "co.vmob.sdk"
+  },
+  {
+   "id": 418,
+   "name": "Swirl",
+   "code_signature": "com.swirl"
+  },
+  {
+   "id": 419,
+   "name": "Treasure Data",
+   "code_signature": "com.treasuredata"
+  },
+  {
+   "id": 420,
+   "name": "IBM Mobile Marketing (Acoustic)",
+   "code_signature": "com.ibm.mce.sdk.|co.acoustic.mobile.push.sdk.|com.xtify.mce.sdk.|com.xtify.android.sdk."
+  },
+  {
+   "id": 422,
+   "name": "Solar2D (Corona)",
+   "code_signature": "com.ansca.corona"
+  },
+  {
+   "id": 423,
+   "name": "Amazon Mobile Analytics (Amplify)",
+   "code_signature": "com.amplifyframework.analytics."
+  },
+  {
+   "id": 424,
+   "name": "AD(X)",
+   "code_signature": "com.adxcorp.ads|com.adxcorp.nativead"
+  },
+  {
+   "id": 425,
+   "name": "AdGateMedia",
+   "code_signature": "com.adgatemedia."
+  },
+  {
+   "id": 426,
+   "name": "AdMarvel",
+   "code_signature": "com.admarvel."
+  },
+  {
+   "id": 427,
+   "name": "AdTiming",
+   "code_signature": "com.aiming.mdt.|com.adtiming."
+  },
+  {
+   "id": 428,
+   "name": "Adjust Unbotify",
+   "code_signature": "com.unbotify.mobile.sdk."
+  },
+  {
+   "id": 429,
+   "name": "LotaData",
+   "code_signature": "com.lotadata.moments."
+  },
+  {
+   "id": 430,
+   "name": "Marketo (an Adobe Company)",
+   "code_signature": "com.marketo."
+  },
+  {
+   "id": 431,
+   "name": "PlaytestCloud Event Tracking",
+   "code_signature": "com.playtestcloud.Analytics"
+  },
+  {
+   "id": 432,
+   "name": "Rollbar",
+   "code_signature": "com.rollbar.android."
+  },
+  {
+   "id": 433,
+   "name": "Snap Ad Kit",
+   "code_signature": "com.snap.adkit|com.snap.appadskit"
+  },
+  {
+   "id": 434,
+   "name": "Synerise",
+   "code_signature": "com.synerise.sdk"
+  },
+  {
+   "id": 435,
+   "name": "UserExperior",
+   "code_signature": "com.userexperior"
+  },
+  {
+   "id": 436,
+   "name": "Vdopia",
+   "code_signature": "com.vdopia.client.android.|com.vdopia.ads."
+  },
+  {
+   "id": 437,
+   "name": "AdGem",
+   "code_signature": "com.adgem.android."
+  },
+  {
+   "id": 438,
+   "name": "AdTrial",
+   "code_signature": "com.adtrial.sdk."
+  },
+  {
+   "id": 439,
+   "name": "Pincrux",
+   "code_signature": "com.pincrux."
+  },
+  {
+   "id": 440,
+   "name": "Tutucloud",
+   "code_signature": "org.lasque.tusdk.core|org.lasque.tusdkpulse.core"
+  },
+  {
+   "id": 441,
+   "name": "Veloxity",
+   "code_signature": "net.veloxity."
+  },
+  {
+   "id": 442,
+   "name": "Yoadx",
+   "code_signature": "com.yoadx.yoadx."
+  },
+  {
+   "id": 443,
+   "name": "Coulus Coelib",
+   "code_signature": "coelib.c.couluslibrary"
+  },
+  {
+   "id": 444,
+   "name": "ACRA",
+   "code_signature": "org.acra.|ch.acra."
+  },
+  {
+   "id": 445,
+   "name": "Backtrace",
+   "code_signature": "com.github.backtrace-labs.|backtraceio.library."
+  },
+  {
+   "id": 447,
+   "name": "Sentry",
+   "code_signature": "io.sentry.|com.joshdholtz.sentry"
+  },
+  {
+   "id": 448,
+   "name": "Yueying Crash SDK",
+   "code_signature": "com.uc.crashsdk|com.uc2.crashsdk"
+  }
+ ]
+}
