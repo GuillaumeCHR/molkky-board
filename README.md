@@ -4,7 +4,8 @@
 pour compter les parties : on touche les quilles tombées, l'app applique les règles, calcule les scores et garde
 l'historique.
 
-> Version actuelle : **0.6.0** (version de test). Identifiant : `com.yogistudio.molkkyboard`.
+> Version actuelle : **0.8.0** (build 8, version de test) — [télécharger l'APK](https://github.com/GuillaumeCHR/molkky-board/releases/tag/v0.8.0).
+> Identifiant : `com.yogistudio.molkkyboard`.
 
 ## Ce qu'elle fait
 
@@ -13,6 +14,8 @@ l'historique.
 - **Les règles appliquées pour vous** : 50 points exactement, retour à 25 en cas de dépassement, élimination
   après trois ratés, match en plusieurs manches, belle et Mölkkout. Mode **Officiel** (règlement IMO en option)
   ou **Ludique** (variantes, mode famille).
+- **Partie à côté** : plusieurs téléphones sur le même terrain suivent et saisissent la même partie, via un QR code,
+  sans compte, sans serveur et sans Internet (point d'accès local ou même Wi-Fi).
 - **Tout se corrige** : n'importe quel lancer passé se modifie ou se supprime, et tout est recalculé (scores,
   retours à 25, éliminations, vainqueur).
 - **En équipes** : équipes nommées (🎲 pour un nom au hasard), couleur et emblème, ordre de passage par
@@ -56,13 +59,19 @@ android emulator start Medium_Phone_API_37.0
 adb shell am start -n com.yogistudio.molkkyboard.debug/com.yogistudio.molkkyboard.MainActivity
 ```
 
-Les APK de test sont aussi publiés dans les [releases](https://github.com/GuillaumeCHR/molkky-board/releases).
+Les APK de test sont aussi publiés dans les [releases](https://github.com/GuillaumeCHR/molkky-board/releases)
+(dernière : [0.8.0](https://github.com/GuillaumeCHR/molkky-board/releases/tag/v0.8.0)). La version debug s'installe
+à côté d'une éventuelle version du Play Store (identifiant `com.yogistudio.molkkyboard.debug`). Pour la partie à côté,
+tous les téléphones doivent avoir la même variante.
+
+Version release signée (AAB pour le Play Store) : voir [`docs/RELEASE.md`](docs/RELEASE.md).
 
 ## Architecture
 
 Kotlin, Jetpack Compose et Material 3, une seule activité, Hilt, Room. L'état d'une partie n'est jamais stocké :
 il est recalculé à partir d'un **journal d'événements** par une fonction pure, ce qui rend possibles l'annulation,
-la correction de n'importe quel lancer et, bientôt, la synchronisation entre téléphones.
+la correction de n'importe quel lancer et la synchronisation entre téléphones (le téléphone de l'organisateur
+valide et ordonne le journal).
 
 | Module | Rôle |
 |---|---|
@@ -72,11 +81,12 @@ la correction de n'importe quel lancer et, bientôt, la synchronisation entre t�
 | `core:scoring` | moteur de score : rejeu du journal, match, Mölkkout (Kotlin pur, 100 % des lignes couvertes) |
 | `core:stats` | statistiques, Hall of Fame, records et moments forts, recalculés depuis les journaux (Kotlin pur) |
 | `core:sync` | validation partagée des événements et commandes de partie, pour plusieurs téléphones (Kotlin pur) |
+| `core:nearby` | partie à côté : point d'accès local ou même Wi-Fi, serveur et client WebSocket en TLS épinglé, service de premier plan |
 | `core:designsystem` | thème « Nordic Bold », quilles, emblèmes au trait, logotype, sons |
 | `core:database` | Room : parties, manches, journal d'événements, profils, équipes |
 | `core:datastore` | réglages (DataStore) |
 | `core:data` | dépôts (Room comme source de vérité), sauvegarde et restauration |
-| `feature:*` | `intro`, `setup`, `game`, `history`, `stats`, `share` |
+| `feature:*` | `intro`, `setup`, `game`, `history`, `stats`, `share`, `nearby` (inviter, rejoindre) |
 
 Documentation : [règles](docs/RULES.md) · [moteur de score](docs/SCORING_SPEC.md) ·
 [statistiques](docs/STATS_SPEC.md) · [architecture et jalons](docs/ARCHITECTURE.md) ·
