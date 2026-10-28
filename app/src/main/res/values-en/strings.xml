@@ -111,6 +111,7 @@
     <string name="about_privacy_local">Everything stays on your phone, except what you choose to share yourself.</string>
     <string name="about_privacy_control">You can back up, export or delete your data at any time, in Settings › Data.</string>
     <string name="about_privacy_open_source">Built with open source libraries (list below).</string>
+    <string name="about_license">Molkky Board is free software, licensed under the GNU GPL v3. The Molkky Board and Yogi Studio names and logos remain reserved.</string>
     <string name="about_credits">Credits</string>
     <string name="about_licenses">Open source libraries</string>
     <string name="about_licenses_list">List of libraries</string>

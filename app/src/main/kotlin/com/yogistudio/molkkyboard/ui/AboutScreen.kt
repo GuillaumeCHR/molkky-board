@@ -75,6 +75,7 @@ internal fun AboutScreen(onBack: () -> Unit, onLicenses: () -> Unit) {
                     R.string.about_privacy_local,
                     R.string.about_privacy_control,
                     R.string.about_privacy_open_source,
+                    R.string.about_license,
                 ).forEach {
                     Text(stringResource(it), style = MaterialTheme.typography.bodyLarge)
                 }
