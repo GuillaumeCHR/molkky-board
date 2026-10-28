@@ -10,6 +10,7 @@ android {
 
 dependencies {
     api(projects.core.scoring)
+    api(projects.core.sync)
     api(projects.core.stats)
     api(projects.core.datastore)
     implementation(projects.core.database)

@@ -23,11 +23,14 @@ import com.yogistudio.molkkyboard.core.scoring.PlayEvent
 import com.yogistudio.molkkyboard.core.scoring.ReplayResult
 import com.yogistudio.molkkyboard.core.scoring.ScoringError
 import com.yogistudio.molkkyboard.core.scoring.SetEvent
-import com.yogistudio.molkkyboard.core.scoring.checkInput
 import com.yogistudio.molkkyboard.core.scoring.getOrThrow
 import com.yogistudio.molkkyboard.core.scoring.matchStatus
 import com.yogistudio.molkkyboard.core.scoring.replay
 import com.yogistudio.molkkyboard.core.scoring.toResult
+import com.yogistudio.molkkyboard.core.sync.Author
+import com.yogistudio.molkkyboard.core.sync.SetLog
+import com.yogistudio.molkkyboard.core.sync.Validation
+import com.yogistudio.molkkyboard.core.sync.validate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -45,10 +48,10 @@ interface GameRepository {
     fun observe(gameId: String): Flow<GameSnapshot?>
 
     /**
-     * Valide [event] avec le moteur puis l'écrit en fin de journal de la manche en cours. Rien n'est écrit si
-     * l'événement est refusé : l'erreur est renvoyée.
+     * Valide [event] (fonction partagée `validate` de `core:sync` : droits de [author], tour, moteur) puis l'écrit en
+     * fin de journal de la manche en cours. Rien n'est écrit si l'événement est refusé : l'erreur est renvoyée.
      */
-    suspend fun append(gameId: String, event: SetEvent): Outcome<ReplayResult>
+    suspend fun append(gameId: String, event: SetEvent, author: Author = Author.Local): Outcome<ReplayResult>
 
     suspend fun startNextSet(gameId: String, lineup: List<TeamLineup>)
 
@@ -187,25 +190,18 @@ class RoomGameRepository
             )
         }
 
-        override suspend fun append(gameId: String, event: SetEvent): Outcome<ReplayResult> =
+        override suspend fun append(gameId: String, event: SetEvent, author: Author): Outcome<ReplayResult> =
             writes.withLock {
                 val snapshot = currentSet(gameId) ?: return Outcome.Err(ScoringError.UNKNOWN_EVENT)
                 val config = snapshot.config
                 val lineup = snapshot.lineup
                 val log = snapshot.log
-                val before = replay(config, lineup, log).getOrThrow()
-                val error =
-                    when (event) {
-                        is PlayEvent -> checkInput(before.state, event)
-                        else -> null
+                // Même porte que l'hôte d'une partie à côté : la validation partagée de `core:sync`.
+                val after =
+                    when (val validation = validate(SetLog(config, lineup, log), event, author)) {
+                        is Validation.Accepted -> validation.result
+                        is Validation.Rejected -> return Outcome.Err(validation.error ?: ScoringError.INVALID_EVENT)
                     }
-                if (error != null) return Outcome.Err(error)
-                val after = replay(config, lineup, log + event).getOrThrow()
-                // Un Undo, une correction ou une suppression refusés par le moteur ne sont pas écrits.
-                after.rejected
-                    .lastOrNull()
-                    ?.takeIf { it.event == event }
-                    ?.let { return Outcome.Err(it.error) }
                 dao.appendEvent(
                     GameEventEntity(
                         id = event.id.value,
