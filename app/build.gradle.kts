@@ -1,4 +1,5 @@
 import com.android.build.api.artifact.SingleArtifact
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.molkkyboard.android.application)
@@ -17,6 +18,25 @@ android {
         versionName = "0.6.0"
     }
 
+    // Clé d'envoi Play Store (upload key) : jamais dans le dépôt ni dans la CI. Ses coordonnées sont lues dans un
+    // fichier local (voir docs/RELEASE.md) ; sans lui, la release est construite sans signature.
+    val uploadKey =
+        providers
+            .environmentVariable("MOLKKY_UPLOAD_KEY_PROPERTIES")
+            .orElse(
+                providers.provider { "${System.getProperty("user.home")}/.config/molkkyboard/upload-key.properties" },
+            ).map { file(it) }
+            .get()
+    if (uploadKey.isFile) {
+        val props = Properties().apply { uploadKey.inputStream().use { load(it) } }
+        signingConfigs.create("upload") {
+            storeFile = file(props.getProperty("storeFile"))
+            storePassword = props.getProperty("storePassword")
+            keyAlias = props.getProperty("keyAlias")
+            keyPassword = props.getProperty("keyPassword")
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
@@ -28,6 +48,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.findByName("upload")
         }
     }
 
