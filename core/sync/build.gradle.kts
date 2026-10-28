@@ -8,6 +8,7 @@ plugins {
 
 dependencies {
     api(projects.core.scoring)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
 
 kover {
