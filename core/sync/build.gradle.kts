@@ -12,6 +12,12 @@ dependencies {
 
 kover {
     reports {
+        filters {
+            excludes {
+                // Classes sérialisables : leur code est généré par kotlinx-serialization.
+                annotatedBy("kotlinx.serialization.Serializable")
+            }
+        }
         verify {
             rule("Validation entièrement couverte") {
                 minBound(100, CoverageUnit.LINE)

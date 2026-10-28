@@ -28,8 +28,12 @@ import com.yogistudio.molkkyboard.core.scoring.matchStatus
 import com.yogistudio.molkkyboard.core.scoring.replay
 import com.yogistudio.molkkyboard.core.scoring.toResult
 import com.yogistudio.molkkyboard.core.sync.Author
+import com.yogistudio.molkkyboard.core.sync.CommandOutcome
+import com.yogistudio.molkkyboard.core.sync.GameCommand
+import com.yogistudio.molkkyboard.core.sync.RejectCode
 import com.yogistudio.molkkyboard.core.sync.SetLog
 import com.yogistudio.molkkyboard.core.sync.Validation
+import com.yogistudio.molkkyboard.core.sync.allowedFor
 import com.yogistudio.molkkyboard.core.sync.validate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -51,9 +55,19 @@ interface GameRepository {
      * Valide [event] (fonction partagée `validate` de `core:sync` : droits de [author], tour, moteur) puis l'écrit en
      * fin de journal de la manche en cours. Rien n'est écrit si l'événement est refusé : l'erreur est renvoyée.
      */
-    suspend fun append(gameId: String, event: SetEvent, author: Author = Author.Local): Outcome<ReplayResult>
+    suspend fun append(
+        gameId: String,
+        event: SetEvent,
+        author: Author = Author.Local,
+        baseSeq: Int? = null,
+    ): Outcome<ReplayResult>
 
-    suspend fun startNextSet(gameId: String, lineup: List<TeamLineup>)
+    /**
+     * Unique porte d'entrée des commandes ([GameCommand]) : droits de [author], idempotence (manche déjà ouverte,
+     * lancer de Mölkkout déjà saisi, revanche déjà créée) et moteur, puis écriture. Celle qu'utilisera le téléphone
+     * hôte d'une partie à côté pour les propositions des autres téléphones.
+     */
+    suspend fun apply(gameId: String, command: GameCommand, author: Author = Author.Local): CommandOutcome
 
     /**
      * Un joueur rejoint la partie en cours : l'événement `AddPlayer` est validé et écrit, puis son nom (et son
@@ -68,18 +82,6 @@ interface GameRepository {
 
     /** Parties closes (terminées ou abandonnées), la plus récente d'abord : historique et statistiques. */
     fun observeHistory(): Flow<List<GameSnapshot>>
-
-    /** Ajoute un lancer de Mölkkout, validé par le moteur ; rien n'est écrit s'il est refusé. */
-    suspend fun appendMolkkout(gameId: String, throwEvent: MolkkoutThrow): Outcome<MolkkoutState>
-
-    /** Annule le dernier lancer de Mölkkout. */
-    suspend fun undoMolkkout(gameId: String)
-
-    /**
-     * Revanche : nouvelle partie avec les mêmes équipes, joueurs et règles. L'ordre de passage découle de la
-     * dernière manche selon [order]. Renvoie l'identifiant de la nouvelle partie.
-     */
-    suspend fun createRematch(gameId: String, order: NextStarter): String?
 
     /** Identifiant de la partie en cours la plus récente, à proposer en reprise. */
     fun observeOngoingGameId(): Flow<String?>
@@ -102,8 +104,9 @@ class RoomGameRepository
         private val json = MolkkyJson
         private val writes = Mutex()
 
-        override suspend fun create(game: NewGame): String {
-            val id = ids.newId()
+        override suspend fun create(game: NewGame): String = insertGame(ids.newId(), game)
+
+        private suspend fun insertGame(id: String, game: NewGame): String {
             val now = time.now()
             dao.createGame(
                 GameEntity(
@@ -190,29 +193,52 @@ class RoomGameRepository
             )
         }
 
-        override suspend fun append(gameId: String, event: SetEvent, author: Author): Outcome<ReplayResult> =
+        override suspend fun append(
+            gameId: String,
+            event: SetEvent,
+            author: Author,
+            baseSeq: Int?,
+        ): Outcome<ReplayResult> =
+            when (val validation = write(gameId, event, author, baseSeq)) {
+                is Validation.Accepted -> Outcome.Ok(validation.result)
+                is Validation.Rejected -> Outcome.Err(validation.error ?: ScoringError.INVALID_EVENT)
+            }
+
+        /**
+         * Même porte que l'hôte d'une partie à côté : la validation partagée de `core:sync`, puis l'écriture en fin
+         * de journal. Le refus garde son motif (droits, fraîcheur, moteur).
+         */
+        private suspend fun write(
+            gameId: String,
+            event: SetEvent,
+            author: Author,
+            baseSeq: Int?,
+        ): Validation =
             writes.withLock {
-                val snapshot = currentSet(gameId) ?: return Outcome.Err(ScoringError.UNKNOWN_EVENT)
-                val config = snapshot.config
-                val lineup = snapshot.lineup
+                val snapshot =
+                    currentSet(gameId) ?: return Validation.Rejected(RejectCode.INVALID, ScoringError.UNKNOWN_EVENT)
                 val log = snapshot.log
-                // Même porte que l'hôte d'une partie à côté : la validation partagée de `core:sync`.
-                val after =
-                    when (val validation = validate(SetLog(config, lineup, log), event, author)) {
-                        is Validation.Accepted -> validation.result
-                        is Validation.Rejected -> return Outcome.Err(validation.error ?: ScoringError.INVALID_EVENT)
-                    }
-                dao.appendEvent(
-                    GameEventEntity(
-                        id = event.id.value,
-                        gameId = gameId,
-                        setIndex = snapshot.index,
-                        localSeq = 0,
-                        createdAt = time.now(),
-                        payloadJson = json.encodeToString(event),
-                    ),
-                )
-                Outcome.Ok(after)
+                val validation =
+                    validate(
+                        SetLog(snapshot.config, snapshot.lineup, log),
+                        event,
+                        author,
+                        baseSeq ?: log.size,
+                    )
+                if (validation is Validation.Accepted) {
+                    dao.appendEvent(
+                        GameEventEntity(
+                            id = event.id.value,
+                            gameId = gameId,
+                            setIndex = snapshot.index,
+                            localSeq = 0,
+                            createdAt = time.now(),
+                            payloadJson = json.encodeToString(event),
+                            authorDevice = author.deviceOrNull(),
+                        ),
+                    )
+                }
+                validation
             }
 
         private data class CurrentSet(
@@ -226,11 +252,6 @@ class RoomGameRepository
             val snapshot = observe(gameId).first() ?: return null
             val set = snapshot.currentSet
             return CurrentSet(snapshot.config, set.index, set.lineup, set.log)
-        }
-
-        override suspend fun startNextSet(gameId: String, lineup: List<TeamLineup>) {
-            val index = currentSet(gameId)?.index?.plus(1) ?: return
-            dao.insertSet(GameSetEntity(gameId, index, json.encodeToString(lineup), time.now()))
         }
 
         override suspend fun addParticipant(
@@ -249,27 +270,88 @@ class RoomGameRepository
             return outcome
         }
 
-        override suspend fun appendMolkkout(gameId: String, throwEvent: MolkkoutThrow): Outcome<MolkkoutState> =
-            writes.withLock {
-                val snapshot = observe(gameId).first() ?: return Outcome.Err(ScoringError.UNKNOWN_EVENT)
-                val teams = snapshot.molkkoutTeams() ?: return Outcome.Err(ScoringError.INVALID_CONFIG)
-                val after =
-                    when (val before = Molkkout.replay(teams, snapshot.molkkout)) {
-                        is Outcome.Ok -> Molkkout.reduce(before.value, throwEvent)
-                        is Outcome.Err -> before
+        override suspend fun apply(gameId: String, command: GameCommand, author: Author): CommandOutcome {
+            if (!command.allowedFor(author)) return CommandOutcome.Rejected(RejectCode.FORBIDDEN)
+            return when (command) {
+                is GameCommand.Play -> {
+                    when (val validation = write(gameId, command.event, author, command.baseSeq)) {
+                        is Validation.Accepted -> CommandOutcome.Applied
+                        is Validation.Rejected -> CommandOutcome.Rejected(validation.code, validation.error)
                     }
-                if (after is Outcome.Ok) {
-                    dao.insertMolkkoutThrow(
-                        MolkkoutThrowEntity(gameId, snapshot.molkkout.size + 1, json.encodeToString(throwEvent)),
-                    )
                 }
-                after
+
+                is GameCommand.NextSet -> {
+                    writes.withLock { nextSet(gameId, command.setIndex) }
+                }
+
+                is GameCommand.MolkkoutPlay -> {
+                    writes.withLock { molkkoutPlay(gameId, command, author) }
+                }
+
+                is GameCommand.MolkkoutUndo -> {
+                    writes.withLock { molkkoutUndo(gameId, command.seq) }
+                }
+
+                is GameCommand.Rematch -> {
+                    rematch(gameId, command)
+                }
             }
+        }
 
-        override suspend fun undoMolkkout(gameId: String) = writes.withLock { dao.deleteLastMolkkoutThrow(gameId) }
+        /** Manche suivante, dans l'ordre que le match impose ; une seule fois par numéro de manche. */
+        private suspend fun nextSet(gameId: String, setIndex: Int): CommandOutcome {
+            val snapshot = observe(gameId).first() ?: return invalid(ScoringError.UNKNOWN_EVENT)
+            if (setIndex != snapshot.sets.size) return CommandOutcome.Rejected(RejectCode.STALE)
+            val next = snapshot.match as? MatchStatus.NextSet ?: return invalid(ScoringError.INVALID_EVENT)
+            val last = snapshot.currentSet.replay.state
+            val lineup =
+                next.order.mapNotNull { id ->
+                    last.team(id)?.takeUnless { it.left }?.let { TeamLineup(id, it.players) }
+                }
+            dao.insertSet(GameSetEntity(gameId, setIndex, json.encodeToString(lineup), time.now()))
+            return CommandOutcome.Applied
+        }
 
-        override suspend fun createRematch(gameId: String, order: NextStarter): String? {
-            val snapshot = observe(gameId).first() ?: return null
+        /** Lancer de Mölkkout : rang attendu, lanceur attendu, puis le moteur du Mölkkout. */
+        private suspend fun molkkoutPlay(
+            gameId: String,
+            command: GameCommand.MolkkoutPlay,
+            author: Author,
+        ): CommandOutcome {
+            val snapshot = observe(gameId).first() ?: return invalid(ScoringError.UNKNOWN_EVENT)
+            val teams = snapshot.molkkoutTeams() ?: return invalid(ScoringError.INVALID_CONFIG)
+            if (command.seq != snapshot.molkkout.size + 1) return CommandOutcome.Rejected(RejectCode.STALE)
+            val before = Molkkout.replay(teams, snapshot.molkkout).getOrThrow()
+            val expected =
+                command.throwEvent.team == before.nextTeam?.id && command.throwEvent.player == before.nextPlayer
+            val after =
+                if (expected) Molkkout.reduce(before, command.throwEvent) else Outcome.Err(ScoringError.NOT_YOUR_TURN)
+            if (after is Outcome.Err) return CommandOutcome.Rejected(after.error.toCode(), after.error)
+            dao.insertMolkkoutThrow(
+                MolkkoutThrowEntity(
+                    gameId,
+                    command.seq,
+                    json.encodeToString(command.throwEvent),
+                    author.deviceOrNull(),
+                ),
+            )
+            return CommandOutcome.Applied
+        }
+
+        private suspend fun molkkoutUndo(gameId: String, seq: Int): CommandOutcome {
+            val count = observe(gameId).first()?.molkkout?.size ?: 0
+            if (seq < 1 || seq != count) return CommandOutcome.Rejected(RejectCode.STALE)
+            dao.deleteLastMolkkoutThrow(gameId)
+            return CommandOutcome.Applied
+        }
+
+        /**
+         * Revanche : nouvelle partie avec les mêmes équipes, joueurs et règles ; l'ordre de passage découle de la
+         * dernière manche selon l'ordre demandé. Une deuxième demande avec le même identifiant ne crée rien de plus.
+         */
+        private suspend fun rematch(gameId: String, command: GameCommand.Rematch): CommandOutcome {
+            if (dao.observeGame(command.gameId).first() != null) return CommandOutcome.Applied
+            val snapshot = observe(gameId).first() ?: return invalid(ScoringError.UNKNOWN_EVENT)
             val last = snapshot.currentSet.replay.state
             val result = last.toResult()
             val remaining = last.teams.filterNot { it.left }
@@ -278,12 +360,13 @@ class RoomGameRepository
                 if (result == null) {
                     ids
                 } else {
-                    val next = matchStatus(MatchConfig(setsToWin = 2, nextStarter = order), ids, listOf(result))
-                    (next as? MatchStatus.NextSet)?.order ?: ids
+                    val config = MatchConfig(setsToWin = 2, nextStarter = command.order)
+                    (matchStatus(config, ids, listOf(result)) as? MatchStatus.NextSet)?.order ?: ids
                 }
             val lineup = nextIds.map { id -> TeamLineup(id, remaining.first { it.id == id }.players) }
             val playerIds = lineup.flatMap { it.players }.toSet()
-            return create(
+            insertGame(
+                command.gameId,
                 NewGame(
                     config = snapshot.config,
                     matchConfig = snapshot.matchConfig,
@@ -293,7 +376,10 @@ class RoomGameRepository
                     place = snapshot.place,
                 ),
             )
+            return CommandOutcome.Applied
         }
+
+        private fun invalid(error: ScoringError) = CommandOutcome.Rejected(RejectCode.INVALID, error)
 
         override fun observeOngoingGameId(): Flow<String?> = dao.observeOngoing().map { it?.id }
 
@@ -306,3 +392,9 @@ class RoomGameRepository
 
 /** JSON du journal et des configurations (champ `type` comme discriminant des événements). */
 val MolkkyJson: Json = Json { ignoreUnknownKeys = true }
+
+private fun ScoringError.toCode(): RejectCode =
+    if (this == ScoringError.NOT_YOUR_TURN) RejectCode.NOT_YOUR_TURN else RejectCode.INVALID
+
+/** Le téléphone auteur à enregistrer : rien pour ce téléphone (partie locale). */
+private fun Author.deviceOrNull(): String? = device.value.takeUnless { this == Author.Local }

@@ -23,6 +23,12 @@ import com.yogistudio.molkkyboard.core.scoring.Throw
 import com.yogistudio.molkkyboard.core.scoring.ThrowResult
 import com.yogistudio.molkkyboard.core.scoring.Undo
 import com.yogistudio.molkkyboard.core.scoring.errorOrNull
+import com.yogistudio.molkkyboard.core.sync.Author
+import com.yogistudio.molkkyboard.core.sync.CommandOutcome
+import com.yogistudio.molkkyboard.core.sync.DeviceId
+import com.yogistudio.molkkyboard.core.sync.GameCommand
+import com.yogistudio.molkkyboard.core.sync.RejectCode
+import com.yogistudio.molkkyboard.core.sync.Role
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -161,9 +167,17 @@ class GameRepositoryTest {
     @Test
     fun `partie en cours manche suivante cloture et suppression`() =
         runTest {
-            val id = repository.create(newGame)
+            val id = repository.create(newGame.copy(matchConfig = MatchConfig.Classic))
             assertEquals(id, repository.observeOngoingGameId().first())
-            repository.startNextSet(id, newGame.lineup.reversed())
+            // Pas de manche suivante tant que la manche en cours n'est pas finie.
+            assertEquals(
+                CommandOutcome.Rejected(RejectCode.INVALID, ScoringError.INVALID_EVENT),
+                repository.apply(id, GameCommand.NextSet(1)),
+            )
+            playPerfect(id)
+            assertEquals(CommandOutcome.Applied, repository.apply(id, GameCommand.NextSet(1)))
+            // Deuxième demande pour la même manche (double tap, autre téléphone) : rien de plus.
+            assertEquals(CommandOutcome.Rejected(RejectCode.STALE), repository.apply(id, GameCommand.NextSet(1)))
             val sets = repository.observe(id).first()!!.sets
             assertEquals(listOf(0, 1), sets.map { it.index })
             assertEquals(
@@ -312,7 +326,13 @@ class GameRepositoryTest {
         runTest {
             val id = repository.create(newGame)
             playPerfect(id)
-            val rematch = repository.createRematch(id, NextStarter.WinnerLast)!!
+            val rematch = "revanche-1"
+            assertEquals(
+                CommandOutcome.Applied,
+                repository.apply(id, GameCommand.Rematch(rematch, NextStarter.WinnerLast)),
+            )
+            // Même demande renvoyée : la partie existe déjà, rien n'est dupliqué.
+            assertEquals(CommandOutcome.Applied, repository.apply(id, GameCommand.Rematch(rematch, NextStarter.Rotate)))
             val snapshot = repository.observe(rematch).first()!!
             assertEquals(listOf("B", "A"), snapshot.currentSet.lineup.map { it.id.value })
             assertEquals(listOf("Alice", "Bruno"), snapshot.teams.map { it.name }.sorted())
@@ -329,10 +349,7 @@ class GameRepositoryTest {
                 MatchStatus.NextSet(2, listOf(TeamId("B"), TeamId("A"))),
                 repository.observe(id).first()!!.match,
             )
-            repository.startNextSet(
-                id,
-                listOf(TeamLineup(TeamId("B"), listOf(bruno)), TeamLineup(TeamId("A"), listOf(alice))),
-            )
+            assertEquals(CommandOutcome.Applied, repository.apply(id, GameCommand.NextSet(1)))
             // Bruno gagne la 2e manche 50 à 4 : 54 points partout, il faut un Mölkkout.
             playPerfect(id)
             val tied = repository.observe(id).first()!!
@@ -340,19 +357,68 @@ class GameRepositoryTest {
             val teams = tied.molkkoutTeams()!!
             // Série réglementaire en solo : 3 lancers chacun, A BB AA BB A.
             val order = listOf("A", "B", "B", "A", "A", "B")
-            order.forEach { team ->
+            // Hors de son tour, ou au mauvais rang : refusé.
+            assertEquals(
+                CommandOutcome.Rejected(RejectCode.NOT_YOUR_TURN, ScoringError.NOT_YOUR_TURN),
+                repository.apply(id, GameCommand.MolkkoutPlay(1, MolkkoutThrow(TeamId("B"), bruno, listOf(4)))),
+            )
+            assertEquals(
+                CommandOutcome.Rejected(RejectCode.STALE),
+                repository.apply(id, GameCommand.MolkkoutPlay(2, MolkkoutThrow(TeamId("A"), alice, listOf(12)))),
+            )
+            order.forEachIndexed { index, team ->
                 val player = if (team == "A") alice else bruno
                 val pins = if (team == "A") listOf(12) else listOf(4)
                 assertEquals(
-                    true,
-                    repository.appendMolkkout(id, MolkkoutThrow(TeamId(team), player, pins)) is Outcome.Ok,
+                    CommandOutcome.Applied,
+                    repository.apply(
+                        id,
+                        GameCommand.MolkkoutPlay(index + 1, MolkkoutThrow(TeamId(team), player, pins)),
+                    ),
                 )
             }
             val decided = repository.observe(id).first()!!
             assertEquals(TeamId("A"), decided.molkkoutState?.winner)
             assertEquals(MatchStatus.NextSet(3, listOf(TeamId("A"), TeamId("B"))), decided.match)
-            repository.undoMolkkout(id)
+            assertEquals(CommandOutcome.Rejected(RejectCode.STALE), repository.apply(id, GameCommand.MolkkoutUndo(5)))
+            assertEquals(CommandOutcome.Applied, repository.apply(id, GameCommand.MolkkoutUndo(6)))
             assertEquals(MatchStatus.MolkkoutRequired(3), repository.observe(id).first()!!.match)
             assertEquals(teams, repository.observe(id).first()!!.molkkoutTeams())
+        }
+
+    @Test
+    fun `commandes - un telephone joueur ne gere pas le match, et son nom est garde sur ses evenements`() =
+        runTest {
+            val id = repository.create(newGame.copy(matchConfig = MatchConfig.Classic))
+            val aliceDevice = Author(DeviceId("tel-alice"), Role.PLAYER, alice)
+            assertEquals(
+                CommandOutcome.Rejected(RejectCode.FORBIDDEN),
+                repository.apply(id, GameCommand.NextSet(1), aliceDevice),
+            )
+            assertEquals(
+                CommandOutcome.Rejected(RejectCode.FORBIDDEN),
+                repository.apply(
+                    id,
+                    GameCommand.Play(Throw(EventId("x1"), ThrowResult.Pins(listOf(7)), bruno), 0),
+                    aliceDevice,
+                ),
+            )
+            assertEquals(
+                CommandOutcome.Applied,
+                repository.apply(
+                    id,
+                    GameCommand.Play(Throw(EventId("x2"), ThrowResult.Pins(listOf(7)), alice), 0),
+                    aliceDevice,
+                ),
+            )
+            assertEquals(
+                "tel-alice",
+                database
+                    .gameDao()
+                    .observeEvents(id)
+                    .first()
+                    .single()
+                    .authorDevice,
+            )
         }
 }

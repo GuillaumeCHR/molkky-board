@@ -55,6 +55,8 @@ import com.yogistudio.molkkyboard.core.stats.PERFECT_GAME_THROWS
 import com.yogistudio.molkkyboard.core.stats.SetSummary
 import com.yogistudio.molkkyboard.core.stats.isNewRecord
 import com.yogistudio.molkkyboard.core.stats.summarize
+import com.yogistudio.molkkyboard.core.sync.CommandOutcome
+import com.yogistudio.molkkyboard.core.sync.GameCommand
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -493,8 +495,11 @@ class GameViewModel
         /** Revanche : mêmes équipes, ordre de passage selon [order] ; l'écran ouvre la nouvelle partie. */
         fun rematch(order: NextStarter) {
             viewModelScope.launch {
-                val id = games.createRematch(gameId, order) ?: return@launch
-                effects.send(GameEffect.OpenGame(id))
+                // L'identifiant est choisi ici : une deuxième demande (double tap, autre téléphone) est sans effet.
+                val id = ids.newId()
+                if (games.apply(gameId, GameCommand.Rematch(id, order)) == CommandOutcome.Applied) {
+                    effects.send(GameEffect.OpenGame(id))
+                }
             }
         }
 
@@ -502,29 +507,36 @@ class GameViewModel
         fun nextSet() {
             viewModelScope.launch {
                 val snapshot = games.observe(gameId).first() ?: return@launch
-                val next = snapshot.match as? MatchStatus.NextSet ?: return@launch
-                val last = snapshot.currentSet.replay.state
-                val lineup =
-                    next.order.mapNotNull { id ->
-                        last.team(id)?.takeUnless { it.left }?.let { TeamLineup(id, it.players) }
-                    }
                 newRecord.value = false
-                games.startNextSet(gameId, lineup)
+                // L'ordre de la manche est calculé par l'autorité (ici, ce téléphone) à partir du match.
+                games.apply(gameId, GameCommand.NextSet(snapshot.sets.size))
             }
         }
 
         /** Lancer de Mölkkout : quilles 4, 6, 8, 10 et 12, remises en place après chaque lancer. */
         fun molkkoutThrow(pins: Set<Int>) {
             viewModelScope.launch {
-                val state = games.observe(gameId).first()?.molkkoutState ?: return@launch
+                val snapshot = games.observe(gameId).first() ?: return@launch
+                val state = snapshot.molkkoutState ?: return@launch
                 val team = state.nextTeam ?: return@launch
                 val player = state.nextPlayer ?: return@launch
-                games.appendMolkkout(gameId, MolkkoutThrow(team.id, player, pins.sorted()))
+                games.apply(
+                    gameId,
+                    GameCommand.MolkkoutPlay(snapshot.molkkout.size + 1, MolkkoutThrow(team.id, player, pins.sorted())),
+                )
             }
         }
 
         fun undoMolkkout() {
-            viewModelScope.launch { games.undoMolkkout(gameId) }
+            viewModelScope.launch {
+                val count =
+                    games
+                        .observe(gameId)
+                        .first()
+                        ?.molkkout
+                        ?.size ?: return@launch
+                games.apply(gameId, GameCommand.MolkkoutUndo(count))
+            }
         }
 
         fun abandon() {
