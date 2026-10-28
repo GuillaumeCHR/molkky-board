@@ -25,7 +25,7 @@ publication**.
 | Point | Statut | Note |
 |---|---|---|
 | AAB signé (`bundleRelease`) | ✅ | 0.8.0 (build 8) signé avec la clé d'envoi le 2026-10-28 ; APK release signé (v2), 0 traceur |
-| Release minifiée testée sur téléphone (dont partie à côté) | ⬜ 👤 | `docs/RELEASE.md` § 5 |
+| Release minifiée testée sur téléphone (dont partie à côté) | 🟡 👤 | 0.8.0 sur Fairphone 6 (2026-10-28) : partie, reprise, partage, sauvegarde, À propos OK ; **partie à côté en release non testée** (release sur les deux téléphones) |
 | targetSdk au niveau exigé (API 36 minimum) | ✅ | targetSdk 37 |
 | Permission « réseau local » (Android 17) gérée, hôte et invité | ✅ | testé sur Pixel 7a |
 | Permissions minimales, aucune localisation | ✅ | liste blanche vérifiée en CI (`checkReleasePermissions`) |
