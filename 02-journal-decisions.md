@@ -111,6 +111,26 @@ La spécification à jour fait foi : ce journal explique **pourquoi** elle est a
 - Le QR code des vignettes de partage n'est jamais un QR d'invitation à une partie en cours.
 - Un prototype sur deux appareils réels est exigé avant l'implémentation complète.
 
+## Ajouts du 28 octobre 2026 (suite) — Modes de jeu
+- **Constat** (analyse de la concurrence mise à jour le 28 octobre) : un concurrent vend ses variantes
+  de jeu à l'unité (Killer, mort subite, bingo…). Les variantes sont une attente réelle des joueurs.
+- **Décision** : distinguer les **options de règles** de la partie classique (V1, « Règles avancées ») et
+  les **modes de jeu** (après la V1). Nouvelle section « Modes de jeu » dans la spécification :
+  Mölkkout, Mort subite, Killer, 50 zap, Avec annonce, Impair perd, Bingo des 12, et le Mémolkky
+  dans le guide des règles seulement.
+- Tous les modes seront **gratuits**, comme le reste de l'app.
+- Seul le **Mölkkout** est officiel (départage d'une série de manches) ; il entre dans `RULES.md` dès la
+  phase 1. Les autres sont des variantes documentées ou des règles maison, rédigées par nous. Les modes
+  propres à un concurrent (« Saboteur », « Révolution »), dont les règles ne sont pas publiques, ne sont
+  pas reproduits.
+- **Architecture** : l'interface `GameMode` est conçue dès la phase 2, le mode classique en est la
+  première implémentation. Les tirages au sort sont des événements du journal (même résultat sur tous
+  les téléphones). Le mode et sa version passent dans le protocole, et un téléphone qui ne connaît pas
+  le mode est refusé proprement. Les statistiques par lancer se calculent sur le résultat brut ; les
+  records restent propres au mode classique.
+- Points de règle à trancher en phase 1 : nombre de lancers en mölkkout solo (sources divergentes),
+  décompte de plusieurs quilles en « Impair perd ».
+
 ### Points ouverts (à trancher)
 1. **Encart « Vie privée »** : « Sans compte, tout reste sur votre téléphone » devient inexact dès que
    plusieurs téléphones jouent ensemble. Nouvelle formulation proposée dans la spec, **non validée**.
@@ -119,6 +139,8 @@ La spécification à jour fait foi : ce journal explique **pourquoi** elle est a
    compte, accès de test pour Google). **Non décidé.**
 3. **Formulaire « Sécurité des données »** : vérifier comment Google qualifie un transfert direct entre
    téléphones sans serveur.
+4. **Priorités des modes de jeu** : P2 proposé pour le Mölkkout, la Mort subite et le Killer ; P3 pour
+   les autres. **Non validé.**
 
 ## Leçons tirées de la concurrence
 Les avis des apps existantes ont fait ajouter au MVP : deux modes de saisie (quilles / pavé rapide),
@@ -152,4 +174,5 @@ Détails dans `04-analyse-concurrence.md`.
 2. Valider `RULES.md` et `SCORING_SPEC.md`, puis l'architecture (choix du backend).
 3. Créer le dépôt GitHub privé `molkky-board` avec `gh`.
 4. Recruter les testeurs du futur test fermé.
-5. Trancher les trois points ouverts de la partie à côté, puis faire réaliser le prototype réseau local.
+5. Trancher les points ouverts (dont les priorités des modes de jeu), puis faire réaliser le prototype
+   réseau local.

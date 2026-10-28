@@ -1,6 +1,6 @@
 # Molkky Board — prompt de référence
 
-> Prompt de référence : `01-specifications-molkky-board.md` (version du 2026-10-28, « Partie à côté »), **mis à jour
+> Prompt de référence : `01-specifications-molkky-board.md` (version du 2026-10-28 soir, « Partie à côté » et « Modes de jeu »), **mis à jour
 > d'après les retours des tests sur téléphone** (27-28 octobre) : coach et mode débutant supprimés, placement en vue
 > globale, intro courte retirée, icône podium au lieu du geste, emblèmes au trait au lieu des emoji, vignettes sans QR
 > code ni masquage des noms, voix et sons coupés en silencieux seulement, écran en portrait, code publié sous GPL v3.
@@ -97,12 +97,19 @@ validation avant de passer à la suivante.
    - le jeu en équipes et l'ordre de passage ;
    - la notion de **tour** : un tour est terminé quand chaque joueur ou équipe encore en jeu a lancé une fois ;
    - la fin de partie et le déroulé d'une série de manches ;
+   - le **mölkkout**, procédure officielle de départage (placement des 5 quilles, nombre de lancers
+     selon la taille des équipes, égalité persistante), en t'appuyant aussi sur le règlement de
+     l'International Mölkky Organisation (IMO) ;
    - la **formation de départ** des quilles (schéma ASCII avec les numéros, vue depuis la ligne de lancer),
      la distance de lancer et la manière de relever les quilles ;
    - les **cas ambigus** (quille appuyée sur une autre ou sur le mölkky, quille sortie du terrain,
      faute de pied…), qui alimenteront la FAQ de l'écran « Règles du jeu ».
-3. Liste les variantes courantes (ex. pas d'élimination, retour à 0 au lieu de 25,
-   objectif différent) : elles deviendront des options paramétrables.
+3. Liste les variantes courantes et classe-les en deux familles (voir « Modes de jeu ») :
+   - les **options de règles** de la partie classique (pas d'élimination, retour à 0 au lieu de 25,
+     objectif différent…), qui seront paramétrables dès la V1 ;
+   - les **modes de jeu** (Mölkkout, Mort subite, Killer, 50 zap, Avec annonce, Impair perd, Bingo des 12),
+     qui ne seront développés qu'après la V1. Pour chacun, signale les points de règle ambigus à trancher
+     (déjà repérés : nombre de lancers en mölkkout solo, décompte de plusieurs quilles en « Impair perd »).
 4. Écris `docs/SCORING_SPEC.md` : la spécification du moteur de score sous forme de
    cas de test (entrée = état + lancer, sortie = nouvel état), y compris :
    - la correction ou la suppression d'un lancer ancien et le recalcul complet qui en découle
@@ -125,8 +132,11 @@ Propose une architecture et justifie les choix. Base suggérée, à challenger :
 - **Moteur de score** : fonction pure qui recalcule tout l'état d'une partie à partir de son
   **journal d'événements** (lancers, corrections, ajouts/retraits de joueurs, changements d'ordre).
   C'est ce modèle qui permet l'undo, la correction de n'importe quel lancer passé, la synchro
-  multi-appareils et les statistiques rétroactives. Les règles (objectif, pénalité, élimination,
-  futures variantes de jeu) sont une **stratégie** injectée dans le moteur ;
+  multi-appareils et les statistiques rétroactives. Les règles sont une **stratégie** injectée dans
+  le moteur : une interface `GameMode`, dont le mode classique et ses options (objectif, pénalité,
+  élimination) sont la première implémentation. Conçois-la dès maintenant pour qu'elle puisse exprimer
+  les modes prévus après la V1 (vies, quille attribuée, annonce, remise à zéro d'un adversaire, grille
+  de quilles, tirages au sort journalisés : voir « Modes de jeu ») sans refonte ;
 - **Stockage local** : Room, fonctionnement 100 % hors ligne en mode « un seul téléphone » ;
   le journal est persisté à chaque événement validé, pour qu'aucune partie ne soit jamais perdue ;
 - **Synchronisation multi-téléphones** (`core:sync`) : un **protocole d'événements unique**
@@ -301,7 +311,7 @@ Présente-moi le résultat, les limites rencontrées et les versions de biblioth
 |---|---|---|
 | `JOIN_REQUEST` | invité → hôte | jeton d'invitation, pseudo, emblème au trait |
 | `JOIN_PENDING` | hôte → invité | — |
-| `WELCOME` | hôte → invité | jeton de session, rôle, joueur associé, identifiant de partie, journal complet, dernier numéro |
+| `WELCOME` | hôte → invité | jeton de session, rôle, joueur associé, identifiant de partie, mode de jeu et sa version, options de règles, journal complet, dernier numéro |
 | `JOIN_REJECTED` | hôte → invité | motif : refusé, jeton expiré ou déjà utilisé, partie pleine, version incompatible |
 | `RESUME` | invité → hôte | jeton de session, dernier numéro reçu |
 | `EVENT_PROPOSAL` | invité → hôte | identifiant unique de l'événement, numéro de base, contenu (lancer, correction, suppression, gestion des joueurs) |
@@ -749,7 +759,8 @@ correcte avec l'app seule.
   6. **Gagner** : atteindre exactement 50 ; au-delà, retour à 25 ;
   7. **Les ratés** : trois lancers consécutifs sans quille tombée = élimination ;
   8. **Jouer en équipes** et **enchaîner les manches** ;
-  9. **Les variantes** activables dans l'app (en renvoyant vers les options correspondantes)
+  9. **Les variantes** activables dans l'app (en renvoyant vers les options correspondantes), puis,
+     quand ils existeront, une fiche par **mode de jeu** (voir « Modes de jeu »)
 - Chaque règle est illustrée par un **petit schéma animé** dessiné avec les composants du design system
   (PinView), pas par des images figées : quille seule qui tombe = son numéro, trois quilles qui tombent = 3,
   dépassement de 50 et retour à 25, trois ratés et élimination
@@ -812,6 +823,8 @@ Contraintes techniques :
   et n'ont aucun effet sur les records. Une partie abandonnée, ou modifiée **après** sa fin, est marquée et
   exclue des records, mais reste dans l'historique
 - Les lancers saisis en mode rapide comptent pour tous les classements sauf ceux qui portent sur une quille précise
+- Les parties jouées dans un autre mode que le classique comptent dans les victoires (avec un filtre par mode)
+  mais pas dans les records du mode classique (voir « Modes de jeu »)
 - Une même partie présente sur plusieurs téléphones (même identifiant de partie) n'est comptée qu'une fois
   dans un Hall of Fame de groupe
 - Tests unitaires sur le calcul des classements, notamment pour les égalités (départage par date : le premier à l'avoir réalisé garde le record)
@@ -907,6 +920,211 @@ publication doit donner envie d'installer Molkky Board ou de rejoindre une parti
 
 ---
 
+## Modes de jeu (variantes) — après la V1
+> Aucun mode n'est développé en V1, mais l'**architecture de la V1 doit les rendre possibles sans
+> refonte** : le « Socle commun » ci-dessous est à prendre en compte dès la phase 2.
+> **Priorités proposées, à valider** : P2 pour le Mölkkout, la Mort subite et le Killer ; P3 pour les autres.
+
+### Principes
+- **Options de règles et modes de jeu sont deux choses distinctes** :
+  - les *options de règles* (V1, « Règles avancées ») ajustent la partie classique : objectif (50 par
+    défaut ; 51 pour la variante dite « la Marseillaise »), conséquence d'un dépassement (retour à 25 ou
+    à 0), conséquence des trois ratés (élimination, retour à 0 ou rien) ;
+  - les *modes de jeu* changent la condition de victoire, l'état suivi pour chaque participant ou ce
+    qu'il faut saisir.
+- Tous les modes sont **gratuits**, sans publicité, comme le reste de l'app (« Aucun revenu ») ;
+  c'est un argument face à la concurrence, qui les vend à l'unité.
+- Seul le **Mölkkout** est une règle officielle. Les autres sont des variantes documentées ou des
+  **règles maison** : Molkky Board en publie sa propre version, rédigée par nous, dans
+  `docs/RULES_MODES.md`, et le guide des règles l'indique clairement (« règle maison, à adapter entre vous »).
+  Noms génériques uniquement ; ne reprendre ni texte ni règle propre à une app concurrente
+  (les modes « Saboteur » et « Révolution » d'un concurrent, dont les règles ne sont pas publiques,
+  ne sont pas reproduits).
+- Le mode est choisi à la création de la partie et **reste fixe pendant la manche** ; on peut en
+  changer entre deux manches (écran de fin, « Revanche »).
+- Un mode peut déclarer des options de règles **incompatibles** (par exemple, le Killer n'a pas
+  d'objectif de 50) : elles sont alors masquées dans « Règles avancées ».
+
+### Socle commun (conception en phase 2, implémentation avec le premier mode)
+- **Moteur** : interface `GameMode` dans `core:scoring` (Kotlin pur). Elle définit l'état initial de
+  chaque participant, l'effet d'un lancer, les éliminations, la condition de victoire, la saisie exigée
+  et les événements propres au mode. Le mode classique en est la première implémentation dès la V1.
+  Journal, recalcul complet, corrections, undo, tour courant, ajout et retrait de joueurs : communs à
+  tous les modes.
+- **Journal et événements** :
+  - un lancer conserve toujours son **résultat brut** (quilles tombées en mode Quilles, valeur et type
+    en mode Rapide) ; les points sont toujours recalculés par le mode, jamais stockés ;
+  - un lancer peut porter des champs optionnels propres au mode (par exemple l'annonce) ;
+  - les **tirages au sort** (quilles attribuées en Killer, équipe qui commence le mölkkout) sont des
+    événements du journal émis par l'autorité avec leur résultat : tous les téléphones voient le même
+    tirage, et une correction ne le refait pas.
+- **Protocole** (`core:sync`) : le mode, sa version et les options de règles sont transmis dans `WELCOME`.
+  Un téléphone qui ne connaît pas le mode ou sa version reçoit `JOIN_REJECTED` (« version incompatible »)
+  avec un message clair : « Mettez Molkky Board à jour pour rejoindre cette partie en mode Killer ».
+  La validation des propositions délègue au mode, avec la même fonction côté hôte et côté serveur.
+- **Saisie** : chaque mode déclare la saisie dont il a besoin. Les modes qui doivent savoir *quelles*
+  quilles sont tombées imposent le mode Quilles ; la bascule vers le pavé rapide est alors désactivée,
+  avec une phrase d'explication.
+- **Interface** :
+  - création de partie : sélecteur **« Mode de jeu »** au-dessus de « Règles avancées », « Classique »
+    par défaut ; chaque mode affiche une phrase de résumé, un lien vers sa fiche de règles et un
+    mini-schéma animé ;
+  - écran de jeu générique piloté par un état d'affichage fourni par le mode (score, vies, quille
+    attribuée, grille de progression, badge) ; le tableau des scores est classé selon le critère du mode
+    (score, vies restantes, quilles réussies) ;
+  - réutilisation des animations existantes (élimination, victoire, « 12 ! »), plus quelques animations
+    propres à chaque mode, décrites ci-dessous ;
+  - annonces vocales adaptées (« Léa perd une vie », « Zap ! Tom retombe à zéro »).
+- **Statistiques et Hall of Fame** :
+  - chaque partie porte son mode ; les statistiques par lancer (moyenne, taux de ratés, carte de
+    précision) se calculent sur le **résultat brut** des lancers, quel que soit le mode ;
+  - les **victoires** comptent tous modes confondus, avec un filtre par mode ;
+  - les **records** existants (victoire la plus rapide, partie parfaite…) restent propres au mode
+    classique ; chaque mode peut ajouter ses propres classements, calculés depuis le journal.
+- **Guide des règles** : une fiche par mode (principe, schéma animé, cas particuliers), avec la mention
+  « règle maison » le cas échéant.
+- **Partage** : chaque mode peut déclarer ses moments partageables (« Zap ! », « Dernier survivant »…).
+- **Tests** : pour chaque mode, une section de `SCORING_SPEC.md` (cas nominaux, correction d'un lancer
+  ancien, ajout et retrait de joueur, égalités), des tests de protocole (mode inconnu, version
+  incompatible) et des captures Roborazzi de ses éléments d'interface.
+
+### Les modes
+
+#### Mölkkout — départage officiel *(P2 proposé)*
+- **Origine** : règle officielle reprise par les fédérations, qui sert à départager deux équipes à
+  égalité après une série de manches.
+- **Installation** : 5 quilles seulement, **6, 4, 12, 10 et 8**, dans cet ordre, alignées l'une
+  derrière l'autre et espacées d'une longueur de mölkky, la première à 3,50 m de la zone de lancer.
+  Le schéma de placement de l'app en a une version dédiée.
+- **Déroulé** :
+  - tirage au sort de l'équipe qui commence (événement du journal) ;
+  - nombre de lancers par joueur selon la taille de l'équipe, en ordre alterné ;
+  - une quille renversée est **relevée à sa position initiale** ;
+  - décompte habituel (quille seule = son numéro, plusieurs quilles = leur nombre) ; ni objectif de 50,
+    ni retour à 25, ni élimination ;
+  - l'équipe qui a le plus de points gagne ; en cas d'égalité, chaque joueur relance une fois, jusqu'au
+    départage.
+- **À trancher en phase 1** : les sources divergent sur le nombre de lancers par joueur en solo (3 ou 2) ;
+  s'appuyer sur le règlement de l'IMO et le documenter dans `RULES.md`.
+- **Deux usages** :
+  - **automatique**, à la fin d'une série de manches à égalité (format officiel : à une manche partout,
+    on additionne les points des deux manches ; si l'égalité persiste, mölkkout) ;
+  - **autonome**, en « Duel mölkkout » : un défi rapide entre deux joueurs ou équipes.
+- **Saisie** : les deux modes ; en mode Quilles, la grille affiche les 5 quilles en ligne.
+- **Classement propre** : meilleur score en mölkkout, à nombre de lancers égal.
+
+#### Mort subite *(P2 proposé)*
+- **Origine** : règle maison.
+- **Principe** : règles classiques, mais **dépasser 50 élimine immédiatement** au lieu de faire
+  retomber à 25.
+- **Paramètre** : nombre de ratés consécutifs avant élimination (3 par défaut, de 1 à 3).
+- **Fin** : le premier à 50 exactement gagne ; si tous les autres sont éliminés, le dernier en jeu
+  gagne, comme en classique.
+- **Implémentation** : c'est un préréglage d'options de règles (dépassement = élimination) présenté
+  comme un mode ; son coût est très faible.
+- **Interface** : le coach de fin de partie signale la zone de danger plus tôt (dès 38 points) ; un
+  dépassement déclenche l'animation d'élimination avec un tampon « Dépassé ! ».
+- **Saisie** : les deux modes.
+
+#### Killer *(P2 proposé)*
+- **Origine** : règle maison inspirée du Killer des fléchettes et du billard (des vies, des « tueurs »).
+- **Participants** : 2 à 12 joueurs ou équipes, une quille par participant.
+- **Départ** : chaque participant reçoit une **quille attribuée**, unique, par un tirage au sort animé
+  (événement du journal ; l'organisateur peut aussi les attribuer à la main), et **3 vies**
+  (paramètre : de 1 à 5).
+- **Devenir tueur** : un participant devient **tueur** dès que sa propre quille tombe lors d'un de ses
+  lancers, seule ou avec d'autres.
+- **Tuer** : quand un tueur lance, chaque quille attribuée à un adversaire encore en jeu qui tombe
+  retire **une vie** à son propriétaire. Plusieurs quilles adverses tombées retirent plusieurs vies,
+  éventuellement à plusieurs adversaires.
+- **Se blesser** : un tueur qui fait tomber sa propre quille perd une vie (option activée par défaut).
+- **Quilles neutres** : celles qui ne sont attribuées à personne, ou à un participant éliminé,
+  ne font rien.
+- **Ratés** : trois lancers consécutifs sans quille tombée font perdre une vie (au lieu d'éliminer).
+- **Élimination et victoire** : à 0 vie, le participant est éliminé (animation d'élimination) ; le
+  dernier en vie gagne. Il n'y a pas de score à 50.
+- **Les quilles** sont relevées là où elles sont tombées, comme en classique.
+- **Équipes** : une quille et un capital de vies par équipe.
+- **Saisie** : mode Quilles obligatoire.
+- **Interface** :
+  - chaque carte montre la quille attribuée, les vies restantes (petites quilles-vies) et un badge
+    « Tueur » ;
+  - sur la grille, les quilles attribuées prennent la couleur de leur propriétaire ;
+  - aperçu avant validation : « −1 vie Léa, −1 vie Tom » ;
+  - animations : « Tueur ! » quand un participant s'arme, une petite quille-vie qui tombe de la carte
+    à chaque vie perdue.
+- **Corrections** : tout est recalculé depuis le journal. Si une correction fait qu'un participant
+  n'était finalement pas encore tueur, les vies qu'il a retirées ensuite sont rendues.
+- **Classements propres** : victoires en Killer, plus grand nombre de vies retirées en une partie.
+
+#### 50 zap *(P3)*
+- **Origine** : variante citée dans des fiches pédagogiques, inspirée du « 321 zap » des fléchettes.
+- **Principe** : règles classiques, mais quand un joueur atteint **exactement le score d'un
+  adversaire**, cet adversaire **retombe à 0**.
+- **Précisions** :
+  - le zap s'applique au score obtenu après le lancer, y compris après un retour à 25 (option activée
+    par défaut) ;
+  - il peut toucher plusieurs adversaires à la fois ;
+  - pas de zap sur un score de 0 ;
+  - atteindre 50 fait gagner, sans zap.
+- **Saisie** : les deux modes.
+- **Interface** : animation « Zap ! », le score de la victime retombe à 0 avec le même mouvement que le
+  retour à 25 ; le coach signale les scores adverses atteignables en un lancer.
+
+#### Avec annonce *(P3)*
+- **Origine** : variante documentée (encyclopédie, fiches pédagogiques).
+- **Principe** : avant de lancer, le joueur peut **annoncer** une ou plusieurs quilles.
+  - S'il fait tomber **exactement** les quilles annoncées, ni plus ni moins, ses points sont **doublés** ;
+  - sinon, on **retire** de son score les points que l'annonce aurait rapportés (quille seule = son
+    numéro, plusieurs quilles = leur nombre), sans descendre sous 0 ;
+  - sans annonce, le lancer compte normalement.
+- **Précisions** : un dépassement de 50 après doublement fait retomber à 25 ; un lancer annoncé sans
+  aucune quille tombée compte aussi comme raté.
+- **Saisie** : mode Quilles obligatoire ; l'annonce est un champ du lancer, saisie par le lanceur
+  (sur son propre téléphone en partie à côté) avant le résultat.
+- **Interface** : bouton « J'annonce » qui ouvre la sélection sur la grille ; bulle « J'annonce : 12 »
+  visible de tous ; aperçu « Réussi : +24 → 39 / Manqué : −12 → 3 ».
+
+#### Impair perd *(P3)*
+- **Origine** : variante citée par des sites de jeux.
+- **Principe** : les quilles **paires** ajoutent des points, les quilles **impaires** en retirent.
+- **À trancher en phase 1** : la source ne précise pas le décompte quand plusieurs quilles tombent.
+  Proposition : quille seule = plus son numéro si elle est paire, moins son numéro si elle est impaire ;
+  plusieurs quilles = nombre de quilles paires moins nombre de quilles impaires.
+- **Tour de dispersion** : au premier tour, chaque joueur doit faire tomber au moins 3 quilles, et ces
+  points ne comptent pas.
+- **Plancher** : le score ne descend pas sous 0.
+- **Saisie** : mode Quilles obligatoire.
+
+#### Bingo des 12 *(P3, ou P2 avec le mode entraînement solo)*
+- **Origine** : règle maison inspirée du « tour de l'horloge » des fléchettes.
+- **Principe** : chaque participant doit faire tomber **chacune des 12 quilles seule**, au moins une
+  fois, dans n'importe quel ordre. Une grille personnelle de 12 cases se remplit au fil des réussites ;
+  le premier à compléter sa grille gagne.
+- **Option « Horloge »** : les quilles doivent être réussies dans l'ordre, de 1 à 12.
+- **Précisions** : un lancer qui fait tomber plusieurs quilles ne coche rien ; la règle des ratés est
+  désactivée par défaut.
+- **Usage solo** : le mode fonctionne avec un seul joueur et sert de premier défi au mode entraînement solo.
+- **Saisie** : les deux modes (en mode Rapide, « quille seule » suffit).
+
+#### Mémolkky *(aucun développement)*
+- Variante classique où les quilles sont relevées numéro caché. Les règles et le décompte ne changent
+  pas : elle figure seulement dans le guide des règles.
+
+### Récapitulatif
+| Mode | Origine | Saisie exigée | Priorité proposée |
+|---|---|---|---|
+| Mölkkout | officielle | les deux | P2 |
+| Mort subite | maison | les deux | P2 |
+| Killer | maison | Quilles | P2 |
+| 50 zap | documentée | les deux | P3 |
+| Avec annonce | documentée | Quilles | P3 |
+| Impair perd | documentée | Quilles | P3 |
+| Bingo des 12 | maison | les deux | P3 (ou P2 avec l'entraînement solo) |
+| Mémolkky | documentée | — | guide des règles seulement |
+
+---
+
 ## Backlog V2 et au-delà
 Règle : ne commencer une fonctionnalité de cette liste qu'une fois la V1 terminée.
 Avant chaque lot, proposer un découpage et attendre ma validation.
@@ -919,8 +1137,8 @@ Priorités : **P2** = V2, **P3** = plus tard.
 ### Modes de jeu
 - **P2 — Mode entraînement solo** : défis et suivi de progression
 - **P2 — Tournoi** : poules puis élimination directe, arbre du tableau, plusieurs terrains en parallèle
-- **P3 — Variantes de jeu** proposées par certains concurrents (par exemple « Killer » ou « mort subite »),
-  chacune étant une stratégie de règles branchée sur le même moteur
+- **P2 — Modes Mölkkout, Mort subite et Killer** (priorité proposée, à valider) : voir « Modes de jeu »
+- **P3 — Modes 50 zap, Avec annonce, Impair perd et Bingo des 12** : voir « Modes de jeu »
 - **P3 — Saisons** de groupe avec podium de fin de saison
 - **P3 — Défi du jour** commun aux membres d'un groupe
 
@@ -1461,3 +1679,9 @@ et tiens-la à jour jusqu'à la publication.
 - 2026-10-28 — **Contrôle « aucun traceur » en CI** : `tools/trackers/check_trackers.py` compare les classes des dex de l'APK debug aux signatures de code d'Exodus Privacy (copie datée `exodus-trackers.json`, `--update` pour la rafraîchir, `--self-test`). Résultat : 0 traceur sur 33 514 classes. « Traceurs : 0 » du générique est désormais adossé à ce contrôle.
 - 2026-10-28 — **Homonymes** (trois règles validées) : jamais deux joueurs du même nom dans une partie, majuscules, accents et espaces ignorés (`nameKey`) ; on propose « Léa 2 » ou une initiale ; un nom de joueur habituel déclenche « C'est la même Léa ? » (oui = reprise du profil et de ses statistiques, non = autre nom) ; deux équipes homonymes bloquent le lancement ; même règle pour un retardataire en cours de partie. L'emblème et la couleur restent toujours affichés à côté du nom.
 - 2026-10-28 — « Revoir la prise en main » (Réglages) ouvre une nouvelle partie guidée (la flèche ne menait nulle part).
+- 2026-10-28 — **Partie à côté terminée en code** (branche `feature/partie-a-cote`, poussée, pas encore sur `main`) : `core:nearby` (point d'accès local ou même Wi-Fi, réseau de la partie côté invité, gestionnaire hôte/invité branché sur la passerelle de commandes, service de premier plan, lien d'invitation limité aux IPv4 privées), `feature:nearby` (écrans « Inviter » et « Rejoindre », CameraX + zxing-cpp), menu « Inviter des téléphones » et pastille de connexion en jeu, partie rejointe en lecture seule sans hôte. Serveur Java-WebSocket et client OkHttp (le serveur Ktor CIO ne gère pas TLS). Contrôle CI des permissions par liste blanche (remplace « aucun accès Internet »), `network_security_config` sans clair, encart Vie privée mis à jour. **Reste : tests sur deux téléphones, puis fusion sur `main` avec accord.**
+- 2026-10-28 — Build : le démon Gradle plante par intermittence (SIGSEGV dans le ramasse-miettes, G1 comme Parallel) ; contournement local `--no-configuration-cache --max-workers=1`. Réglages du projet inchangés.
+
+### Spécification du 2026-10-28 (soir) — « Modes de jeu »
+- 2026-10-28 — Nouvelle version fournie (`01-specifications-molkky-board.md`, copiée aussi dans `prompt-molkky.md`, et `02-journal-decisions.md`). Ses 8 modifications sont reportées dans la spec de ce fichier **sans écraser les ajustements « retour du test »** : mölkkout officiel en phase 1, deux familles (options de règles / modes de jeu), interface `GameMode` en phase 2, `WELCOME` avec mode, version et options, fiches de modes dans le guide des règles, victoires tous modes avec filtre, section « Modes de jeu (variantes) — après la V1 », backlog.
+- **En attente** : audit du socle (étape 1), puis adaptation (étape A) sur accord ; modes (étape B) seulement sur « go étape B ». Priorités des modes non validées.
