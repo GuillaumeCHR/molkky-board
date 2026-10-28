@@ -97,6 +97,73 @@ class SetupViewModelTest {
     }
 
     @Test
+    fun `deux joueurs ne portent jamais le meme nom dans une partie - on propose Lea 2`() {
+        add("Léa")
+        add("  lea ")
+        val question = vm.state.value.nameQuestion as NameQuestion.Rename
+        assertTrue(question.inGame)
+        assertEquals("Léa 2", question.suggestion)
+        assertEquals(1, vm.state.value.players.size)
+        // Un nom encore pris est refusé, un nom libre est ajouté.
+        vm.confirmName("LÉA")
+        assertTrue((vm.state.value.nameQuestion as NameQuestion.Rename).stillTaken)
+        vm.confirmName("Léa B.")
+        assertEquals(null, vm.state.value.nameQuestion)
+        assertEquals(
+            listOf("Léa", "Léa B."),
+            vm.state.value.players
+                .map { it.name },
+        )
+    }
+
+    @Test
+    fun `un joueur habituel homonyme - oui reprend son profil, non demande un autre nom`() =
+        runTest {
+            add("Léa")
+            val lea =
+                vm.state.value.players
+                    .single()
+            vm.removePlayer(lea.id)
+            vm.state.first { it.profiles.any { p -> p.name == "Léa" } }
+            add("Lea")
+            assertEquals("Léa", (vm.state.value.nameQuestion as NameQuestion.SameProfile).profile.name)
+            vm.answerSameProfile(true)
+            // C'est le même profil : ses statistiques continuent.
+            assertEquals(
+                listOf(lea.id),
+                vm.state.value.players
+                    .map { it.id },
+            )
+            vm.removePlayer(lea.id)
+            add("léa")
+            vm.answerSameProfile(false)
+            val rename = vm.state.value.nameQuestion as NameQuestion.Rename
+            assertFalse(rename.inGame)
+            vm.confirmName(rename.suggestion)
+            assertEquals(
+                listOf("Léa 2"),
+                vm.state.value.players
+                    .map { it.name },
+            )
+            assertTrue(
+                vm.state.value.players
+                    .single()
+                    .id != lea.id,
+            )
+        }
+
+    @Test
+    fun `deux equipes du meme nom empechent de lancer`() {
+        vm.setPlayMode(PlayMode.TEAMS, names)
+        listOf("Alice", "Bruno", "Chloé", "Denis").forEach { add(it) }
+        assertTrue(vm.state.value.canStart)
+        val (first, second) = vm.state.value.teams
+        vm.renameTeam(second.id, " " + first.name.uppercase())
+        assertEquals(first.name, vm.state.value.duplicateTeamName)
+        assertFalse(vm.state.value.canStart)
+    }
+
+    @Test
     fun `nom limite a 20 caracteres`() {
         vm.onNameChange("x".repeat(40))
         assertEquals(SetupUiState.MAX_NAME, vm.state.value.draftName.length)
@@ -220,14 +287,15 @@ class SetupViewModelTest {
                 },
             )
             assertEquals(2, teams.map { it.colorIndex }.toSet().size)
-            vm.renameTeam(teams.first().id, "Les Bouleaux")
+            // Un nom hors de la liste tirée au hasard : deux équipes homonymes empêcheraient de lancer.
+            vm.renameTeam(teams.first().id, "Les Pives")
             vm.moveMember(teams.first().id, 0, 1)
             var created: String? = null
             vm.start { created = it }
             val id = games.observeOngoingGameId().first { it != null }!!
             assertEquals(id, created)
             val game = games.observe(id).first()!!
-            assertEquals("Les Bouleaux", game.teams.first().name)
+            assertEquals("Les Pives", game.teams.first().name)
             assertEquals(
                 listOf("Chloé", "Alice"),
                 game.currentSet.lineup
@@ -235,7 +303,7 @@ class SetupViewModelTest {
                     .players
                     .map(game::playerName),
             )
-            assertEquals("Les Bouleaux", players.team(game.teams.first().memberKey)?.name)
+            assertEquals("Les Pives", players.team(game.teams.first().memberKey)?.name)
         }
 
     @Test

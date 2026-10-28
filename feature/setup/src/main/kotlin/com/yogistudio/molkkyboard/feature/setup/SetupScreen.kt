@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -116,6 +117,9 @@ data class SetupActions(
     val onPlayful: (GameConfig) -> Unit = {},
     val onFamily: (TeamId, TeamOverride) -> Unit = { _, _ -> },
     val onStart: () -> Unit = {},
+    val onSameProfile: (Boolean) -> Unit = {},
+    val onConfirmName: (String) -> Unit = {},
+    val onDismissName: () -> Unit = {},
 )
 
 /** Création de partie : joueurs ou équipes, ordre de passage par glisser-déposer, règles. */
@@ -153,6 +157,9 @@ fun SetupScreen(
                 onMoveMember = viewModel::moveMember,
                 onSwitchTeam = viewModel::switchTeam,
                 onAddToTeam = viewModel::addPlayerToTeam,
+                onSameProfile = viewModel::answerSameProfile,
+                onConfirmName = viewModel::confirmName,
+                onDismissName = viewModel::dismissNameQuestion,
                 onAddProfileToTeam = viewModel::addProfileToTeam,
                 onAcceptKnown = viewModel::acceptKnownTeam,
                 onDismissKnown = viewModel::dismissKnownTeam,
@@ -207,31 +214,7 @@ fun SetupContent(state: SetupUiState, actions: SetupActions) {
                 }
                 RulesSection(state, actions, onEditPlayful = { editingPlayful = true })
             }
-            // Le bouton de lancement reste visible en bas et devient évident dès deux joueurs.
-            Column(
-                modifier = Modifier.navigationBarsPadding().padding(MBDimens.ScreenPadding),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                if (!state.canStart) {
-                    Hint(
-                        if (state.playMode ==
-                            PlayMode.SOLO
-                        ) {
-                            R.string.setup_need_two
-                        } else {
-                            R.string.setup_need_two_teams
-                        },
-                    )
-                }
-                BigActionButton(
-                    text = stringResource(R.string.setup_start),
-                    onClick = actions.onStart,
-                    kind = BigActionKind.Primary,
-                    enabled = state.canStart,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
+            LaunchFooter(state, actions)
         }
         // Prise en main, étape 1 sur 4 : tant qu'il manque des joueurs.
         if (state.guide && !state.canStart) {
@@ -262,6 +245,7 @@ fun SetupContent(state: SetupUiState, actions: SetupActions) {
         }
     }
     avatarFor?.let { id -> state.player(id)?.let { AvatarSheet(it, actions, onDismiss = { avatarFor = null }) } }
+    state.nameQuestion?.let { NameQuestionDialog(it, actions) }
 }
 
 private const val GUIDE_ADD = "add_player"
@@ -917,7 +901,7 @@ private fun AvatarSheet(player: SetupPlayer, actions: SetupActions, onDismiss: (
 }
 
 @Composable
-private fun Hint(text: Int, modifier: Modifier = Modifier) {
+internal fun Hint(text: Int, modifier: Modifier = Modifier) {
     Text(
         stringResource(text),
         style = MaterialTheme.typography.bodyMedium,

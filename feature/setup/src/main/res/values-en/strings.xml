@@ -146,4 +146,15 @@
     <string name="setup_format_match_hint">The first to win 2 sets wins the match. Before the decider, the team that scored the most points starts; if tied, a Mölkkout settles it.</string>
     <string name="setup_format_match_imo_hint">The first to win 2 sets wins the match; the throwing order alternates every set (IMO rules).</string>
     <string name="setup_guide">Add at least two players: a nickname is enough. Then “Start the game”.</string>
+    <string name="setup_same_player_title">Is this the same %1$s?</string>
+    <string name="setup_same_player_text">%1$s is already one of your regular players. If it is the same person, their stats and record carry on.</string>
+    <string name="setup_same_player_yes">Yes, it\'s %1$s</string>
+    <string name="setup_same_player_no">No, someone else</string>
+    <string name="setup_name_in_game">There is already a player “%1$s” in this game</string>
+    <string name="setup_name_other_player">Another name for this new player than “%1$s”</string>
+    <string name="setup_name_hint">Two players cannot share a name: add an initial (“Lea B.”) or a number.</string>
+    <string name="setup_name_still_taken">This name is already taken.</string>
+    <string name="setup_name_add">Add</string>
+    <string name="setup_name_cancel">Cancel</string>
+    <string name="setup_duplicate_team">Two teams are called “%1$s”: rename one of them.</string>
 </resources>

@@ -49,6 +49,8 @@ import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.TeamId
+import com.yogistudio.molkkyboard.core.model.nameKey
+import com.yogistudio.molkkyboard.core.model.nextFreeName
 import com.yogistudio.molkkyboard.core.model.withoutUnsafeChars
 
 /**
@@ -69,7 +71,6 @@ internal fun PlayersSheet(
     var order by remember(original) { mutableStateOf(original) }
     var confirmOrder by remember { mutableStateOf(false) }
     var removing by remember { mutableStateOf<Pair<PlayerId, String>?>(null) }
-    var newName by rememberSaveable { mutableStateOf("") }
     val editable = !state.finished && !state.abandoned
     ModalBottomSheet(
         dragHandle = { MBDragHandle() },
@@ -127,46 +128,7 @@ internal fun PlayersSheet(
                 )
                 TextButton(onClick = { order = original }) { Text(stringResource(R.string.log_cancel)) }
             }
-            if (editable) {
-                SectionLabel(R.string.players_add)
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
-                ) {
-                    OutlinedTextField(
-                        value = newName,
-                        onValueChange = { newName = it.withoutUnsafeChars().take(MAX_NAME) },
-                        label = { Text(stringResource(R.string.players_add_name)) },
-                        singleLine = true,
-                        keyboardOptions =
-                            KeyboardOptions(
-                                capitalization = KeyboardCapitalization.Words,
-                                imeAction = ImeAction.Done,
-                            ),
-                        keyboardActions =
-                            KeyboardActions(onDone = {
-                                actions.onAddPlayer(newName)
-                                newName = ""
-                            }),
-                        modifier = Modifier.weight(1f),
-                    )
-                    TextButton(
-                        onClick = {
-                            actions.onAddPlayer(newName)
-                            newName = ""
-                        },
-                        enabled = newName.isNotBlank(),
-                        modifier = Modifier.heightIn(min = MBDimens.MinTouch),
-                    ) {
-                        Text(stringResource(R.string.players_add_button))
-                    }
-                }
-                Text(
-                    stringResource(R.string.players_add_hint),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            if (editable) LatePlayerField(state, actions.onAddPlayer)
         }
     }
     if (confirmOrder) {
@@ -312,3 +274,53 @@ internal fun <T> List<T>.moved(from: Int, to: Int): List<T> {
 private const val MAX_NAME = 20
 private const val OUT_ALPHA = 0.55f
 private const val BANNER_ALPHA = 0.3f
+
+/**
+ * Retardataire : un nom libre dans la partie (majuscules et accents ignorés) ; sinon le bouton reste désactivé et
+ * l'app propose « Léa 2 » ou une initiale.
+ */
+@Composable
+private fun LatePlayerField(state: GameUiState, onAdd: (String) -> Unit) {
+    var newName by rememberSaveable { mutableStateOf("") }
+    SectionLabel(R.string.players_add)
+    val names = state.teams.flatMap { it.members + it.name }
+    val clash = names.firstOrNull { newName.isNotBlank() && it.nameKey() == newName.nameKey() }
+    val canAdd = newName.isNotBlank() && clash == null
+    val add = {
+        if (canAdd) {
+            onAdd(newName)
+            newName = ""
+        }
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap),
+    ) {
+        OutlinedTextField(
+            value = newName,
+            onValueChange = { newName = it.withoutUnsafeChars().take(MAX_NAME) },
+            label = { Text(stringResource(R.string.players_add_name)) },
+            singleLine = true,
+            keyboardOptions =
+                KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Done,
+                ),
+            keyboardActions = KeyboardActions(onDone = { add() }),
+            isError = clash != null,
+            supportingText =
+                clash?.let { taken ->
+                    { Text(stringResource(R.string.players_add_taken, taken, newName.nextFreeName(names, MAX_NAME))) }
+                },
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = add, enabled = canAdd, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+            Text(stringResource(R.string.players_add_button))
+        }
+    }
+    Text(
+        stringResource(R.string.players_add_hint),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}

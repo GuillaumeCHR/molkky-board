@@ -20,6 +20,8 @@ import com.yogistudio.molkkyboard.core.model.PlayerId
 import com.yogistudio.molkkyboard.core.model.RulesMode
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.TeamOverride
+import com.yogistudio.molkkyboard.core.model.nameKey
+import com.yogistudio.molkkyboard.core.model.nextFreeName
 import com.yogistudio.molkkyboard.core.model.withoutUnsafeChars
 import com.yogistudio.molkkyboard.core.scoring.MatchConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -85,6 +87,109 @@ class SetupViewModel
         fun addPlayer(teamNames: List<String> = emptyList()) {
             val name = mutableState.value.draftName.trim()
             if (name.isEmpty()) return
+            mutableState.update { it.copy(draftName = "") }
+            requestNewPlayer(name, team = null, teamNames = teamNames)
+        }
+
+        /** Ajoute directement un nouveau joueur à une équipe (et crée son profil). */
+        fun addPlayerToTeam(team: TeamId, name: String) {
+            val trimmed = name.withoutUnsafeChars().trim().take(SetupUiState.MAX_NAME)
+            if (trimmed.isEmpty()) return
+            requestNewPlayer(trimmed, team = team, teamNames = emptyList())
+        }
+
+        /**
+         * Nouveau joueur nommé [name] : jamais deux fois le même nom dans la partie (on en propose un autre), et un nom
+         * déjà porté par un joueur habituel donne lieu à la question « C'est la même personne ? ».
+         */
+        private fun requestNewPlayer(name: String, team: TeamId?, teamNames: List<String>) {
+            val state = mutableState.value
+            val key = name.nameKey()
+            val inGame = state.players.firstOrNull { it.name.nameKey() == key }
+            val known = state.profiles.firstOrNull { it.name.nameKey() == key }
+            val question =
+                when {
+                    inGame != null -> {
+                        NameQuestion.Rename(inGame.name, suggestionFor(inGame.name), true, team, teamNames)
+                    }
+
+                    known != null -> {
+                        NameQuestion.SameProfile(known, team, teamNames)
+                    }
+
+                    else -> {
+                        null
+                    }
+                }
+            if (question != null) {
+                mutableState.update { it.copy(nameQuestion = question) }
+            } else {
+                createPlayer(name, team, teamNames)
+            }
+        }
+
+        /** Nom proposé : « Léa 2 », libre dans la partie et parmi les joueurs habituels. */
+        private fun suggestionFor(name: String): String {
+            val state = mutableState.value
+            return name.nextFreeName(
+                state.players.map { it.name } + state.knownProfiles.map { it.name },
+                SetupUiState.MAX_NAME,
+            )
+        }
+
+        /** Réponse à « C'est la même Léa ? » : oui, on reprend son profil ; non, il faut un autre nom. */
+        fun answerSameProfile(same: Boolean) {
+            val question = mutableState.value.nameQuestion as? NameQuestion.SameProfile ?: return
+            if (same) {
+                mutableState.update { it.copy(nameQuestion = null) }
+                val team = question.team
+                if (team !=
+                    null
+                ) {
+                    addProfileToTeam(team, question.profile)
+                } else {
+                    addProfile(question.profile, question.teamNames)
+                }
+            } else {
+                val name = question.profile.name
+                mutableState.update {
+                    it.copy(
+                        nameQuestion =
+                            NameQuestion.Rename(
+                                name,
+                                suggestionFor(name),
+                                false,
+                                question.team,
+                                question.teamNames,
+                            ),
+                    )
+                }
+            }
+        }
+
+        /** Nom choisi pour lever le doute : accepté s'il n'est porté ni dans la partie ni par un joueur habituel. */
+        fun confirmName(name: String) {
+            val question = mutableState.value.nameQuestion as? NameQuestion.Rename ?: return
+            val clean = name.withoutUnsafeChars().trim().take(SetupUiState.MAX_NAME)
+            val state = mutableState.value
+            val key = clean.nameKey()
+            val taken =
+                (
+                    state.players.map {
+                        it.name
+                    } + state.knownProfiles.map { it.name }
+                ).any { it.nameKey() == key }
+            if (clean.isEmpty() || taken) {
+                mutableState.update { it.copy(nameQuestion = question.copy(stillTaken = true)) }
+                return
+            }
+            mutableState.update { it.copy(nameQuestion = null) }
+            createPlayer(clean, question.team, question.teamNames)
+        }
+
+        fun dismissNameQuestion() = mutableState.update { it.copy(nameQuestion = null) }
+
+        private fun createPlayer(name: String, team: TeamId?, teamNames: List<String>) {
             val state = mutableState.value
             val profile =
                 PlayerProfile(
@@ -100,31 +205,7 @@ class SetupViewModel
                         ),
                     avatar = firstFree(PLAYER_AVATARS, state.players.map { it.avatar }, state.players.size),
                 )
-            mutableState.update { it.copy(draftName = "") }
-            addProfile(profile, teamNames)
-            viewModelScope.launch { profiles.saveProfile(profile) }
-        }
-
-        /** Ajoute directement un nouveau joueur à une équipe (et crée son profil). */
-        fun addPlayerToTeam(team: TeamId, name: String) {
-            val trimmed = name.withoutUnsafeChars().trim().take(SetupUiState.MAX_NAME)
-            if (trimmed.isEmpty()) return
-            val state = mutableState.value
-            val profile =
-                PlayerProfile(
-                    id = ids.newId(),
-                    name = trimmed,
-                    colorIndex =
-                        firstFree(
-                            (0 until SetupUiState.PALETTE_SIZE).toList(),
-                            state.players.map {
-                                it.colorIndex
-                            },
-                            state.players.size,
-                        ),
-                    avatar = firstFree(PLAYER_AVATARS, state.players.map { it.avatar }, state.players.size),
-                )
-            addProfileToTeam(team, profile)
+            if (team != null) addProfileToTeam(team, profile) else addProfile(profile, teamNames)
             viewModelScope.launch { profiles.saveProfile(profile) }
         }
 

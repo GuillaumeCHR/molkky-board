@@ -9,6 +9,7 @@ import com.yogistudio.molkkyboard.core.model.RulesMode
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.TeamLineup
 import com.yogistudio.molkkyboard.core.model.TeamOverride
+import com.yogistudio.molkkyboard.core.model.nameKey
 
 /** Partie en solo (chacun pour soi) ou en équipes nommées. */
 enum class PlayMode { SOLO, TEAMS }
@@ -44,6 +45,35 @@ data class SetupUnit(
     val players: List<PlayerId>,
 )
 
+/**
+ * Nom à clarifier avant d'ajouter un joueur : deux joueurs ne portent jamais le même nom dans une partie, et un nom
+ * déjà connu peut désigner un joueur habituel (ses statistiques continuent alors de s'accumuler).
+ */
+sealed interface NameQuestion {
+    /** Équipe où ajouter le joueur (`null` : l'ajout ordinaire) et équipes proposées en mode équipes. */
+    val team: TeamId?
+    val teamNames: List<String>
+
+    /** « C'est la même Léa ? » : un joueur habituel porte déjà ce nom. */
+    data class SameProfile(
+        val profile: PlayerProfile,
+        override val team: TeamId?,
+        override val teamNames: List<String>,
+    ) : NameQuestion
+
+    /** Un autre nom est nécessaire : [taken] est le nom en conflit, [suggestion] le nom proposé (« Léa 2 »). */
+    data class Rename(
+        val taken: String,
+        val suggestion: String,
+        /** Le conflit vient de la partie (sinon, d'un joueur habituel qu'on a dit différent). */
+        val inGame: Boolean,
+        override val team: TeamId?,
+        override val teamNames: List<String>,
+        /** Le nom proposé est lui aussi déjà pris. */
+        val stillTaken: Boolean = false,
+    ) : NameQuestion
+}
+
 data class SetupUiState(
     val playMode: PlayMode = PlayMode.SOLO,
     /** Joueurs de la partie ; en solo, c'est l'ordre de passage. */
@@ -68,6 +98,8 @@ data class SetupUiState(
     /** Première partie guidée en cours (la bulle « ajoutez les joueurs » s'affiche tant qu'il en manque). */
     val guide: Boolean = false,
     val creating: Boolean = false,
+    /** Nom à clarifier avant d'ajouter un joueur (même nom dans la partie, ou joueur habituel homonyme). */
+    val nameQuestion: NameQuestion? = null,
 ) {
     fun player(id: PlayerId): SetupPlayer? = players.firstOrNull { it.id == id }
 
@@ -117,7 +149,24 @@ data class SetupUiState(
                 }
             }
 
-    val canStart: Boolean get() = units.size >= MIN_PLAYERS && !creating && units.all { it.name.isNotBlank() }
+    /** Deux équipes portent le même nom (majuscules et accents ignorés) : on ne lance pas, pour éviter la confusion. */
+    val duplicateTeamName: String?
+        get() =
+            if (playMode != PlayMode.TEAMS) {
+                null
+            } else {
+                units
+                    .groupBy { it.name.nameKey() }
+                    .values
+                    .firstOrNull { it.size > 1 }
+                    ?.first()
+                    ?.name
+            }
+
+    val canStart: Boolean
+        get() =
+            units.size >= MIN_PLAYERS && !creating && units.all { it.name.isNotBlank() } &&
+                duplicateTeamName == null
     val canAdd: Boolean get() = draftName.isNotBlank()
 
     companion object {

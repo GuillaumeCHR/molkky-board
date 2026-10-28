@@ -146,4 +146,15 @@
     <string name="setup_format_match_hint">Le premier à gagner 2 manches remporte le match. Avant la belle, l\'équipe qui a marqué le plus de points commence ; à égalité, un Mölkkout les départage.</string>
     <string name="setup_format_match_imo_hint">Le premier à gagner 2 manches remporte le match ; l\'ordre de passage alterne à chaque manche (règlement IMO).</string>
     <string name="setup_guide">Ajoutez au moins deux joueurs : un pseudo suffit. Puis « Lancer la partie ».</string>
+    <string name="setup_same_player_title">C\'est la même %1$s ?</string>
+    <string name="setup_same_player_text">%1$s fait déjà partie de vos joueurs habituels. Si c\'est la même personne, ses statistiques et son palmarès continuent.</string>
+    <string name="setup_same_player_yes">Oui, c\'est %1$s</string>
+    <string name="setup_same_player_no">Non, quelqu\'un d\'autre</string>
+    <string name="setup_name_in_game">Il y a déjà un joueur « %1$s » dans la partie</string>
+    <string name="setup_name_other_player">Un autre nom pour ce nouveau joueur que « %1$s »</string>
+    <string name="setup_name_hint">Deux joueurs ne peuvent pas porter le même nom : ajoutez une initiale (« Léa B. ») ou un numéro.</string>
+    <string name="setup_name_still_taken">Ce nom est déjà pris.</string>
+    <string name="setup_name_add">Ajouter</string>
+    <string name="setup_name_cancel">Annuler</string>
+    <string name="setup_duplicate_team">Deux équipes s\'appellent « %1$s » : renommez l\'une d\'elles.</string>
 </resources>

@@ -241,4 +241,5 @@
     <string name="game_last_chance_eliminate">1 miss = out</string>
     <string name="game_last_chance_reset">1 miss = back to %1$d</string>
     <string name="rules_go_to">Go to “%1$s”</string>
+    <string name="players_add_taken">“%1$s” is already in the game: try “%2$s” or add an initial.</string>
 </resources>

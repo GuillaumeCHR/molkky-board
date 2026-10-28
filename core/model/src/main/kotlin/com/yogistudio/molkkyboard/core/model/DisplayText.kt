@@ -32,3 +32,27 @@ fun String.withoutUnsafeChars(keepNewlines: Boolean = false): String {
     if (codePoints().allMatch(keep)) return this
     return buildString { this@withoutUnsafeChars.codePoints().filter(keep).forEach(::appendCodePoint) }
 }
+
+/**
+ * Clé de comparaison de deux noms (joueurs, équipes) : sans majuscules, sans accents, espaces réduits. « Léa »,
+ * « lea » et « Léa » désignent la même personne pour l'app.
+ */
+fun String.nameKey(): String =
+    java.text.Normalizer
+        .normalize(trim(), java.text.Normalizer.Form.NFD)
+        .replace(Regex("\\p{Mn}+"), "")
+        .lowercase()
+        .replace(Regex("\\s+"), " ")
+
+/**
+ * Premier nom libre à partir de [this] : « Léa 2 », « Léa 3 »… (longueur bornée à [maxLength]), différent de tous
+ * les noms [taken] au sens de [nameKey].
+ */
+fun String.nextFreeName(taken: Collection<String>, maxLength: Int): String {
+    val keys = taken.map { it.nameKey() }.toSet()
+    val base = trim()
+    return (2..taken.size + 2)
+        .asSequence()
+        .map { n -> "${base.take(maxLength - " $n".length).trimEnd()} $n" }
+        .first { it.nameKey() !in keys }
+}
