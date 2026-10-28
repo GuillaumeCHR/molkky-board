@@ -176,7 +176,7 @@
     <string name="credits_post_credits">Post-credits scene: ✨ … somewhere, far in the back of the screen, a pin is still twinkling.</string>
     <string name="about_license_title">Licence and contact</string>
     <string name="about_license">Molkky Board is free software, licensed under the GNU GPL v3 (or any later version): you may study, modify and redistribute it under its terms. It comes with no warranty.</string>
-    <string name="about_license_trademarks">The Molkky Board and Yogi Studio names, their logos and the app icon are not covered by the licence.</string>
+    <string name="about_license_trademarks">The Molkky Board and Yogi Studio names, their logos and the app icon are not covered by the licence. Mölkky® is a trademark of Tactic Games Oy: Molkky Board is an independent app, neither affiliated with nor endorsed by the trademark owner.</string>
     <string name="about_source">Source code: %1$s</string>
     <string name="about_source_button">View the source code</string>
     <string name="about_contact_button">Write to Yogi Studio</string>

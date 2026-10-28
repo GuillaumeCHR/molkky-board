@@ -9,7 +9,7 @@ publication**.
 |---|---|---|
 | Phase 4 (comptes) reportée en V2 | ✅ | validé le 2026-10-28 |
 | Modes de jeu après la publication | ✅ | validé le 2026-10-28 |
-| Marque « Mölkky » vérifiée, nom validé ou nom de repli | 🟡 👤 | MÖLKKY est une marque déposée (classe 28) de Tactic Games Oy, défendue activement ; à trancher (voir plus bas) |
+| Marque « Mölkky » vérifiée, nom validé ou nom de repli | ✅ | nom conservé (usage toléré par les apps tierces) ; non-affiliation dans À propos, README, `TRADEMARKS.md` ; à reprendre dans la fiche ; nom de repli à garder sous le coude |
 | Public cible : 13 ans et plus, hors programme « Familles » | ⬜ 👤 | à confirmer au questionnaire |
 | Lien de soutien (« Paye-moi un café ») | ⬜ | seulement sur le site, jamais dans l'app ; règle Play et statut DSA à vérifier |
 
@@ -18,13 +18,13 @@ publication**.
 |---|---|---|
 | Compte développeur personnel « Yogi Studio » (25 $, identité vérifiée) | ⬜ 👤 | |
 | Adresse de contact publique dédiée | ✅ | yogistudiofr@gmail.com |
-| Clé d'envoi créée et sauvegardée | ⬜ 👤 | `tools/release/create-upload-key.sh`, puis `docs/RELEASE.md` § 2 |
+| Clé d'envoi créée et sauvegardée | 🟡 👤 | créée le 2026-10-28 (empreinte SHA-256 `71:A7:37:72:…:54:A8:DF:B0`) ; sauvegarde à faire, `docs/RELEASE.md` § 2 |
 | Play App Signing accepté | ⬜ 👤 | au premier envoi |
 
 ## Application
 | Point | Statut | Note |
 |---|---|---|
-| AAB signé (`bundleRelease`) | ⬜ | dépend de la clé d'envoi ; release R8 déjà construite sans erreur |
+| AAB signé (`bundleRelease`) | ✅ | 0.8.0 (build 8) signé avec la clé d'envoi le 2026-10-28 ; APK release signé (v2), 0 traceur |
 | Release minifiée testée sur téléphone (dont partie à côté) | ⬜ 👤 | `docs/RELEASE.md` § 5 |
 | targetSdk au niveau exigé (API 36 minimum) | ✅ | targetSdk 37 |
 | Permission « réseau local » (Android 17) gérée, hôte et invité | ✅ | testé sur Pixel 7a |

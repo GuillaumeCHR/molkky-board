@@ -178,7 +178,7 @@
     <string name="credits_post_credits">Scène post-générique : ✨ … quelque part, loin au fond de l\'écran, une quille scintille encore.</string>
     <string name="about_license_title">Licence et contact</string>
     <string name="about_license">Molkky Board est un logiciel libre, sous licence GNU GPL v3 (ou toute version ultérieure) : vous pouvez l\'étudier, le modifier et le redistribuer selon ses termes. Il est fourni sans aucune garantie.</string>
-    <string name="about_license_trademarks">Les noms Molkky Board et Yogi Studio, leurs logos et l\'icône de l\'application ne sont pas couverts par la licence.</string>
+    <string name="about_license_trademarks">Les noms Molkky Board et Yogi Studio, leurs logos et l\'icône de l\'application ne sont pas couverts par la licence. Mölkky® est une marque de Tactic Games Oy : Molkky Board est une application indépendante, ni affiliée ni approuvée par le détenteur de la marque.</string>
     <string name="about_source">Code source : %1$s</string>
     <string name="about_source_button">Voir le code source</string>
     <string name="about_contact_button">Écrire à Yogi Studio</string>
