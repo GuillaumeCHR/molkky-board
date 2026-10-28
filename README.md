@@ -4,8 +4,17 @@
 pour compter les parties : on touche les quilles tombées, l'app applique les règles, calcule les scores et garde
 l'historique.
 
-> Version actuelle : **0.8.0** (build 8, version de test) — [télécharger l'APK](https://github.com/GuillaumeCHR/molkky-board/releases/tag/v0.8.0).
+> Version actuelle : **0.8.1** (build 9, version de test). APK de test : [0.8.0](https://github.com/GuillaumeCHR/molkky-board/releases/tag/v0.8.0).
 > Identifiant : `com.yogistudio.molkkyboard`.
+
+## Aperçu
+
+| | | |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/jeu.png" width="240" alt="Écran de jeu : score d'Alice (38), grille des quilles, aperçu +2 → 40, boutons Raté et Valider"> | <img src="docs/screenshots/tableau-des-scores.png" width="240" alt="Tableau des scores classé, tour 3, joueur éliminé grisé en bas"> | <img src="docs/screenshots/fin-de-partie.png" width="240" alt="Fin de partie : victoire d'Alice en 7 lancers, classement et série de 3 manches"> |
+| Saisie du lancer | Tableau des scores | Fin de partie |
+| <img src="docs/screenshots/hall-of-fame.png" width="240" alt="Hall of Fame : victoires et victoire la plus rapide"> | <img src="docs/screenshots/vignette-partage.png" width="240" alt="Vignette de partage « Victoire ! » avec podium des équipes"> | <img src="docs/screenshots/jeu-sombre.png" width="240" alt="Écran de jeu en thème sombre"> |
+| Hall of Fame | Vignette à partager | Thème sombre |
 
 ## Ce qu'elle fait
 
@@ -33,6 +42,8 @@ l'historique.
 - Aucune publicité, aucun traceur publicitaire, aucun outil de mesure d'audience, aucune donnée revendue.
 - Tout reste sur votre téléphone, sauf ce que vous choisissez vous-même de partager.
 - Sauvegarde, export (JSON) et suppression de vos données à tout moment, dans Réglages › Données.
+- **0 traceur** selon les signatures d'Exodus Privacy, contrôlé dans la CI : voir le
+  [rapport de traceurs](docs/privacy/RAPPORT_TRACEURS.md) (permissions comprises).
 - Les permissions de l'APK sont une liste blanche vérifiée à chaque build (`check<Variante>Permissions`) : jamais de localisation, de contacts ni d'identifiant publicitaire. La permission `INTERNET` ne sert qu'aux sockets de la partie à côté, sur le réseau local.
 
 **Partie à côté** : plusieurs téléphones jouent ensemble sur le même terrain, directement entre eux (point d'accès
