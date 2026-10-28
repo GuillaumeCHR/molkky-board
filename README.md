@@ -4,7 +4,7 @@
 pour compter les parties : on touche les quilles tombées, l'app applique les règles, calcule les scores et garde
 l'historique.
 
-> Version actuelle : **0.8.1** (build 9, version de test). APK de test : [0.8.0](https://github.com/GuillaumeCHR/molkky-board/releases/tag/v0.8.0).
+> Version actuelle : **0.8.1** (build 9, version de test). [Télécharger l'APK de test](https://github.com/GuillaumeCHR/molkky-board/releases/tag/v0.8.1).
 > Identifiant : `com.yogistudio.molkkyboard`.
 
 ## Aperçu
@@ -71,7 +71,7 @@ adb shell am start -n com.yogistudio.molkkyboard.debug/com.yogistudio.molkkyboar
 ```
 
 Les APK de test sont aussi publiés dans les [releases](https://github.com/GuillaumeCHR/molkky-board/releases)
-(dernière : [0.8.0](https://github.com/GuillaumeCHR/molkky-board/releases/tag/v0.8.0)). La version debug s'installe
+(dernière : [0.8.1](https://github.com/GuillaumeCHR/molkky-board/releases/tag/v0.8.1)). La version debug s'installe
 à côté d'une éventuelle version du Play Store (identifiant `com.yogistudio.molkkyboard.debug`). Pour la partie à côté,
 tous les téléphones doivent avoir la même variante.
 
