@@ -107,6 +107,7 @@
     <!-- À propos -->
     <string name="about_version">Version %1$s</string>
     <string name="about_publisher">Une application Yogi Studio</string>
+    <string name="about_contact">Contact : %1$s</string>
     <string name="about_privacy_title">Vie privée</string>
     <string name="about_privacy_headline">Aucune donnée collectée. Molkky Board n\'a même pas accès à Internet.</string>
     <string name="about_privacy_no_ads">Molkky Board ne contient aucune publicité, aucun traceur publicitaire, aucun outil de mesure d\'audience, et ne revend aucune donnée.</string>

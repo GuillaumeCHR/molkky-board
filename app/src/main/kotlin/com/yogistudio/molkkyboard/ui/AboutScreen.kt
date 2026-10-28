@@ -32,6 +32,7 @@ import com.yogistudio.molkkyboard.core.designsystem.brand.YogiStudioLogo
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
 import com.yogistudio.molkkyboard.core.designsystem.component.MolkkyBoardLogotype
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
+import com.yogistudio.molkkyboard.crash.SUPPORT_EMAIL
 import com.yogistudio.molkkyboard.crash.composeEmail
 import com.yogistudio.molkkyboard.crash.deviceSummary
 
@@ -62,6 +63,7 @@ internal fun AboutScreen(onBack: () -> Unit, onLicenses: () -> Unit) {
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(stringResource(R.string.about_publisher), style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.about_contact, SUPPORT_EMAIL), style = MaterialTheme.typography.bodyMedium)
             YogiStudioLogo(markSize = 56.dp)
             AboutCard(R.string.about_privacy_title) {
                 // L'essentiel en tête, en gras : rien n'est collecté, et l'app ne peut de toute façon rien envoyer.

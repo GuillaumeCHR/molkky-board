@@ -125,3 +125,8 @@ redistribuée, modifiée ou non, doit rester sous GPL v3 et publier son code sou
 
 Les noms « Molkky Board » et « Yogi Studio », leurs logos et l'icône de l'application ne sont pas couverts par la
 licence : voir [`TRADEMARKS.md`](TRADEMARKS.md).
+
+## Contact
+
+Yogi Studio : **yogistudiofr@gmail.com** (retours, questions, marques). Vulnérabilités : voir
+[`SECURITY.md`](SECURITY.md).

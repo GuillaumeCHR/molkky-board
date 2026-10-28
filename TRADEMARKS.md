@@ -27,4 +27,4 @@ identifiant d'application** que `com.yogistudio.molkkyboard`.
 Mölkky® est une marque de Tactic Games Oy. Molkky Board est une application indépendante, ni affiliée ni approuvée
 par le détenteur de la marque.
 
-Pour toute question : ouvrez une *issue* sur le dépôt.
+Pour toute question : yogistudiofr@gmail.com, ou une *issue* sur le dépôt.

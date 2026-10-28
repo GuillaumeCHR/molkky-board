@@ -31,8 +31,5 @@ fun deviceSummary(): String =
     "Molkky Board ${BuildConfig.VERSION_NAME} · Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT}) · " +
         "${Build.MANUFACTURER} ${Build.MODEL}"
 
-/**
- * Adresse de contact publique dédiée (à créer, voir « Publication sur le Google Play Store ») : tant qu'elle est vide,
- * l'utilisateur saisit le destinataire lui-même.
- */
-const val SUPPORT_EMAIL = ""
+/** Adresse de contact publique dédiée de Yogi Studio (retours, plantages, sécurité). */
+const val SUPPORT_EMAIL = "yogistudiofr@gmail.com"
