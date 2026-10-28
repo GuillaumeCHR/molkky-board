@@ -64,3 +64,32 @@ dependencies {
 
     testImplementation(libs.junit4)
 }
+
+/**
+ * Engagement « aucune requête réseau » sur un seul téléphone : la permission INTERNET ne doit pas figurer dans le
+ * manifeste fusionné, y compris par une bibliothèque. Quand la partie à côté l'ajoutera (jalon S2), ce contrôle
+ * cédera la place au test « aucune adresse hors du réseau local ».
+ */
+abstract class CheckNoInternetPermission : DefaultTask() {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val manifest: RegularFileProperty
+
+    @TaskAction
+    fun check() {
+        val forbidden = "android.permission.INTERNET"
+        if (forbidden in manifest.get().asFile.readText()) {
+            throw GradleException("$forbidden est déclarée dans le manifeste fusionné : l'engagement « aucune requête réseau » serait faux.")
+        }
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        val check =
+            tasks.register<CheckNoInternetPermission>("check${variant.name.replaceFirstChar { it.uppercase() }}NoInternet") {
+                manifest.set(variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.MERGED_MANIFEST))
+            }
+        tasks.named("check") { dependsOn(check) }
+    }
+}
