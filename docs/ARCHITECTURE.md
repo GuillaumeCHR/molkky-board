@@ -2,6 +2,8 @@
 
 > Validée le 2026-10-25 (Phase 2). Règles : [`RULES.md`](RULES.md) · moteur : [`SCORING_SPEC.md`](SCORING_SPEC.md).
 > Décisions résumées dans `CLAUDE.md` § Décisions.
+> **Révision du 2026-10-28 (spec « Partie à côté », phase 3 bis) : en attente de validation.** Nouveautés : § 6 bis
+> (`core:sync`), § 7 (QR code), § 9 (jalons), points ouverts. Modèle de menaces : [`security/THREAT_MODEL.md`](security/THREAT_MODEL.md).
 
 ## Vue d'ensemble
 
@@ -12,13 +14,18 @@ flowchart TB
     home & setup & game & summary & history & stats & halloffame & players & settings & auth & join & groups
   end
   features --> data[core:data]
+  data --> sync[core:sync<br/>Kotlin pur : protocole,<br/>validation, hôte, invité]
+  sync --> scoring
+  data --> lan[core:sync-lan<br/>JVM : WebSocket + TLS<br/>épinglage]
+  data --> droid[core:sync-android<br/>point d'accès, Keystore,<br/>service de premier plan]
+  lan -. WSS sur réseau local .-> peers[(Autres téléphones<br/>de la partie)]
   features --> ui[core:ui] --> ds[core:designsystem]
   data --> stats[core:stats<br/>Kotlin pur] --> scoring
   data --> scoring[core:scoring<br/>Kotlin pur] --> model[core:model<br/>Kotlin pur]
   data --> db[(core:database<br/>Room)]
   data --> store[core:datastore]
-  data --> net[core:network<br/>supabase-kt]
-  net -. HTTPS / WSS .-> sb[(Supabase Paris<br/>Postgres + RLS + Realtime)]
+  data --> net[core:network<br/>Phase 4, à trancher]
+  net -. HTTPS / WSS .-> sb[(Serveur distant<br/>Phase 4)]
 ```
 
 ## Flux d'un lancer en partie partagée
@@ -74,12 +81,20 @@ core:designsystem       thème Nordic Bold, tokens, typo, PinView, QuickPad, Sco
 core:ui                 composables métier partagés (grille de quilles, bandeau joueurs)
 core:database           Room (entités, DAO, migrations exportées)
 core:datastore          DataStore Preferences (réglages, préréglage de règles, « Plein soleil »)
-core:network            [Phase 4] supabase-kt + Ktor OkHttp, DTO
+core:sync               [3 bis] Kotlin pur — protocole versionné, fonction de validation partagée, logique d'hôte
+                        (numérotation, idempotence, rattrapage) et d'invité, abstraction `Transport`
+core:sync-lan           [3 bis] JVM — transport réseau local : serveur et client WebSocket sur TLS, épinglage
+                        de l'empreinte ; testable sur la boucle locale en JVM
+core:sync-android       [3 bis] Android — point d'accès local, `WifiNetworkSpecifier`, liaison au `Network`,
+                        certificat de partie (Keystore), service de premier plan `connectedDevice`, permissions
+core:network            [Phase 4] client du serveur distant (même protocole `core:sync`, autre transport)
 core:data               repositories (source de vérité = Room) + SyncEngine [Phase 4]
 core:share              [J6] rendu des vignettes (Compose → bitmap) et encodage des mini-vidéos
 core:testing            fakes, règles de test, données de test
 feature:intro | home | setup | game | summary | history | stats | halloffame | players | settings | share | rules
-feature:auth | join | groups   [Phase 4]
+feature:nearby          [3 bis] « Inviter » (QR, demandes, téléphones connectés) et « Rejoindre » (scan
+                        CameraX + zxing-cpp)
+feature:auth | groups   [Phase 4]
 ```
 Règles de dépendance : `feature:*` → `core:data`, `core:ui`, `core:designsystem` uniquement ; les
 features ne dépendent jamais les unes des autres ; `core:scoring` et `core:stats` ne connaissent pas Android.
@@ -124,6 +139,10 @@ features ne dépendent jamais les unes des autres ; `core:scoring` et `core:stat
   compteur de lancements, prise en main vue.
 - Le mode « un seul téléphone » fonctionne sans compte ni réseau : les modules réseau sont injectés
   mais inactifs tant qu'on ne partage pas la partie.
+- **Changement imposé par la partie à côté** : l'APK devra déclarer `INTERNET` (sockets, même locales). La
+  garantie « aucune requête réseau » ne repose donc plus sur l'absence de la permission mais sur un test
+  (voir § 6 bis, « Ce qui est testable ») ; la phrase d'À propos « n'a même pas accès à Internet » devient fausse
+  (point ouvert « Vie privée »).
 
 ## 5. Backend : recommandation **Supabase (région UE)**
 
@@ -206,6 +225,122 @@ la clé `anon` de l'app, les migrations et les données. **Décision à prendre 
 - **Retour en ligne** : `select … where seq > lastSeq`, puis vidage de la boîte d'envoi. Room reste
   l'unique source de l'UI : le réseau ne fait qu'alimenter Room.
 
+## 6 bis. Partie à côté : `core:sync` (phase 3 bis, proposition du 2026-10-28)
+
+Le téléphone de l'organisateur devient l'**autorité** : il valide, numérote, enregistre et diffuse chaque
+événement, exactement le rôle prévu pour le serveur en phase 4. Les autres téléphones ne font que proposer.
+
+### Flux proposition → validation → numérotation → diffusion
+
+```mermaid
+sequenceDiagram
+  participant G as Invité (UI + Room)
+  participant T as Transport (WSS local)
+  participant H as Hôte : Authority (core:sync)
+  participant R as Room de l'hôte
+  participant O as Autres invités
+  G->>T: EVENT_PROPOSAL(eventId, baseSeq, contenu)
+  T->>H: (session authentifiée : appareil, rôle, joueur associé)
+  H->>H: déjà vu ? (eventId) → renvoyer le résultat mémorisé
+  H->>H: validate(journal, proposition, droits) — fonction pure
+  alt accepté
+    H->>R: écrire avec seq = tête + 1 (transaction)
+    H-->>G: EVENT(seq, eventId, appareil auteur, contenu, horodatage)
+    H-->>O: EVENT(...)
+    G->>G: Room ← EVENT (dans l'ordre des seq) → replay() → UI, animations
+  else refusé
+    H-->>G: EVENT_REJECTED(eventId, NOT_YOUR_TURN | FORBIDDEN | INVALID | STALE)
+  end
+```
+
+- **Une seule porte d'entrée** : les saisies de l'organisateur passent par la même `Authority`, via un transport
+  en mémoire. L'hôte n'a donc pas de chemin privilégié qui échapperait à la validation.
+- **Pas d'écriture optimiste chez l'invité** : il n'écrit dans Room que les `EVENT` reçus, dans l'ordre des numéros
+  (sur un réseau local, l'aller-retour se compte en millisecondes). Pendant l'attente, le bouton « Valider »
+  affiche un état d'envoi ; en cas de refus, un message (« Ce n'est plus le tour de Léa »). Ce choix supprime la
+  boîte d'envoi et le rejeu après conflit prévus au § 6 pour le serveur ; il sera réexaminé pour le jeu à
+  distance, où la latence est plus forte.
+- **Numéro d'ordre** : `seq` par manche, attribué par l'hôte. Il est stocké dans la colonne `serverSeq` existante
+  de `game_event` (renommée `authoritySeq` à la migration) ; l'invité ordonne son journal par ce numéro.
+- **`baseSeq` et `STALE`** : la proposition indique le dernier numéro que l'invité connaissait. La validation se
+  fait toujours sur le journal **courant** de l'hôte. Un lancer reste acceptable s'il est encore valide (c'est
+  bien le tour de ce joueur) ; une correction ou une suppression visant un état dépassé (`baseSeq` en retard et
+  cible modifiée entre-temps) est refusée en `STALE`.
+- **Idempotence** : l'hôte garde, pour la partie, la table `eventId → seq | code de refus`. Une proposition
+  renvoyée après une coupure reçoit la même réponse, sans être appliquée deux fois. L'`EventId` (UUID) existe
+  déjà dans le moteur.
+- **Rattrapage** : `RESUME(jeton de session, dernier seq reçu)` → l'hôte renvoie les `EVENT` manquants (ou le
+  journal complet si l'invité est trop en retard), sans nouvelle validation humaine. Un trou dans les numéros
+  côté invité déclenche la même demande.
+- **Corrections** : `Correct`, `Delete`, `Undo` et la gestion des joueurs sont des événements comme les autres.
+  Chaque téléphone rejoue le journal et compare l'état avant et après : « Lancer de Léa corrigé », écran de fin
+  qui se referme si le vainqueur change. Les **animations sont déduites du changement d'état** et non plus de
+  l'action locale (voir adaptations).
+- **Actions de match** : manche suivante, lancers et annulation du Mölkkout, revanche et abandon deviennent des
+  contenus de proposition (aujourd'hui ce sont des écritures directes dans Room, hors journal).
+- **Droits** (dans `validate`) : un invité saisit pour le joueur associé à son téléphone et peut corriger ou
+  annuler **son dernier lancer** ; l'organisateur peut tout corriger, gérer les joueurs, exclure un téléphone.
+  Bornes : 64 Ko par message, 12 téléphones, textes bornés et filtrés (`withoutUnsafeChars`), débit limité par
+  téléphone.
+- **Format** : JSON (kotlinx-serialization, déjà utilisé pour le journal), champ `v` de version, messages en
+  `sealed interface` sérialisée. CBOR n'apporterait qu'un gain de taille négligeable ici, et le module CBOR de
+  kotlinx-serialization garde des API expérimentales : **proposition JSON**, à confirmer.
+
+### Où vit quoi
+
+| Élément | Module | Testable en JVM pur |
+|---|---|---|
+| Messages, versions, (dé)sérialisation | `core:sync` | oui |
+| `validate(journal, proposition, appareil)` : droits, tour, cohérence, `STALE` (réutilise `checkInput` et `replay`) | `core:sync` | oui |
+| `HostSession` (numérotation, idempotence, rattrapage, appareils, jetons) et `GuestSession` (ordre, trous, reconnexion) | `core:sync` | oui |
+| Serveur et client WebSocket, TLS, gestionnaire de confiance qui épingle l'empreinte | `core:sync-lan` | oui, hôte + 2 invités sur `127.0.0.1` avec un vrai TLS |
+| Point d'accès local, `WifiNetworkSpecifier`, liaison des sockets au `Network`, mode « même Wi-Fi » | `core:sync-android` | non : deux téléphones réels |
+| Certificat de partie (Keystore), stockage chiffré des jetons de session | `core:sync-android` | non (Robolectric partiel) |
+| Service de premier plan `connectedDevice` (= notification de partie en cours de l'hôte) | `core:sync-android` | non |
+| Écrans « Inviter » et « Rejoindre », scan | `feature:nearby` | Robolectric + Roborazzi |
+
+### Choix techniques vérifiés le 2026-10-28, et ceux qui restent ouverts
+
+- **Le serveur Ktor CIO ne gère pas TLS** : son code lève `UnsupportedOperationException("CIO Engine does not
+  currently support HTTPS…")` dès qu'un connecteur HTTPS est configuré. La spec (« serveur Ktor CIO en WebSocket sur
+  TLS ») n'est donc **pas réalisable telle quelle**. Options à départager au prototype :
+  1. **Ktor, moteur Netty**, qui gère `sslConnector` : même code serveur qu'en phase 4, mais Ktor ne liste Netty
+     que pour la JVM (Android non documenté) et l'APK grossit ; à mesurer ;
+  2. **`SSLServerSocket` de la plateforme (Conscrypt) + trames WebSocket de Ktor** (`ktor-websockets`, sans moteur
+     HTTP) : la poignée de main HTTP « Upgrade » s'écrit à la main (≈ 100 lignes à tester sévèrement), TLS reste
+     standard ;
+  3. en secours, **Java-WebSocket** (MIT) sur un `SSLContext` de la plateforme ; dernière version 1.6.0, en
+     décembre 2024 : maintenance faible.
+- **Client** : préférer **Ktor client avec le moteur OkHttp** (Apache 2.0) au moteur CIO. OkHttp utilise le TLS de la
+  plateforme (Conscrypt, TLS 1.3 à partir d'Android 10) et accepte un `X509TrustManager` d'épinglage ; le moteur CIO
+  s'appuie sur l'implémentation TLS propre à Ktor (`ktor-network-tls`), dont la prise en charge de TLS 1.3 reste
+  à vérifier, et qui ressemble trop à de la « crypto maison ».
+- **TLS 1.3 sous Android 8 et 9** : le Conscrypt intégré ne fait que TLS 1.2 sur ces versions. Il faut soit
+  embarquer `conscrypt-android` 2.5.3 (dernière version, août 2024, bibliothèques natives : quelques Mo par
+  architecture), soit accepter TLS 1.2 (ECDHE + AEAD) avec ces invités. **À trancher.**
+- **Certificat** : l'Android Keystore génère lui-même un certificat auto-signé pour une paire de clés (sujet, numéro
+  de série et validité réglables) et la clé n'est pas exportable. **Proposition : Keystore**, sans dépendance, avec
+  Bouncy Castle (`bcpkix-jdk18on` 1.86) en `testImplementation` seulement, pour les tests JVM. À valider au prototype
+  (un `SSLContext` serveur adossé à une clé du Keystore doit fonctionner sous Android 8 à 17).
+- **Versions** : Ktor **3.6.0** (16/09/2026) ; compatibilité avec minSdk 26 et Kotlin 2.4 à vérifier au prototype
+  (désucrage éventuel).
+- **Accès au réseau local** : avec **targetSdk 37 (déjà le nôtre)**, Android 17 bloque par défaut tout le trafic local
+  (connexions sortantes **et entrantes**, sur toutes les API réseau) sans la permission d'exécution
+  `ACCESS_LOCAL_NETWORK` (groupe « Appareils à proximité »). Sous Android 16, le blocage n'est actif que sur opt-in
+  (`adb shell am compat enable RESTRICT_LOCAL_NETWORK`). La documentation ne dit rien d'une exception pour un réseau
+  créé par l'app (point d'accès local, `WifiNetworkSpecifier`) : **à tester sur un appareil Android 17**. La
+  permission n'est demandée qu'à partir de l'API 37.
+- **Point d'accès local** : à partir de l'API 33, `NEARBY_WIFI_DEVICES` (avec `neverForLocation`) ; en dessous,
+  `ACCESS_FINE_LOCATION`, que l'app ne demande jamais : hôte sous Android 12 ou moins = « même Wi-Fi » seulement.
+- **Service de premier plan `connectedDevice`** : `FOREGROUND_SERVICE_CONNECTED_DEVICE`, et l'un des prérequis est
+  de déclarer `CHANGE_NETWORK_STATE` ou `CHANGE_WIFI_STATE`, déjà nécessaires : condition remplie. Usage décrit par
+  Android : « interactions avec des appareils externes par Bluetooth, NFC, IR, USB ou réseau ». Justification à
+  préparer pour la Play Console.
+
+### Adaptations de l'existant (avant la phase 3 bis)
+Voir le jalon **A1** au § 9 : validation extraite en fonction pure, enveloppe d'événement (auteur, `seq`), actions
+de match dans le journal, animations déduites de l'état, migration Room v4, test réseau.
+
 ## 7. Comptes, invitation, rôles
 - **Auth** : **code OTP à 6 chiffres reçu par e-mail** (le lien magique a besoin d'un deep link, reporté) et mot de passe en option ; Google via
   **Credential Manager** → `signInWithIdToken`. **Connexion anonyme** pour un invité qui veut suivre
@@ -213,7 +348,9 @@ la clé `anon` de l'app, les migrations et les données. **Décision à prendre 
 - **Code de partie** : 6 caractères, alphabet de 31 symboles sans caractères ambigus
   (pas de 0/O, 1/I/L), soit environ 887 millions de combinaisons. Il expire à la fin de la partie ou
   après 24 h, avec limitation de débit sur `join_game`.
-- **QR** : contient **uniquement le code** (texte `ABC123`), généré avec **zxing core** et scanné avec
+- **QR (révision du 2026-10-28)** : en partie à côté, le QR porte un lien `…/join#v=1&h=…&p=…&fp=…&t=…` (plus
+  `ssid`/`psk` en point d'accès), sans code court ; pour le jeu à distance (phase 4), il porte le code. Ce qui suit
+  reste valable pour le scan. Ancienne règle : le QR contient **uniquement le code** (texte `ABC123`), généré avec **zxing core** et scanné avec
   **CameraX (`ImageAnalysis`) + zxing-cpp** (wrapper Android, Apache 2.0, aucune connexion réseau) ; analyse
   limitée à la zone de cadrage et à quelques images par seconde, nouvel essai en image inversée et contraste
   renforcé contre les reflets d'écran. **Pas de ML Kit** : même embarqué, il envoie des statistiques d'usage
@@ -241,28 +378,24 @@ la clé `anon` de l'app, les migrations et les données. **Décision à prendre 
 
 ## 9. Jalons
 
-> Replanifiés le 2026-10-25 après l'élargissement de la V1 (prompt du soir). Fait : J0 à J4, navigation et intro.
-> J4 clos le 2026-10-27 ; ses restes (coach, première partie guidée, geste du bandeau, avatars) faits le même
-> jour après le J5, ainsi que l'intro « strike » (timings à valider sur téléphone) et la mise à jour de ce document
-> (zxing-cpp, souveraineté).
+> Replanifiés le 2026-10-25 après l'élargissement de la V1 (prompt du soir). Fait : J0 à J7 (V1 locale).
+> **Révision proposée le 2026-10-28** (phase 3 bis « Partie à côté »), en attente de validation : J7b, A1, P0, S1 à
+> S3 insérés ; l'ancienne Phase 4 (J8 à J11) devient R1 à R4, dont le report en V2 n'est pas tranché.
 
-| # | Jalon | Contenu | Arrêt pour validation |
-|---|---|---|---|
-| J0 | Squelette ✅ | build-logic, catalogue, CI, lint | — |
-| J1 | Moteur ✅ | `core:model`, `core:scoring`, 427 tests | rapport de tests ✅ |
-| J2 | Design system ✅ | thème, composants, QuickPad, grandes polices, FitToScreen ; navigation (barre du bas) ; intro Yogi Studio et icône | captures ✅ (intro : timings à valider) |
-| J1b | Moteur v2 ✅ | attribution par position, saisie rapide, `Delete`, joueurs en cours de partie, `modifiedAfterFinish`, ordre de la manche suivante, stratégie `ScoringRules` (§ 15 de la spec) | rapport de tests |
-| J3 | Données locales ✅ | Room (journal écrit à chaque événement, reprise automatique + test instrumenté), DataStore (réglages, **sélecteur de langue**, compteur de lancements → intro courte), repositories | — |
-| J4 | Jouer ✅ (restes reportés, voir ci-dessus) | création de partie (profils avec avatar emoji/mascotte ou photo, équipes nommées 🎲, glisser-déposer, règles avancées, mode famille), écran de jeu adaptatif (quilles ou pavé rapide, « Valider » obligatoire, undo + snackbar, déroulé modifiable, gestion des joueurs, coach, règles consultables, haptique, shake/retour à 25, keepScreenOn), prise en main en 3–4 bulles (test < 30 s), captures à 1,0 / 1,5 / 2,0 | démo APK |
-| J5 | Fin de partie et mémoire ✅ (test sur téléphone à faire) | animation de victoire, fin de partie, revanche et ordre de la manche suivante, **tableau récapitulatif de série** (mêmes équipes), historique complet (suppression), stats (Vico), `core:stats` + Hall of Fame local, match et Mölkkout, notification de partie en cours, annonces vocales (TTS) | APK |
-| J6 | Partage social ✅ (validation : captures + vidéo) | moments détectés, vignettes (3 formats, 3–4 modèles), mini-vidéo et GIF, feuille de partage, vie privée (noms masquables, sans EXIF), tests de rendu et d'encodage | captures + vidéo |
-| J7 ✅ | Confiance et langues | export JSON, sauvegarde/restauration fichier, **traduction anglaise complète** | APK — **fin de la V1 locale (Phase 3)** |
-| J8 | Backend | Supabase UE, migrations, RLS, RPC, pgTAP | revue SQL / RLS |
-| J9 | Comptes | auth (OTP, mot de passe, Google, anonyme), profil, suppression du compte | — |
-| J10 | Multi-appareils | partie partagée, code et QR (< 10 s), SyncEngine, Realtime, rattrapage, conflits, propagation des corrections | test à deux téléphones |
-| J11 | Rôles et groupes | droits de correction, invités, groupes et Hall of Fame de groupe, victoire synchronisée, « Défier » par code. **Fin de la Phase 4** | — |
-| J12 | Finitions et build | Baseline Profiles, audit d'accessibilité, build release signé (Phase 5) | APK |
-| J13 | Compléments | records secondaires, badges : **après validation** | oui |
+| # | Jalon | Contenu | Appareils | Arrêt pour validation |
+|---|---|---|---|---|
+| J0–J7 ✅ | V1 locale | squelette, moteur, design system, données, jeu, fin de partie, partage, confiance et langues | — | — |
+| J7b | Restes du test de rattrapage | C6 avatars sobres (captures à choisir), C13 accessibilité automatique, N2 animation à chaque lancer, N3 tension avant la sanction, N1 photo du moment (maquette d'abord) | émulateur, puis ton téléphone | captures + QCM |
+| **A1** | Adaptations pour plusieurs appareils (branche principale) | `validate()` extraite du dépôt en fonction pure (`core:sync`, squelette) ; enveloppe d'événement (`seq` d'autorité, appareil auteur, horodatage) ; manche suivante, Mölkkout, revanche dans le journal ; animations et annonces déduites du changement d'état ; migration Room v4 et test de migration ; test « l'APK ne déclare pas `INTERNET` » remplacé plus tard par le test d'adresses locales | émulateur | rapport de tests |
+| **P0** | Prototype **jetable**, branche `proto/partie-a-cote` | serveur WebSocket sur TLS (options du § 6 bis : Netty, `SSLServerSocket` + trames Ktor), certificat auto-signé (Keystore), point d'accès local, invité par `WifiNetworkSpecifier`, épinglage de l'empreinte, un message aller-retour ; mesures : temps pour rejoindre, taille de l'APK, comportement sous Android 17 (`ACCESS_LOCAL_NETWORK`) | **deux téléphones réels** (Fairphone 6 + un second, idéalement une autre version d'Android) | **résultat, limites, versions retenues** ; rien ne passe sur la branche principale sans accord |
+| S1 | Protocole et autorité | `core:sync` complet (messages, `HostSession`, `GuestSession`, droits, idempotence, rattrapage, `STALE`), `core:sync-lan` avec tests d'intégration JVM (hôte + 2 invités, vrai TLS, mauvaise empreinte, jeton expiré ou réutilisé, téléphone exclu, reconnexion), couverture complète | JVM | rapport de tests |
+| S2 | Réseau Android | `core:sync-android` : modes « même Wi-Fi » et point d'accès, permissions au moment de l'usage (refus testés), service de premier plan, certificat de partie, jetons chiffrés exclus des sauvegardes ; lien `molkkyboard://join#…` (App Links quand le domaine existera) | deux téléphones réels | démo |
+| S3 | Écrans et robustesse | interrupteur « Plusieurs téléphones », « Inviter » (QR, demandes, exclusion), « Rejoindre » (CameraX + zxing-cpp), pastille de connexion, coupure et reconnexion, revanche partagée, annonces sur l'hôte seulement, notification ; `docs/qa/PARTIE_A_COTE.md` ; mise à jour du modèle de menaces | deux téléphones réels (+ un Android 8-9 si possible) | QCM sur téléphones |
+| R1–R4 | Ancienne Phase 4 (backend, comptes, jeu à distance, groupes) | réutilise `core:sync`, seul le transport change ; **report en V2 à trancher** ; le choix Supabase est à revoir (la validation en Kotlin ne s'exécute pas dans une fonction SQL) | — | — |
+| J12 | Finitions et build | Baseline Profiles, audit d'accessibilité, build release signé (Phase 5) | téléphone | APK |
+
+Ce qui exige deux téléphones réels : P0, S2 et S3 (l'émulateur ne crée pas de point d'accès, et deux émulateurs
+sont isolés chacun derrière leur propre réseau virtuel). Tout le protocole (S1) se teste en JVM sur la boucle locale.
 
 ## 10. Équipes nommées, victoire, Hall of Fame et groupes
 
@@ -339,6 +472,10 @@ Le backlog (`CLAUDE.md`) ne démarre qu'après le MVP. Dès maintenant, quelques
 - Lien spectateur et liens d'invitation nécessitent un domaine : reportés ensemble.
 
 ## Points ouverts (non bloquants, à trancher au jalon indiqué)
+- **Partie à côté (2026-10-28)** : serveur TLS (le moteur CIO ne gère pas TLS), TLS 1.3 sous Android 8-9 (embarquer
+  Conscrypt ou non), Keystore ou Bouncy Castle, JSON ou CBOR : à trancher au prototype P0.
+- **Encart « Vie privée »**, **report de la Phase 4 en V2**, **formulaire « Sécurité des données »** : à trancher
+  par le porteur du projet (spec du 2026-10-28).
 - ~~Liens d'invitation~~ : reportés après la v1 ; on rejoint par code ou QR contenant le code (décidé le 2026-10-25).
 - ~~Région Supabase~~ : **Paris (`eu-west-3`)** (décidé le 2026-10-25).
 - **Durée de conservation** des parties partagées (J11).

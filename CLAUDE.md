@@ -1,7 +1,7 @@
 # Molkky Board — prompt de référence
 
-> Prompt de référence : copie intégrale de `01-specifications-molkky-board.md` (version du 2026-10-26,
-> qui remplace `prompt-molkky.md` du 2026-10-25). Les versions précédentes restent dans l'historique git.
+> Prompt de référence : copie intégrale de `01-specifications-molkky-board.md` (version du 2026-10-28,
+> « Partie à côté », qui remplace celle du 2026-10-26). Les versions précédentes restent dans l'historique git.
 > Les décisions prises au fil des phases sont dans la section `## Décisions` en fin de fichier ;
 > le pourquoi des choix est raconté dans `02-journal-decisions.md`.
 
@@ -46,7 +46,8 @@ puis utilise `android screen capture` pour vérifier visuellement l'interface av
   - projet Gradle : `rootProject.name = "MolkkyBoard"` ;
   - code : classe `MolkkyBoardApp` (Application), thème `MolkkyBoardTheme`, préfixe des composants
     de design `MB` si un préfixe est nécessaire ;
-  - liens profonds : schéma `molkkyboard://` (domaine des App Links à définir en phase 4) ;
+  - liens profonds : schéma `molkkyboard://`, puis App Links vérifiés sur le domaine du site de l'app
+    (à définir au plus tard en phase 3 bis, voir « Partie à côté ») ;
   - canaux de notification, titre de l'écran d'accueil, écran « À propos », README, carte de résultat
     partageable, page spectateur web, annonces vocales, métadonnées Play Store ;
   - écran de démarrage (voir la section dédiée).
@@ -58,8 +59,10 @@ puis utilise `android screen capture` pour vérifier visuellement l'interface av
 Je veux une application Android native, simple, intuitive et soignée visuellement,
 pour gérer des parties de Mölkky : saisie des lancers, calcul automatique des scores,
 application des règles, historique. Plusieurs joueurs doivent pouvoir suivre et saisir
-une même partie depuis plusieurs téléphones, ce qui implique des comptes utilisateurs
-et une synchronisation temps réel.
+une même partie depuis plusieurs téléphones. Quand les téléphones sont sur le même terrain
+(le cas le plus courant), ils se synchronisent **directement entre eux, sans serveur, sans compte
+et sans Internet** : c'est la « Partie à côté ». Des comptes et un serveur ne servent qu'au jeu
+à distance et aux groupes (Hall of Fame partagé).
 
 Une analyse des avis des apps concurrentes (octobre 2026) a fait ressortir leurs défauts récurrents :
 prise en main confuse (on ne sait pas comment démarrer, tutoriel vidéo trop rapide), impossibilité
@@ -67,7 +70,8 @@ de corriger un lancer une fois le joueur suivant passé, ordre de passage figé,
 parties perdues à la fermeture de l'app, scores à deux chiffres tronqués en grande police,
 historique incomplet, demande d'une saisie numérique rapide. Molkky Board doit être irréprochable
 sur chacun de ces points. Nos différenciateurs :
-- **multi-téléphones en temps réel** (rare sur Android) : rejoindre une partie en moins de 10 secondes via QR code ;
+- **multi-téléphones en temps réel** (rare sur Android) : rejoindre une partie en moins de 10 secondes
+  via QR code, **sans compte ni serveur** quand les téléphones sont côte à côte ;
 - **aucune publicité, aucun traceur**, aucune donnée collectée en mode sans compte ;
 - équipes nommées avec Hall of Fame, mode famille, coach de fin de partie, annonces vocales ;
 - **partage social** : chaque partie devient en deux taps une vignette ou un mini-reel prêt à publier,
@@ -114,7 +118,7 @@ validation avant de passer à la suivante.
 Propose une architecture et justifie les choix. Base suggérée, à challenger :
 - **Kotlin + Jetpack Compose + Material 3**, une seule Activity, Navigation Compose ;
 - **Architecture** : MVVM / UDF, modules `core:scoring` (Kotlin pur, sans dépendance Android),
-  `core:data`, `core:designsystem`, `feature:*` ;
+  `core:data`, `core:designsystem`, `core:sync`, `feature:*` ;
 - **Moteur de score** : fonction pure qui recalcule tout l'état d'une partie à partir de son
   **journal d'événements** (lancers, corrections, ajouts/retraits de joueurs, changements d'ordre).
   C'est ce modèle qui permet l'undo, la correction de n'importe quel lancer passé, la synchro
@@ -122,7 +126,15 @@ Propose une architecture et justifie les choix. Base suggérée, à challenger :
   futures variantes de jeu) sont une **stratégie** injectée dans le moteur ;
 - **Stockage local** : Room, fonctionnement 100 % hors ligne en mode « un seul téléphone » ;
   le journal est persisté à chaque événement validé, pour qu'aucune partie ne soit jamais perdue ;
-- **Comptes + multi-appareils** : compare Supabase (Auth + Postgres + Realtime, hébergement UE possible)
+- **Synchronisation multi-téléphones** (`core:sync`) : un **protocole d'événements unique**
+  (messages versionnés, proposition d'événement → validation par une autorité → diffusion ordonnée)
+  et une **abstraction de transport** avec deux implémentations :
+  - **réseau local, téléphone hôte comme autorité** (phase 3 bis, « Partie à côté ») ;
+  - **serveur distant comme autorité** (phase 4).
+  La validation d'un événement (droits, tour, cohérence) est une fonction Kotlin pure partagée,
+  appelée par l'hôte local et réutilisable côté serveur. L'UI et le moteur de score ignorent quel
+  transport est utilisé ;
+- **Comptes + multi-appareils à distance** : compare Supabase (Auth + Postgres + Realtime, hébergement UE possible)
   et Firebase (Auth + Firestore). J'ai un profil cybersécurité/RGPD : je privilégie un hébergement UE,
   la minimisation des données et des règles d'accès strictes (RLS ou security rules).
   Intègre dans la comparaison la question de la **souveraineté** : un hébergement en région UE chez un
@@ -130,10 +142,12 @@ Propose une architecture et justifie les choix. Base suggérée, à challenger :
   Évalue aussi l'option **Supabase auto-hébergé** chez un hébergeur européen (Scaleway, OVHcloud…)
   avec son coût d'exploitation réel pour un projet personnel. Fais une recommandation argumentée ;
 - **Gestion des conflits** : deux téléphones qui saisissent en même temps — journal d'événements
-  ordonnés côté serveur, l'état étant recalculé à partir du journal. Précise comment une correction
-  d'un lancer ancien se propage aux autres téléphones ;
-- **Rejoindre une partie** : code court à 6 caractères + QR code ;
-- **Injection** : Hilt ; **minSdk** 26, **targetSdk** la dernière version stable.
+  ordonnés par l'autorité (téléphone hôte ou serveur), l'état étant recalculé à partir du journal.
+  Précise comment une correction d'un lancer ancien se propage aux autres téléphones ;
+- **Rejoindre une partie** : QR code dans les deux modes ; en plus, code court à 6 caractères pour
+  le jeu à distance (phase 4) ;
+- **Injection** : Hilt ; **minSdk** 26, **targetSdk** la dernière version stable (vérifie ses
+  conséquences sur l'accès au réseau local, voir phase 3 bis).
 
 Produis `docs/ARCHITECTURE.md` et un plan d'implémentation découpé en jalons.
 
@@ -189,14 +203,187 @@ Produis `docs/ARCHITECTURE.md` et un plan d'implémentation découpé en jalons.
 - **Grandes tailles de police** : aucun score à deux chiffres coupé ou tronqué jusqu'à un facteur
   de taille de police système de 2,0 (captures Roborazzi à 1,0, 1,5 et 2,0)
 
-## Phase 4 — Comptes et multi-appareils
+---
+
+## Phase 3 bis — Partie à côté : plusieurs téléphones, sans serveur ni compte
+
+### Principe
+- Cas d'usage : les téléphones sont **physiquement sur le même terrain**. L'organisateur crée la
+  partie ; son téléphone devient l'**hôte**, c'est-à-dire l'autorité qui ordonne et valide le journal,
+  exactement le rôle que tiendra le serveur en phase 4
+- **Aucun serveur tiers, aucun compte, aucun accès Internet nécessaire.** Les données de la partie
+  ne quittent jamais les téléphones de la partie
+- Le **QR code** affiché par l'hôte sert de canal d'appairage : il porte l'adresse de l'hôte,
+  l'empreinte de son certificat et un jeton d'invitation à usage unique
+- **Uniquement des briques open source**, aucune dépendance aux Google Play services
+  (Google Nearby Connections est écarté : propriétaire, dépendant des Play services, et il collecte
+  des métriques d'usage). La pile reste compatible avec une future distribution F-Droid
+- Objectif : **rejoindre en moins de 10 secondes** (scan, fenêtre de connexion Wi-Fi d'Android,
+  validation par l'organisateur)
+
+👉 **Point d'arrêt technique avant l'implémentation complète** : réalise d'abord un prototype minimal
+(serveur Ktor CIO en WebSocket sur TLS avec certificat auto-signé sur Android, hotspot local,
+connexion de l'invité par `WifiNetworkSpecifier`, épinglage de l'empreinte) et teste-le sur deux
+appareils réels (le Fairphone et un second téléphone ; l'émulateur ne sait pas créer de point d'accès).
+Présente-moi le résultat, les limites rencontrées et les versions de bibliothèques retenues.
+
+### Modes réseau
+| Mode | Quand | Conditions |
+|---|---|---|
+| **Même Wi-Fi** | L'hôte est connecté à un réseau Wi-Fi | Toutes versions d'Android. Certains réseaux (Wi-Fi invité, réseaux publics) isolent les appareils entre eux : en cas d'échec de connexion, proposer le mode point d'accès |
+| **Point d'accès local** | Dehors, sans Wi-Fi (cas le plus fréquent) | **Hôte sous Android 13 ou plus** (`WifiManager.startLocalOnlyHotspot`, réseau sans Internet). **Invité sous Android 10 ou plus** : connexion automatique par `WifiNetworkSpecifier`, après confirmation dans la fenêtre système ; l'invité garde ses données mobiles. Invité sous Android 8 ou 9 : afficher le nom du réseau et le mot de passe à saisir à la main |
+
+- Le mode est choisi automatiquement et modifiable par l'organisateur
+- **Hôte sous Android 12 ou moins : mode « même Wi-Fi » uniquement.** Sur ces versions, le point d'accès
+  local exige la permission de localisation précise, que l'app ne demande jamais
+- L'invité attache ses connexions au réseau de la partie (objet `Network` obtenu par la requête),
+  pour que rien ne parte par les données mobiles
+
+### Permissions (demandées au moment de l'usage, avec une phrase d'explication)
+- **Appareils à proximité** : `NEARBY_WIFI_DEVICES` déclarée avec `usesPermissionFlags="neverForLocation"`,
+  nécessaire au point d'accès local à partir d'Android 13
+- **Accès au réseau local** : avec un targetSdk 37 (Android 17) ou plus, Android bloque par défaut le
+  trafic vers le réseau local et exige la permission d'exécution `ACCESS_LOCAL_NETWORK`, côté hôte
+  comme côté invité. Elle appartient au même groupe « Appareils à proximité ». Sous Android 16, le
+  mécanisme est en opt-in et s'appuie sur `NEARBY_WIFI_DEVICES`. **Vérifie l'état exact de ces règles
+  au moment de l'implémentation** et teste le refus de la permission
+- **Service de premier plan** de type `connectedDevice` (+ `FOREGROUND_SERVICE_CONNECTED_DEVICE`)
+  pour que l'hôte reste joignable écran éteint. Vérifie que ce type et ses prérequis d'exécution
+  correspondent bien à ce cas d'usage, et prépare la justification demandée par la Play Console
+- `INTERNET` (sockets), `ACCESS_WIFI_STATE`, `CHANGE_WIFI_STATE`, `CHANGE_NETWORK_STATE` (permissions normales)
+- Caméra pour le scan (déjà prévue)
+- **Jamais** `ACCESS_FINE_LOCATION` ni `ACCESS_COARSE_LOCATION`
+- Si une permission est refusée : message clair, et la partie continue sur le seul téléphone de l'hôte
+
+### Parcours de référence (sert de base aux tests)
+1. **L'organisateur crée la partie** : *Nouvelle partie* → joueurs → interrupteur « Plusieurs téléphones »
+   → *Inviter*. En coulisse : choix du mode réseau, démarrage éventuel du point d'accès, génération de la
+   paire de clés et du certificat de la partie, démarrage du serveur sur un port aléatoire et sur
+   l'interface locale uniquement, création du jeton d'invitation, passage en service de premier plan,
+   affichage du QR code (luminosité poussée) et de la liste des téléphones connectés
+2. **L'invité scanne** : *Rejoindre* (ou l'appareil photo du téléphone) → scan → fenêtre système
+   « Se connecter au réseau » si point d'accès → l'app vérifie l'empreinte du certificat et envoie sa
+   demande (jeton, pseudo, avatar). Il voit « En attente de l'organisateur… »
+3. **L'organisateur accepte** : carte « 🦊 Léa veut rejoindre la partie » avec trois choix :
+   *C'est Léa* (associer le téléphone à un joueur existant), *Nouveau joueur* (règles d'ajout en
+   cours de partie), *Refuser*. L'hôte remet un jeton de session et le journal complet ; l'invité
+   enregistre le journal dans Room et affiche l'écran de jeu à jour. Un nouveau QR code s'affiche
+   pour le suivant
+4. **Pendant la partie** : chaque téléphone propose ses événements, l'hôte les valide avec le moteur
+   de score, les numérote, les enregistre et les diffuse à tous, auteur compris. Chaque téléphone
+   recalcule l'état et joue localement les animations (« 12 ! », élimination, victoire), ce qui les
+   synchronise. Une saisie concurrente devenue invalide est refusée avec un message
+   (« Ce n'est plus le tour de Léa »). Une correction suit le même circuit et s'affiche chez les autres
+   (« Lancer de Léa corrigé »)
+5. **Coupure** : bandeau « Connexion perdue, reconnexion… » chez l'invité, saisie suspendue sur ce
+   téléphone, reconnexion automatique avec le jeton de session et le dernier numéro reçu ; l'hôte
+   renvoie seulement ce qui manque, sans nouvelle validation humaine
+6. **Fin** : animation de victoire sur tous les téléphones. L'hôte arrête le serveur, ferme le point
+   d'accès, invalide les jetons, supprime la clé de la partie et quitte le service de premier plan ;
+   les invités libèrent le réseau. Chaque téléphone garde la partie dans son historique, avec un
+   identifiant de partie commun. « Revanche » réutilise les sessions en cours sans rescanner
+
+### Protocole
+- WebSocket sur **TLS 1.3**, serveur **Ktor (moteur CIO)** sur l'hôte, client **Ktor (moteur CIO)**
+  sur l'invité ; messages JSON (kotlinx-serialization) avec un champ de version, taille bornée
+  (64 Ko par message), nombre de téléphones borné (12)
+- **Contenu du QR code** : lien `https://<domaine du site>/join#v=1&h=<ip>&p=<port>&fp=<empreinte>&t=<jeton>`,
+  plus `ssid` et `psk` en mode point d'accès. Les paramètres sont **après le `#`** : un navigateur
+  n'envoie jamais cette partie au serveur web. Avec l'app installée, les App Links vérifiés ouvrent
+  directement Molkky Board, sans réseau ; sans l'app, la page du site propose de l'installer.
+  En attendant le domaine, schéma `molkkyboard://join#…`
+- Messages :
+
+| Message | Sens | Contenu |
+|---|---|---|
+| `JOIN_REQUEST` | invité → hôte | jeton d'invitation, pseudo, avatar emoji ou mascotte |
+| `JOIN_PENDING` | hôte → invité | — |
+| `WELCOME` | hôte → invité | jeton de session, rôle, joueur associé, identifiant de partie, journal complet, dernier numéro |
+| `JOIN_REJECTED` | hôte → invité | motif : refusé, jeton expiré ou déjà utilisé, partie pleine, version incompatible |
+| `RESUME` | invité → hôte | jeton de session, dernier numéro reçu |
+| `EVENT_PROPOSAL` | invité → hôte | identifiant unique de l'événement, numéro de base, contenu (lancer, correction, suppression, gestion des joueurs) |
+| `EVENT` | hôte → tous | numéro d'ordre, identifiant unique, appareil auteur, contenu, horodatage |
+| `EVENT_REJECTED` | hôte → auteur | identifiant unique, code : `NOT_YOUR_TURN`, `FORBIDDEN`, `INVALID`, `STALE` |
+| `DEVICE_REMOVED` | hôte → invité | l'organisateur a exclu ce téléphone |
+| `GAME_ENDED` | hôte → tous | fin de partie, fermeture de la session |
+| `PING` / `PONG` | les deux | maintien de la connexion |
+
+- **Idempotence** : l'identifiant unique de chaque proposition permet à l'hôte d'ignorer un doublon
+  renvoyé après une reconnexion
+- Droits : chacun saisit les lancers du joueur associé à son téléphone et peut corriger son dernier
+  lancer ; l'organisateur peut tout corriger et gérer les joueurs (ordre, ajout, retrait, exclusion d'un téléphone)
+
+### Sécurité
+- **Authentification de l'hôte** : certificat auto-signé généré pour chaque partie (Bouncy Castle ou
+  Android Keystore, à trancher au prototype), empreinte SHA-256 dans le QR code, **épinglage strict**
+  côté invité, aucune exception ni repli en cas d'écart (« Ce n'est pas le téléphone de l'organisateur »).
+  La clé est conservée dans l'Android Keystore pendant la partie, puis supprimée
+- **Jeton d'invitation** : 128 bits d'aléa cryptographique, à usage unique, valable 2 minutes,
+  renouvelé après chaque usage, comparé à temps constant. Le QR code est considéré comme **observable**
+  (photo par-dessus l'épaule, capture d'écran) : il ne contient aucun secret durable
+- **Validation humaine** de chaque arrivée par l'organisateur
+- **Jeton de session** : 256 bits, propre à chaque téléphone, valable jusqu'à la fin de la partie,
+  révocable (exclusion), stocké chiffré avec une clé du Keystore et exclu des sauvegardes Android
+- Le serveur n'écoute que sur l'interface du réseau de la partie, refuse tout ce qui n'est pas TLS,
+  et s'arrête à la fin de la partie ou à l'abandon
+- **Validation par l'hôte de chaque événement** avec la même fonction que la validation serveur de la
+  phase 4 : appareil accepté, droits, tour, lancer cohérent ; champs texte bornés et sans caractères
+  de contrôle ; limitation de débit par téléphone
+- Seuls le pseudo, l'avatar emoji ou mascotte et les événements de jeu transitent. **Les photos de
+  joueurs ne sont jamais transmises** : les autres téléphones affichent l'avatar
+- Aucune crypto maison : TLS standard (Conscrypt) et primitives Tink
+
+### Comportements limites
+- **Hôte en arrière-plan ou écran éteint** : le service de premier plan garde le serveur actif ; la
+  notification « Partie en cours » indique le nombre de téléphones connectés
+- **L'app de l'hôte redémarre** : le serveur repart avec le même certificat ; si l'adresse IP a changé,
+  les invités rescannent le QR code et sont reconnus par leur jeton de session, sans nouvelle validation
+- **L'hôte quitte définitivement** : les invités gardent la partie en lecture seule
+  (transfert du rôle d'hôte : backlog P3)
+- **Pas de saisie manuelle de code dans ce mode** : un code court ne peut pas porter l'empreinte de
+  sécurité. En secours (caméra refusée, QR illisible), l'organisateur ajoute le joueur sur son propre
+  téléphone et saisit pour lui
+- Le Hall of Fame local de chaque téléphone compte la partie ; l'identifiant commun évitera les
+  doublons quand les groupes seront synchronisés (phase 4)
+
+### Interface
+- Création de partie : interrupteur « Plusieurs téléphones »
+- Écran « Inviter » : grand QR code, mode réseau en cours (modifiable), liste des téléphones connectés
+  avec leur joueur associé, cartes de demandes en attente, action « Exclure »
+- Écran « Rejoindre » : viseur de scan, états clairs (connexion au réseau, vérification, en attente,
+  refusé), aide en cas d'échec (« Rapprochez-vous », « Passez en point d'accès »)
+- Écran de jeu : petite pastille de connexion (« 3 téléphones », ou « Hors ligne » en corail chez l'invité)
+- Accessibilité : description TalkBack du QR code et des états de connexion ; tous les messages
+  lisibles jusqu'au facteur de police 2,0
+
+### Tests
+- Unitaires : sérialisation et version du protocole, validation de chaque proposition (tous les codes
+  de refus), idempotence, rattrapage après coupure, ordonnancement de deux propositions concurrentes,
+  correction d'un lancer ancien propagée à tous
+- Intégration JVM : un hôte et deux invités sur la boucle locale avec TLS réel ; refus d'une mauvaise
+  empreinte, d'un jeton expiré, d'un jeton déjà utilisé, d'un téléphone exclu ; reconnexion
+- Sur appareils réels (manuel, scénarios dans `docs/qa/PARTIE_A_COTE.md`) : même Wi-Fi, point d'accès
+  local, invité Android 8-9, refus de chaque permission, hôte écran éteint 10 minutes, hôte qui redémarre
+  l'app, temps pour rejoindre mesuré (objectif : moins de 10 s)
+- **Vie privée** : pendant une partie à côté, aucune connexion vers une adresse hors du réseau local
+  (adresses privées et lien-local uniquement), vérifié par un test et par logcat
+
+---
+
+## Phase 4 — Comptes et multi-appareils à distance
+> Décision ouverte : la « Partie à côté » couvre le jeu sur un même terrain sans compte. Cette phase
+> pourrait être reportée en V2. À trancher avec moi avant de la commencer.
+
+- Réutilise le protocole et la validation de `core:sync` : seul le transport change (le serveur
+  devient l'autorité à la place du téléphone hôte)
 - Inscription / connexion (e-mail + lien magique ou mot de passe ; Google en option) ;
-- Création d'une partie partagée, invitation par code ou QR : **rejoindre en moins de 10 secondes** ;
+- Création d'une partie partagée à distance, invitation par code court ou QR : **rejoindre en moins de 10 secondes** ;
 - Synchronisation temps réel ; un appareil hors ligne rattrape son retard en revenant ;
 - Rôles simples : chacun saisit son propre lancer et peut corriger son dernier lancer ;
   l'organisateur peut corriger n'importe quel lancer et gérer les joueurs (ordre, ajout, retrait) ;
 - Toute correction est visible des autres téléphones (petite notification « Lancer de Léa corrigé ») ;
-- Les joueurs invités sans compte restent possibles.
+- Les joueurs invités sans compte restent possibles ;
+- Groupes et Hall of Fame de groupe synchronisés.
 
 ## Phase 5 — Build
 - Génère un APK debug avec `./gradlew assembleDebug` et indique son chemin ;
@@ -230,14 +417,28 @@ Produis `docs/ARCHITECTURE.md` et un plan d'implémentation découpé en jalons.
 ### Données et injection
 - **Hilt** (+ hilt-navigation-compose)
 - **Room** pour le stockage local, **DataStore (Preferences)** pour les réglages
-- Backend selon la décision de la phase 2 :
+- Backend distant selon la décision de la phase 2 :
   - Supabase : **supabase-kt** (modules auth, postgrest, realtime) + client **Ktor** (moteur OkHttp)
   - Firebase : **Firebase BoM** (auth, firestore)
-- Repository pattern : Room reste la source de vérité de l'UI, et la synchro distante se fait en arrière-plan (offline-first)
+- Repository pattern : Room reste la source de vérité de l'UI, et la synchro se fait en arrière-plan (offline-first)
 - **Aucun SDK de publicité, d'analytics ou de crash reporting tiers** (voir « Sécurité et vie privée »)
 - **Tink** (ou l'Android Keystore directement) pour chiffrer les jetons de session stockés localement
 - **AboutLibraries** pour la liste des licences open source dans les crédits
   (pas le plugin oss-licenses de Google, qui dépend des Google Play services)
+
+### Partie à côté (réseau local, phase 3 bis) — uniquement des briques open source
+- **Ktor server** (moteur CIO, plugin WebSockets) sur l'hôte et **Ktor client** (moteur CIO,
+  WebSockets) sur l'invité — Apache 2.0
+- **Conscrypt** (fournisseur TLS intégré à Android) pour TLS 1.3 ; `X509TrustManager` d'épinglage par empreinte
+- **Bouncy Castle** (`bcpkix`, licence MIT) pour générer le certificat auto-signé de la partie,
+  sauf si le prototype montre que l'Android Keystore suffit
+- **Tink** pour les jetons et les comparaisons à temps constant
+- API Android (AOSP) : `WifiManager.startLocalOnlyHotspot`, `WifiNetworkSpecifier`,
+  `ConnectivityManager`, service de premier plan
+- Références de conception (spécifications publiques, **ne copier aucun code**) : protocole LocalSend
+  (HTTPS auto-signé identifié par empreinte) et Bramble QR Code Protocol de Briar (appairage par QR code,
+  QR considéré comme observable). Le code de Briar est sous GPL
+- Écarté : Google Nearby Connections (propriétaire, Play services, métriques d'usage)
 
 ### QR code et invitation
 - Génération : **zxing core**
@@ -246,8 +447,10 @@ Produis `docs/ARCHITECTURE.md` et un plan d'implémentation découpé en jalons.
   par seconde, gestion des reflets d'écran (contraste, tentative en image inversée)
 - Pas de ML Kit : même en version embarquée, il envoie des statistiques d'usage à Google, ce qui
   contredit notre engagement « aucun traceur »
-- **Saisie manuelle du code à 6 caractères** toujours proposée sur l'écran de scan, en secours
-  (soleil direct, écran rayé, caméra refusée)
+- Contenu du QR code : voir « Phase 3 bis — Protocole » (partie à côté) ; jeton d'invitation long
+  pour le jeu à distance (phase 4)
+- **Saisie manuelle du code à 6 caractères** proposée sur l'écran de scan pour le **jeu à distance**,
+  en secours (soleil direct, écran rayé, caméra refusée). Elle n'existe pas pour la partie à côté
 - **Android App Links** pour qu'un lien d'invitation ouvre directement la partie
 
 ### Qualité
@@ -294,9 +497,10 @@ généreuses. Ni skeuomorphisme ni texture bois réaliste : on évoque le bois p
 ### Écrans clés
 1. **Accueil** : logotype « Molkky Board » **compact** en haut à gauche (même hauteur qu'un titre de
    barre d'application, environ 22sp, sans dominer l'écran), grand bouton « Nouvelle partie »,
-   bouton « Rejoindre » (code/QR), partie en cours à reprendre, historique, Hall of Fame
+   bouton « Rejoindre » (scan du QR code), partie en cours à reprendre, historique, Hall of Fame
 2. **Création de partie** : ajout des joueurs en chips colorées, glisser-déposer pour l'ordre,
-   options de règles repliées dans « Règles avancées », bouton de lancement bien visible
+   options de règles repliées dans « Règles avancées », interrupteur « Plusieurs téléphones »,
+   bouton de lancement bien visible
 3. **Écran de jeu** (le plus important) :
    - en haut, le joueur ou l'équipe actif en très grand avec son score et ses ratés, et une pastille
      discrète « Tour 3 » à côté du nom. Au changement de tour, la pastille bascule avec un ressort
@@ -307,6 +511,7 @@ généreuses. Ni skeuomorphisme ni texture bois réaliste : on évoque le bois p
    - en bas, deux gros boutons : « Raté » (corail) et « Valider » (safran) ;
    - un bandeau horizontal avec les autres joueurs et leur score, muni d'une poignée qui invite à le
      tirer vers le haut ;
+   - en partie multi-téléphones, une petite pastille de connexion (« 3 téléphones » ou « Hors ligne ») ;
    - le **tableau des scores** : en glissant le bandeau vers le haut (ou en le touchant), une feuille
      (bottom sheet) monte et couvre l'écran de saisie. Elle affiche :
      - le numéro du tour en titre ;
@@ -315,7 +520,7 @@ généreuses. Ni skeuomorphisme ni texture bois réaliste : on évoque le bois p
      - le joueur actif surligné en safran, les éliminés grisés et barrés en bas de liste ;
      - en équipes, le score de l'équipe, et ses joueurs dépliables en dessous.
      Les scores s'y mettent à jour en direct, y compris quand un autre téléphone saisit un lancer ou
-     corrige un lancer passé (phase 4). On la referme en glissant vers le bas, en touchant à
+     corrige un lancer passé (phases 3 bis et 4). On la referme en glissant vers le bas, en touchant à
      l'extérieur ou avec le bouton retour ; la saisie en cours n'est pas perdue. La feuille est accessible
      sans geste (tap, action TalkBack « Afficher le tableau des scores ») et lisible jusqu'au facteur
      de police 2,0 ;
@@ -329,6 +534,7 @@ généreuses. Ni skeuomorphisme ni texture bois réaliste : on évoque le bois p
 8. **À propos** : logotype Molkky Board, version, mention « Yogi Studio », encart « Vie privée »
    (voir « Sécurité et vie privée »), crédits (bibliothèques open source via AboutLibraries, polices),
    liens vers la politique de confidentialité, les conditions d'utilisation et le site de l'app
+9. **Inviter / Rejoindre** (partie à côté) : voir « Phase 3 bis — Interface »
 
 ### Mouvement et retours
 - Physique de ressort (`spring`) partout ; aucune animation linéaire
@@ -456,7 +662,7 @@ Les quilles restent **entières** : elles ne se brisent pas, elles s'envolent.
   4. une double vibration de célébration retentit.
 - Si un record est battu pendant la partie, ajouter un bandeau « 🏆 Nouveau record ! »
 - Son de victoire optionnel, désactivé par défaut et réglable
-- Sur une partie partagée, l'animation se joue **simultanément sur tous les téléphones connectés**
+- Sur une partie partagée (à côté ou à distance), l'animation se joue **simultanément sur tous les téléphones connectés**
 - Si une correction de lancer annule la victoire, l'écran de fin se referme et la partie reprend
 - Version allégée, un simple fondu avec le trophée, si l'option système « Réduire les animations » est active
 
@@ -510,6 +716,8 @@ Les quilles restent **entières** : elles ne se brisent pas, elles s'envolent.
   « Tour 4 », « Au tour de Léa, il lui faut 7 », « Retour à 25 ! », « Léa est éliminée »,
   « Victoire de l'équipe Les Bouleaux »
 - Volume et débit réglables ; respecte le mode silencieux ; pas d'annonce pendant TalkBack si cela fait doublon
+- En partie multi-téléphones, les annonces ne sont jouées que sur le téléphone de l'organisateur
+  par défaut, pour éviter l'écho (réglable)
 
 ### Coach de fin de partie
 - À partir de 38 points, afficher ce qu'il faut pour gagner (« Il te faut 7 : la quille 7 seule, ou 7 quilles »),
@@ -587,7 +795,7 @@ Classements :
 Chaque record affiche la date de la partie et un lien vers son déroulé.
 
 Périmètre :
-- **Local** : toutes les parties jouées sur ce téléphone
+- **Local** : toutes les parties jouées sur ce téléphone, y compris les parties à côté auxquelles il a participé
 - **Groupe** : un groupe (famille, amis, club) réunit des comptes. Son Hall of Fame est partagé et synchronisé entre ses membres. Une partie partagée est rattachée à un groupe à sa création, ce rattachement étant facultatif
 - Filtres : tout le temps, cette année, ce mois-ci
 
@@ -597,10 +805,14 @@ Contraintes techniques :
   et n'ont aucun effet sur les records. Une partie abandonnée, ou modifiée **après** sa fin, est marquée et
   exclue des records, mais reste dans l'historique
 - Les lancers saisis en mode rapide comptent pour tous les classements sauf ceux qui portent sur une quille précise
+- Une même partie présente sur plusieurs téléphones (même identifiant de partie) n'est comptée qu'une fois
+  dans un Hall of Fame de groupe
 - Tests unitaires sur le calcul des classements, notamment pour les égalités (départage par date : le premier à l'avoir réalisé garde le record)
 
 ### Notification de partie en cours
 - Notification persistante : numéro du tour, à qui c'est le tour et les scores, avec action rapide « Saisir le lancer »
+- Sur le téléphone hôte d'une partie à côté, c'est aussi la notification du service de premier plan :
+  elle indique le nombre de téléphones connectés et propose « Arrêter le partage »
 
 ### Données et confiance
 - **Contrôle des données (RGPD)** : export JSON, suppression du compte et des données depuis l'app,
@@ -638,7 +850,8 @@ publication doit donner envie d'installer Molkky Board ou de rejoindre une parti
 - Contenu : titre du moment, noms et couleurs des équipes, emblèmes ou avatars, score, chiffre clé
   (« 50 en 7 lancers », « victoire au tour 6 »), date, lieu s'il a été saisi
 - Signature systématique et discrète : logotype **Molkky Board** et un **QR code** ou un lien court
-  (vers la fiche de l'app, ou vers une invitation à rejoindre le groupe si l'auteur le choisit)
+  (vers la fiche de l'app, ou vers une invitation à rejoindre le groupe si l'auteur le choisit).
+  Ce QR code n'est **jamais** un QR d'invitation à une partie à côté en cours
 - Rendu directement depuis des composables Compose capturés en bitmap (`GraphicsLayer`), sans serveur
 
 ### Mini-vidéos (reels / stories)
@@ -705,6 +918,11 @@ Priorités : **P2** = V2, **P3** = plus tard.
 - **P3 — Saisons** de groupe avec podium de fin de saison
 - **P3 — Défi du jour** commun aux membres d'un groupe
 
+### Partie à côté
+- **P3 — Transfert du rôle d'hôte** à un autre téléphone quand l'organisateur doit partir
+- **P3 — Transport Bluetooth** (RFCOMM) en secours, quand ni Wi-Fi ni point d'accès ne sont possibles
+- **P3 — Mode spectateur à côté** : un téléphone ou une tablette rejoint en lecture seule (tableau d'affichage)
+
 ### Statistiques et classement
 - **P2 — Classement Elo** au sein d'un groupe (ou modèle type TrueSkill pour les équipes), avec courbe d'évolution
 - **P2 — Face-à-face** entre deux joueurs ou équipes
@@ -736,17 +954,24 @@ Référentiel cible : **OWASP MASVS v2** (niveau L1 pour toute l'app, contrôles
 l'authentification et le stockage), vérifié avec le guide de test **OWASP MASTG**.
 Les recommandations de la **CNIL** pour les applications mobiles servent de référence pour la partie RGPD.
 
-### Analyse de risques (avant la phase 4)
+### Analyse de risques (avant la phase 3 bis)
 - Rédige `docs/security/THREAT_MODEL.md`, une analyse de risques légère inspirée d'**EBIOS Risk Manager** :
   biens essentiels (comptes, données de groupe, intégrité des scores et des records), sources de risque
   (joueur tricheur, curieux qui énumère les codes d'invitation, attaquant opportuniste sur les comptes,
   contenu malveillant dans les noms d'équipe), scénarios et mesures retenues
+- Pour la partie à côté, couvre au minimum : QR code photographié ou capturé, téléphone qui se fait passer
+  pour l'hôte (homme du milieu sur le Wi-Fi ou le point d'accès), invité exclu qui tente de revenir,
+  rejeu d'événements, client modifié qui force un score, hôte qui quitte la partie, inondation de messages
 - Mets-le à jour à chaque fonctionnalité qui ajoute des données ou une surface d'exposition
-  (partage, lien spectateur, groupes, photos)
+  (partie à côté, partage, lien spectateur, groupes, photos)
 
 ### Minimisation et cycle de vie des données
-- **Mode sans compte : aucune donnée ne quitte le téléphone**, aucun appel réseau
-  (vérifiable : aucune requête sortante pendant une partie locale, à tester)
+- **Mode sans compte : aucune donnée ne quitte les téléphones de la partie.** En partie sur un seul
+  téléphone, aucun trafic réseau ; en partie à côté, uniquement du trafic chiffré vers les autres
+  téléphones de la partie, sur le réseau local, et **aucun trafic vers Internet**
+  (vérifiable : test automatisé et logcat, voir « Tests et preuves »)
+- En partie à côté, seuls le pseudo, l'avatar emoji ou mascotte et les événements de jeu sont transmis ;
+  jamais de photo, jamais d'identifiant de l'appareil
 - Mode compte : seulement l'e-mail (pour l'authentification), un pseudo, l'avatar et les données de parties.
   L'e-mail n'est **jamais** visible des autres joueurs
 - Pas de nom réel, pas de date de naissance, pas de localisation, pas d'identifiant publicitaire,
@@ -755,17 +980,18 @@ Les recommandations de la **CNIL** pour les applications mobiles servent de réf
   stockage privé, URL signées à durée limitée, métadonnées EXIF supprimées avant envoi
 - **Durées de conservation** définies et appliquées automatiquement côté serveur : comptes inactifs
   depuis 3 ans prévenus puis supprimés, données des parties supprimées avec le compte, codes
-  d'invitation expirés purgés
+  d'invitation expirés purgés. En partie à côté : clés et jetons supprimés à la fin de la partie
 - **Suppression** de compte effective sous 30 jours maximum, y compris dans les sauvegardes
   (documenter la rotation des sauvegardes)
 - **Portabilité** : export JSON complet des données de l'utilisateur
 - Rédige `docs/privacy/REGISTRE.md` (registre simplifié des traitements : finalités, base légale,
   catégories de données, durées, sous-traitants, localisation) et la liste publique des sous-traitants
-  pour le site web
+  pour le site web. La partie à côté n'implique aucun sous-traitant
 
 ### Aucun traceur, et le prouver
 - Zéro SDK publicitaire, d'analytics, d'attribution ou de crash reporting tiers ; pas de Firebase,
-  pas de ML Kit, pas de Facebook SDK, pas de police téléchargée depuis Google Fonts à l'exécution
+  pas de ML Kit, pas de Google Nearby, pas de Facebook SDK, pas de police téléchargée depuis Google Fonts
+  à l'exécution
 - **Rapports de plantage** : uniquement à la demande de l'utilisateur. Après un plantage, proposer
   « Envoyer le rapport par e-mail » avec un aperçu du contenu (trace technique, version, modèle,
   aucune donnée de partie ni identifiant). Rien n'est envoyé automatiquement
@@ -778,8 +1004,10 @@ Les recommandations de la **CNIL** pour les applications mobiles servent de réf
 Texte court et sincère, en français et en anglais, par exemple :
 - « Molkky Board ne contient **aucune publicité, aucun traceur publicitaire, aucun outil de mesure
   d'audience** et ne revend aucune donnée. »
-- « Sans compte, tout reste sur votre téléphone. Avec un compte, seules les données nécessaires
-  au jeu partagé sont stockées, en Europe [à adapter selon l'hébergeur retenu]. »
+- **[Proposition à valider, remplace « Sans compte, tout reste sur votre téléphone. »]**
+  « Sans compte, vos parties restent sur vos téléphones : quand plusieurs téléphones jouent ensemble,
+  ils échangent directement entre eux, en chiffré, sans passer par Internet. Avec un compte, seules les
+  données nécessaires au jeu à distance sont stockées, en Europe [à adapter selon l'hébergeur retenu]. »
 - « Vous pouvez exporter ou supprimer vos données à tout moment. »
 - Lien vers la politique de confidentialité, la liste des sous-traitants et le rapport Exodus Privacy
 Chaque affirmation de cet encart doit être **vraie et vérifiable** : si un choix technique la rend
@@ -790,10 +1018,10 @@ fausse, préviens-moi au lieu de modifier le texte.
   un joueur ne lit que les parties et groupes dont il est membre
 - La clé de service (service role) n'est **jamais** dans l'app ; les opérations privilégiées passent
   par des fonctions serveur
-- **Validation côté serveur de chaque événement** de partie : l'auteur est bien membre de la partie,
-  le lancer est cohérent (0 à 12 quilles, numéros valides), la séquence est respectée, les droits de
-  correction sont vérifiés. Le serveur recalcule l'état ; un client modifié ne peut pas forcer un score
-  ou un record
+- **Validation côté serveur de chaque événement** de partie (même fonction que l'hôte de la partie à côté) :
+  l'auteur est bien membre de la partie, le lancer est cohérent (0 à 12 quilles, numéros valides),
+  la séquence est respectée, les droits de correction sont vérifiés. Le serveur recalcule l'état ;
+  un client modifié ne peut pas forcer un score ou un record
 - **Codes d'invitation** : générés avec un aléa cryptographique, alphabet sans caractères ambigus,
   expiration (24 h par défaut), révocables par l'organisateur, et **limitation du nombre d'essais**
   par compte et par adresse IP pour empêcher l'énumération. Le QR code contient un jeton plus long
@@ -814,24 +1042,26 @@ fausse, préviens-moi au lieu de modifier le texte.
 - Confirmation renforcée pour la suppression du compte (nouvelle authentification récente)
 
 ### Application Android
-- **Transport** : HTTPS uniquement, trafic en clair interdit dans `network_security_config`.
-  Pas d'épinglage de certificat strict (risque de panne lors des rotations du fournisseur) ;
+- **Transport vers le backend** : HTTPS uniquement, trafic en clair interdit dans `network_security_config`.
+  Pas d'épinglage de certificat strict vers le backend (risque de panne lors des rotations du fournisseur) ;
   documente ce choix dans le modèle de menaces
+- **Transport en partie à côté** : TLS 1.3 avec **épinglage strict** de l'empreinte lue dans le QR code
+  (certificat éphémère, aucune rotation à craindre). Aucun trafic en clair, y compris sur le réseau local
 - **Stockage local** : jetons de session chiffrés avec une clé de l'Android Keystore ; base Room
   protégée par le chiffrement du système de fichiers Android (données peu sensibles, choix à documenter)
 - **Sauvegarde Android** : `dataExtractionRules` excluant les jetons de session et les clés de la
   sauvegarde cloud et du transfert d'appareil ; les parties locales peuvent être sauvegardées
 - **Composants exportés** : le strict minimum ; liens profonds via **App Links vérifiés**
-  (`autoVerify`) et validation stricte de tous les paramètres entrants
+  (`autoVerify`) et validation stricte de tous les paramètres entrants, y compris ceux du QR code
 - `FileProvider` limité au seul dossier des fichiers de partage, fichiers temporaires nettoyés
 - Aucune WebView ; pas de chargement de code dynamique
 - Release : `debuggable=false`, R8 activé, aucun log (Timber sans arbre en release), pas de
   données sensibles dans les messages d'erreur
 - Protection contre le **tapjacking** (`filterTouchesWhenObscured`) sur les actions sensibles :
-  suppression de compte, déconnexion de tous les appareils
+  suppression de compte, déconnexion de tous les appareils, acceptation d'un téléphone en partie à côté
 - Permissions demandées au moment de leur usage, avec une explication ; l'app fonctionne si elles sont refusées
 - Pas de Play Integrity API (elle implique des échanges avec Google) ; l'intégrité des scores repose
-  sur la validation serveur
+  sur la validation par l'autorité (téléphone hôte ou serveur)
 
 ### Page spectateur web
 - Lecture seule, accès par jeton non devinable et expirant à la fin de la partie
@@ -852,15 +1082,20 @@ fausse, préviens-moi au lieu de modifier le texte.
 ### Tests et preuves
 - Tests automatisés des règles d'accès du backend (un utilisateur ne peut ni lire ni modifier
   la partie d'un autre groupe, un code expiré ou révoqué est refusé, la limitation d'essais fonctionne)
-- Test qu'une partie locale n'émet **aucune requête réseau**
+- Test qu'une partie sur un seul téléphone n'émet **aucune requête réseau**, et qu'une partie à côté
+  ne contacte **aucune adresse hors du réseau local**
+- Tests de sécurité de la partie à côté : mauvaise empreinte, jeton expiré ou déjà utilisé, téléphone
+  exclu, rejeu d'un événement, proposition hors tour ou hors droits, message trop gros
 - Avant la publication : revue complète selon la checklist **MASVS** (`docs/security/MASVS_CHECKLIST.md`,
-  avec le statut de chaque contrôle et sa justification), puis je ferai moi-même un test d'intrusion léger
+  avec le statut de chaque contrôle et sa justification), puis je ferai moi-même un test d'intrusion léger,
+  y compris sur la partie à côté
 - **Divulgation de vulnérabilités** : `SECURITY.md` dans le dépôt et `/.well-known/security.txt`
   sur le site, avec une adresse de contact dédiée
 
 ### Ouverture (P3)
 - Étudier la publication du code en **open source** et une distribution sur **F-Droid**, qui apportent
-  une preuve forte de l'absence de traceurs
+  une preuve forte de l'absence de traceurs. La partie à côté, entièrement open source et sans Play
+  services, reste compatible avec F-Droid
 
 ---
 
@@ -899,23 +1134,30 @@ avec cette section.
 - Un dépôt **public** séparé `molkky-board-site` publié avec GitHub Pages (le dépôt du code reste privé ;
   GitHub Pages n'est pas disponible gratuitement sur un dépôt privé), en français et en anglais :
   - page d'accueil courte (présentation, captures, lien vers le Play Store) ;
+  - **page `/join`** : cible des liens d'invitation de la partie à côté quand l'app n'est pas installée
+    (propose de l'installer ; elle ne lit ni n'envoie jamais les paramètres placés après le `#`) ;
+  - fichier `/.well-known/assetlinks.json` pour les App Links vérifiés ;
   - **politique de confidentialité** (URL exigée par le Play Store) ;
   - **page de demande de suppression de compte et des données**, accessible sans réinstaller l'app
     (exigence Google pour les apps qui proposent des comptes) ;
   - conditions d'utilisation, avec l'âge minimum ;
   - mentions « Yogi Studio » et, éventuellement, le lien de soutien
 - La politique de confidentialité décrit exactement ce que fait l'app : rien n'est collecté en mode
-  sans compte ; en mode compte, e-mail, pseudo et données de parties, hébergés dans l'UE (selon le
-  backend retenu), avec les durées de conservation et la procédure de suppression
+  sans compte ; en partie à côté, échanges directs et chiffrés entre les téléphones, sans serveur ;
+  en mode compte, e-mail, pseudo et données de parties, hébergés dans l'UE (selon le backend retenu),
+  avec les durées de conservation et la procédure de suppression
 
 ### Exigences techniques
 - Format **AAB** et Play App Signing (voir phase 5)
 - **targetSdk** au niveau exigé par Google au moment de l'envoi (Android 16 / API 36 minimum
-  pour les nouvelles apps depuis le 31 août 2026)
+  pour les nouvelles apps depuis le 31 août 2026). Avec un targetSdk 37, gérer la permission d'accès
+  au réseau local (voir phase 3 bis)
 - Suppression du compte **dans l'app** et **via le site web**
 - Icône adaptative avec variante monochrome
 - Permissions minimales, chacune justifiée : caméra (scan du QR code, et photo de joueur en option),
-  notifications (partie en cours), vibration. Pas d'accès aux contacts, pas de localisation
+  notifications (partie en cours), vibration, **appareils à proximité / réseau local** (partie à côté,
+  déclarée sans usage de localisation), service de premier plan de type `connectedDevice` (téléphone hôte).
+  Pas d'accès aux contacts, **pas de localisation**
 
 ### Fiche du Play Store (à préparer dans `docs/store/`, en français et en anglais)
 - Titre (30 caractères maximum), description courte (80), description longue (4 000)
@@ -923,10 +1165,14 @@ avec cette section.
 - Au moins 4 captures d'écran téléphone, générées à partir des tests Roborazzi
   (accueil, écran de jeu, fin de partie, Hall of Fame), éventuellement avec un bandeau de texte
 - Une vignette de partage d'exemple pour illustrer la fonction sociale
+- Mettre en avant « plusieurs téléphones, sans compte ni Internet »
 
 ### Déclarations dans la Play Console (prépare les réponses dans `docs/store/declarations.md`)
 - **Sécurité des données** : aucune donnée collectée ni partagée en mode sans compte ; en mode compte,
-  la liste exacte des données, leur finalité, le chiffrement en transit et la possibilité de suppression
+  la liste exacte des données, leur finalité, le chiffrement en transit et la possibilité de suppression.
+  **À vérifier** : la façon dont Google qualifie un transfert direct entre téléphones, sans serveur,
+  en partie à côté (a priori ni collecte ni partage) ; résume-moi la règle avant de remplir le formulaire
+- **Service de premier plan** : justification du type `connectedDevice` (vidéo de démonstration si demandée)
 - **Classification du contenu** (questionnaire IARC)
 - **Public cible et contenu** : 13 ans et plus, pas d'attrait spécifique pour les enfants
 - **Publicités** : aucune
@@ -938,8 +1184,8 @@ avec cette section.
 - Au moins **12 testeurs inscrits pendant 14 jours consécutifs**. Si leur nombre passe sous 12,
   le compteur repart à zéro : viser 15 à 20 testeurs pour garder de la marge
 - Prépare un **kit testeurs** dans `docs/store/testeurs.md` : message d'invitation, marche à suivre pour
-  rejoindre le test, scénarios à jouer (partie solo, partie en équipes, partie multi-téléphones,
-  partage d'une vignette), et un formulaire simple de retour
+  rejoindre le test, scénarios à jouer (partie solo, partie en équipes, **partie à côté en Wi-Fi et en
+  point d'accès**, partage d'une vignette), et un formulaire simple de retour
 - Ajoute dans l'app (version de test uniquement) un bouton « Envoyer un retour » qui ouvre un e-mail
   pré-rempli avec la version et le modèle de téléphone, sans autre donnée
 - Tiens un **journal des retours et des corrections** pendant le test : il servira à remplir le
@@ -967,6 +1213,8 @@ et tiens-la à jour jusqu'à la publication.
 ## Contraintes de qualité
 - Le moteur de score doit avoir une couverture de tests complète, alignée sur SCORING_SPEC.md,
   y compris les corrections de lancers anciens et les changements de joueurs en cours de partie ;
+- Le protocole de synchronisation (`core:sync`) a une couverture de tests complète : validation,
+  ordonnancement, idempotence, rattrapage et cas de sécurité ;
 - Pas de clé ni de secret dans le code ;
 - Commits réguliers et explicites ; un README qui explique comment builder et lancer Molkky Board ;
 - Interface en français, avec des chaînes externalisées pour pouvoir traduire plus tard.
@@ -1182,3 +1430,14 @@ et tiens-la à jour jusqu'à la publication.
 - 2026-10-27 — **Coach de fin de partie et mode débutant supprimés** (jugés inutiles au test ; écarts volontaires à la spec). « Mordu compté comme raté » retiré des règles Ludique ; **écran bloqué en portrait**.
 - Corrections restantes du test (à reprendre) : C1 signature Yogi Studio, C2 icône podium et geste retiré, C3 placement en vue globale, C6 avatars sobres, C8 « Terminer », C9 voix et sons en vibreur, C10 Mölkkout expliqué, C11 QR retiré, C12 « aucune donnée collectée », C13 accessibilité, C15 tremblement du bon joueur, C16 caractères de mise en forme ; D1 masquage des noms retiré ; N1 photo du moment, N2 animation par lancer.
 - 2026-10-27 — Demandé : **N3 animation de tension** quand le joueur actif est à un raté de la sanction (après `missLimit − 1` ratés, et seulement si un raté de plus est sanctionné : en Ludique, selon la règle choisie — élimination, retour à 0 ou à la moitié ; rien si « on continue » ou joueur exempté). À jouer au moment de son lancer, plus marquée que la pulsation actuelle des ratés, sans bloquer la saisie, avec une version calme si « Réduire les animations ».
+
+### Corrections du test de rattrapage (faites le 2026-10-28)
+- Faits : C1 signature Yogi Studio à 1,5 s (fin de l'envol raccourcie, total 4,5 s), C2 icône podium à gauche du bandeau (geste et mot « Scores » retirés), C3 placement en vue globale (pas à pas, voix et vue de côté retirés), C8 bouton « Terminer », C9 voix et sons coupés en silencieux seulement (et première annonce plus perdue pendant l'initialisation du moteur vocal), C10 belle et Mölkkout expliqués (écran de fin à 1-1, section et démo dans les règles), C11 QR retiré des vignettes et du clip, C12 « Aucune donnée collectée » en tête d'À propos + bibliothèques open source, C15 autocollant « Aïe ! » sur le joueur qui a dépassé, C16 caractères de mise en forme filtrés à la saisie et refusés à la restauration, D1 masquage des noms retiré.
+- Restent (jalon J7b) : C6 avatars sobres, C13 accessibilité, N1 photo du moment, N2 animation à chaque lancer, N3 tension avant la sanction.
+
+### Spécification du 2026-10-28 — « Partie à côté »
+- 2026-10-28 — `CLAUDE.md`, `01-specifications-molkky-board.md` et `02-journal-decisions.md` reprennent la version du 28 (fusion sans toucher à cette section).
+- Décidé par la spec : **phase 3 bis** (plusieurs téléphones sur le même terrain, sans serveur ni compte ni Internet, le téléphone de l'organisateur est l'autorité) ; module `core:sync` (protocole unique, abstraction de transport, validation pure partagée avec le futur serveur) ; briques open source uniquement, **Google Nearby écarté** ; jamais de localisation ; pas de code court dans ce mode ; photos jamais transmises ; **prototype sur deux téléphones réels avant l'implémentation complète**.
+- **En attente de validation** : révision d'`ARCHITECTURE.md` (§ 6 bis, § 9 jalons J7b, A1, P0, S1–S3, R1–R4) et premier `docs/security/THREAT_MODEL.md`.
+- Constat technique (vérifié dans le code de Ktor) : le moteur **serveur CIO ne gère pas TLS** ; options à départager au prototype (Ktor Netty, ou `SSLServerSocket` de la plateforme avec les trames WebSocket de Ktor) ; client Ktor sur moteur OkHttp proposé.
+- Points non tranchés (porteur du projet) : nouvelle formulation de l'encart « Vie privée » ; report de la phase 4 en V2 ; qualification du transfert direct dans le formulaire « Sécurité des données ».

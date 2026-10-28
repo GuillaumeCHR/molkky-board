@@ -79,6 +79,47 @@ La spécification à jour fait foi : ce journal explique **pourquoi** elle est a
 - **Animation d'élimination** au troisième raté (tampon « Éliminé », quille-avatar qui tombe), réversible
   si une correction annule l'élimination, synchronisée sur tous les téléphones.
 
+## Ajouts du 28 octobre 2026 — « Partie à côté » (multi-téléphones sans serveur)
+- **Constat** : le cas le plus courant est celui de téléphones sur le même terrain. Un serveur et des
+  comptes n'y sont pas nécessaires ; ils ajoutent des données personnelles, un sous-traitant et un point
+  de panne quand il n'y a pas de réseau mobile.
+- **Décision** : nouvelle **phase 3 bis**. Le téléphone de l'organisateur devient l'**hôte** (autorité qui
+  valide et ordonne le journal, le rôle prévu pour le serveur). Les autres téléphones le rejoignent en
+  scannant un QR code, via le même Wi-Fi ou un **point d'accès local sans Internet** créé par l'hôte.
+- **Architecture** : un module `core:sync` porte un protocole d'événements unique et une abstraction
+  de transport (réseau local en phase 3 bis, serveur en phase 4). La validation des événements est une
+  fonction pure partagée entre l'hôte local et le futur serveur.
+- **Briques uniquement open source** : Ktor (serveur et client CIO, WebSockets), Conscrypt (TLS 1.3),
+  Bouncy Castle ou Android Keystore pour le certificat de partie, Tink, zxing, API Android AOSP.
+  **Google Nearby Connections écarté** : propriétaire, dépendant des Play services, et il collecte des
+  métriques d'usage. La pile reste compatible F-Droid.
+- **Sécurité inspirée de LocalSend et du protocole d'appairage de Briar** (spécifications lues, aucun code
+  copié ; Briar est sous GPL) : certificat éphémère dont l'empreinte est dans le QR code et épinglée par
+  l'invité ; QR code considéré comme **observable**, donc sans secret durable (jeton à usage unique, 2 min) ;
+  **validation humaine** de chaque arrivée par l'organisateur ; jeton de session par téléphone.
+- **Pas de code court à saisir** dans ce mode : il ne peut pas porter l'empreinte du certificat.
+  En secours, l'organisateur saisit pour le joueur sur son propre téléphone.
+- **Pas de localisation, jamais** : le point d'accès local exige la localisation précise sur Android 12 et
+  moins, donc ces hôtes n'ont que le mode « même Wi-Fi ». À partir d'Android 13, `NEARBY_WIFI_DEVICES`
+  avec `neverForLocation`.
+- **Android 17** : avec un targetSdk 37, l'accès au réseau local passe derrière la permission d'exécution
+  `ACCESS_LOCAL_NETWORK`. Prévu dans la spec, à revérifier à l'implémentation.
+- Service de premier plan `connectedDevice` sur l'hôte (sa notification est celle de la partie en cours).
+- Les photos de joueurs ne transitent jamais ; seuls pseudo, avatar emoji ou mascotte et événements de jeu.
+- QR code sous forme de lien `https://…/join#…` : paramètres après le `#`, jamais envoyés au site ;
+  App Links vérifiés si l'app est installée, page d'installation sinon.
+- Le QR code des vignettes de partage n'est jamais un QR d'invitation à une partie en cours.
+- Un prototype sur deux appareils réels est exigé avant l'implémentation complète.
+
+### Points ouverts (à trancher)
+1. **Encart « Vie privée »** : « Sans compte, tout reste sur votre téléphone » devient inexact dès que
+   plusieurs téléphones jouent ensemble. Nouvelle formulation proposée dans la spec, **non validée**.
+2. **Phase 4 (comptes, serveur)** : la partie à côté couvre l'essentiel sans compte. Reporter les comptes,
+   les groupes et le jeu à distance en V2 simplifierait la V1 (RGPD, registre, page de suppression de
+   compte, accès de test pour Google). **Non décidé.**
+3. **Formulaire « Sécurité des données »** : vérifier comment Google qualifie un transfert direct entre
+   téléphones sans serveur.
+
 ## Leçons tirées de la concurrence
 Les avis des apps existantes ont fait ajouter au MVP : deux modes de saisie (quilles / pavé rapide),
 correction de n'importe quel lancer, réordonnancement des joueurs à tout moment, première partie guidée
@@ -91,15 +132,18 @@ Détails dans `04-analyse-concurrence.md`.
 - **Aucun revenu**, statut DSA non-commerçant. Un éventuel « Paye-moi un café » : uniquement sur le
   site web tant que la politique de paiements de Google n'a pas été vérifiée.
 - Site web public séparé (`molkky-board-site`, GitHub Pages) : politique de confidentialité,
-  suppression de compte, conditions d'utilisation. Le dépôt du code reste privé.
+  suppression de compte, conditions d'utilisation, page `/join` et `assetlinks.json` pour les
+  invitations. Le dépôt du code reste privé.
 - Test fermé obligatoire : 12 testeurs pendant 14 jours (viser 15 à 20).
 - Détails dans `05-publication-play-store.md`.
 
 ## Sécurité et vie privée
 - Référentiel **OWASP MASVS v2**, recommandations CNIL, analyse de risques inspirée d'EBIOS RM.
-- **Aucune donnée ne quitte le téléphone sans compte**, aucun traceur ni SDK tiers, rapports de
-  plantage uniquement à la demande de l'utilisateur.
-- Validation serveur de chaque événement de partie (intégrité des scores et des records).
+- **Aucune donnée ne quitte les téléphones de la partie sans compte** : rien du tout sur un seul
+  téléphone, uniquement du trafic chiffré sur le réseau local en partie à côté. Aucun traceur ni SDK
+  tiers, rapports de plantage uniquement à la demande de l'utilisateur.
+- Validation de chaque événement de partie par l'autorité (téléphone hôte ou serveur) :
+  intégrité des scores et des records.
 - Encart « Vie privée » dans l'écran « À propos », dont chaque affirmation doit rester vraie.
 - Open source et F-Droid envisagés plus tard (P3).
 
@@ -108,3 +152,4 @@ Détails dans `04-analyse-concurrence.md`.
 2. Valider `RULES.md` et `SCORING_SPEC.md`, puis l'architecture (choix du backend).
 3. Créer le dépôt GitHub privé `molkky-board` avec `gh`.
 4. Recruter les testeurs du futur test fermé.
+5. Trancher les trois points ouverts de la partie à côté, puis faire réaliser le prototype réseau local.
