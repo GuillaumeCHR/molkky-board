@@ -62,7 +62,7 @@ Molkky Board is an independent app published by Yogi Studio. It is not affiliate
 
 ## Graphics
 
-- App icon 512 × 512: to generate
+- App icon 512 × 512: `docs/store/icon-512.png`
 - Feature graphic 1024 × 500: `docs/store/screenshots/en/feature-graphic.png`
 - Phone screenshots (1080 × 1920): `docs/store/screenshots/en/01-game.png` … `08-dark.png`
 
