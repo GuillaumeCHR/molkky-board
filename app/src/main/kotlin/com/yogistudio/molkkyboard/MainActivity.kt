@@ -1,6 +1,7 @@
 package com.yogistudio.molkkyboard
 
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -46,6 +47,12 @@ class MainActivity : AppCompatActivity() {
         // L'écran de démarrage système ne reste que le temps de lire les réglages (sons de l'intro).
         installSplashScreen().setKeepOnScreenCondition { !startupLoader.state.value.settingsRead }
         super.onCreate(savedInstanceState)
+        // Portrait sur téléphone seulement. Sur grand écran (tablette, pliable ouvert), la mise en page s'adapte et
+        // Android ignore de toute façon toute restriction d'orientation : rien n'est déclaré dans le manifeste.
+        // Un pliable qu'on plie ou déplie recrée l'activité, qui réévalue ce choix.
+        if (resources.configuration.smallestScreenWidthDp < LARGE_SCREEN_DP) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
         if (savedInstanceState == null) {
             readTarget(intent)
             lifecycleScope.launch { crashReport.value = withContext(Dispatchers.IO) { crashReports.pending() } }
@@ -110,6 +117,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_GAME_ID = "com.yogistudio.molkkyboard.GAME_ID"
+        private const val LARGE_SCREEN_DP = 600
         const val EXTRA_DEBUG_JOIN = "com.yogistudio.molkkyboard.DEBUG_JOIN"
     }
 }
