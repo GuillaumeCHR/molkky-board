@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ds_pin_standing">Quille %1$d, debout</string>
+    <string name="ds_pin_knocked">Quille %1$d, tombée</string>
+    <string name="ds_pin_state_knocked">tombée</string>
+    <string name="ds_pin_state_standing">debout</string>
+    <string name="ds_score">Score : %1$d sur %2$d</string>
+    <string name="ds_misses">Ratés consécutifs : %1$d sur %2$d</string>
+    <string name="ds_player_active">%1$s, à son tour</string>
+    <string name="ds_remove">Retirer %1$s</string>
+    <string name="ds_quickpad_single">Quille seule</string>
+    <string name="ds_quickpad_count">Nombre de quilles</string>
+    <string name="ds_quickpad_value_single">Quille %1$d seule</string>
+    <string name="ds_quickpad_value_count">%1$d quilles</string>
+    <string name="ds_quickpad_value_miss">Aucune quille</string>
+    <string name="ds_player_score">%1$s : %2$d points</string>
+    <string name="ds_back">Retour</string>
+    <string name="ds_round">Tour %1$d</string>
+    <string name="ds_rank">Rang %1$d</string>
+    <string name="ds_remaining">reste %1$d</string>
+    <string name="ds_misses_warning">Ratés consécutifs : %1$d sur %2$d, attention au prochain</string>
+    <string name="ds_guide_step">Prise en main · %1$d sur %2$d</string>
+    <string name="ds_guide_skip">Passer le guide</string>
+    <string name="ds_guide_done">Compris !</string>
+    <string name="ds_emblem_pin">Quille</string>
+    <string name="ds_emblem_leaf">Feuille</string>
+    <string name="ds_emblem_bolt">Éclair</string>
+    <string name="ds_emblem_wave">Vague</string>
+    <string name="ds_emblem_star">Étoile</string>
+    <string name="ds_emblem_sun">Soleil</string>
+    <string name="ds_emblem_mountain">Montagne</string>
+    <string name="ds_emblem_flame">Flamme</string>
+    <string name="ds_emblem_tree">Sapin</string>
+    <string name="ds_emblem_crown">Couronne</string>
+    <string name="ds_emblem_anchor">Ancre</string>
+    <string name="ds_emblem_heart">Cœur</string>
+    <string name="ds_emblem_moon">Lune</string>
+    <string name="ds_emblem_snowflake">Flocon</string>
+    <string name="ds_emblem_fish">Poisson</string>
+    <string name="ds_emblem_bird">Oiseau</string>
+</resources>

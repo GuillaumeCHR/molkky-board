@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="nearby_channel">Partie partagée</string>
-    <string name="nearby_notification_title">Partie partagée en cours</string>
+    <string name="nearby_channel">Shared game</string>
+    <string name="nearby_notification_title">Shared game in progress</string>
     <plurals name="nearby_notification_phones">
-        <item quantity="one">%1$d invité connecté</item>
-        <item quantity="other">%1$d invités connectés</item>
+        <item quantity="one">%1$d guest connected</item>
+        <item quantity="other">%1$d guests connected</item>
     </plurals>
-    <string name="nearby_notification_stop">Arrêter le partage</string>
-    <string name="notice_guest_left">%1$s s\'est déconnecté.</string>
-    <string name="notice_guest_offline">Connexion perdue avec %1$s.</string>
-    <string name="notice_guest_back">%1$s est de retour.</string>
-    <string name="notice_removed">L\'organisateur vous a déconnecté. La partie reste consultable sur ce téléphone.</string>
-    <string name="notice_stopped">L\'organisateur a arrêté le partage. La partie reste consultable sur ce téléphone.</string>
-    <string name="notice_over_host">Partie terminée : le partage est arrêté et les invités sont prévenus.</string>
-    <string name="notice_over_guest">Partie terminée : le partage s\'arrête. La partie reste consultable sur ce téléphone.</string>
+    <string name="nearby_notification_stop">Stop sharing</string>
+    <string name="notice_guest_left">%1$s disconnected.</string>
+    <string name="notice_guest_offline">Connection lost with %1$s.</string>
+    <string name="notice_guest_back">%1$s is back.</string>
+    <string name="notice_removed">The organiser disconnected you. The game stays readable on this phone.</string>
+    <string name="notice_stopped">The organiser stopped sharing. The game stays readable on this phone.</string>
+    <string name="notice_over_host">Game over: sharing has stopped and guests have been told.</string>
+    <string name="notice_over_guest">Game over: sharing stops. The game stays readable on this phone.</string>
 </resources>

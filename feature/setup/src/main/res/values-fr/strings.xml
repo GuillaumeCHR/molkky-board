@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_title">Nouvelle partie</string>
+    <string name="setup_players">Joueurs</string>
+    <string name="setup_player_name">Nom du joueur</string>
+    <string name="setup_add">Ajouter</string>
+    <string name="setup_shuffle">Ordre au hasard</string>
+    <string name="setup_order_hint">Glissez la poignée ≡ pour changer l\'ordre de passage ; le premier commence.</string>
+    <string name="setup_rules">Règles</string>
+    <string name="setup_rules_official">Officiel</string>
+    <string name="setup_rules_playful">Ludique</string>
+    <string name="setup_rules_official_hint">Les règles officielles : 50 points exactement, retour à 25 en cas de dépassement, éliminé après 3 ratés de suite. Les parties officielles comptent pour les records.</string>
+    <string name="setup_rules_imo">Règlement de tournoi IMO</string>
+    <string name="setup_rules_imo_hint">Ajoute la règle des 37 points, les fautes détaillées et le score 50 / 0 en cas d\'élimination.</string>
+    <string name="setup_rules_playful_hint">Les règles officielles avec des exceptions, pour jouer sans prise de tête. Les parties ludiques comptent dans les victoires, pas dans les records.</string>
+    <string name="setup_rules_playful_edit">Modifier pour cette partie</string>
+    <string name="setup_rules_playful_sheet">Exceptions de cette partie</string>
+
+    <string name="playful_title">Règles du mode Ludique</string>
+    <string name="playful_intro">Exceptions proposées par défaut quand vous choisissez le mode Ludique. Vous pourrez encore les modifier pour une seule partie.</string>
+    <string name="playful_official">Règle officielle</string>
+    <string name="playful_misses_title">Après %1$d ratés de suite</string>
+    <string name="playful_miss_eliminate">Éliminé</string>
+    <string name="playful_miss_none">Rien : on continue à jouer</string>
+    <string name="playful_miss_reset_zero">Retour à 0</string>
+    <string name="playful_miss_reset_half">Retour à %1$d</string>
+    <string name="playful_miss_limit">Nombre de ratés</string>
+    <string name="playful_overshoot_title">Si on dépasse %1$d</string>
+    <string name="playful_overshoot_half">Retour à %1$d</string>
+    <string name="playful_overshoot_zero">Retour à 0</string>
+    <string name="playful_overshoot_stay">Le lancer ne compte pas</string>
+    <string name="playful_overshoot_bounce">Rebond : on recule de l\'excédent</string>
+    <string name="playful_target">Score à atteindre</string>
+    <string name="playful_places">Jouer les places</string>
+    <string name="playful_places_hint">La partie continue après le premier vainqueur, pour la 2e et la 3e place.</string>
+    <string name="playful_catch_up">Rejoindre un score</string>
+    <string name="playful_catch_up_hint">L\'équipe dont on atteint exactement le score redescend à %1$d.</string>
+    <string name="playful_reset">Rétablir les exceptions par défaut</string>
+    <string name="playful_decrease">Diminuer : %1$s</string>
+    <string name="playful_increase">Augmenter : %1$s</string>
+    <string name="playful_summary">Ludique · %1$s</string>
+    <string name="playful_summary_none">Aucune exception : la partie suivra les règles officielles.</string>
+    <string name="playful_ex_no_elimination">sans élimination</string>
+    <string name="playful_ex_miss_zero">ratés : retour à 0</string>
+    <string name="playful_ex_miss_half">ratés : retour à %1$d</string>
+    <string name="playful_ex_miss_limit">%1$d ratés</string>
+    <string name="playful_ex_overshoot_zero">dépassement : retour à 0</string>
+    <string name="playful_ex_overshoot_stay">dépassement : lancer annulé</string>
+    <string name="playful_ex_overshoot_bounce">dépassement : rebond</string>
+    <string name="playful_ex_target">cible %1$d</string>
+    <string name="playful_ex_places">on joue les places</string>
+    <string name="playful_ex_catch_up">rejoindre un score</string>
+    <string name="setup_start">Lancer la partie</string>
+    <string name="setup_need_two">Ajoutez au moins deux joueurs</string>
+    <string name="setup_position">%1$d.</string>
+    <string name="setup_solo">Chacun pour soi</string>
+    <string name="setup_teams">En équipes</string>
+    <string name="setup_need_two_teams">Il faut au moins deux équipes avec des joueurs</string>
+    <string name="setup_known_players">Joueurs habituels : touchez pour les ajouter</string>
+    <string name="setup_add_known">Ajouter %1$s</string>
+    <string name="setup_remove">Retirer %1$s</string>
+    <string name="setup_change_avatar">Changer l\'avatar de %1$s</string>
+    <string name="setup_move_up">Monter</string>
+    <string name="setup_move_down">Descendre</string>
+    <string name="setup_add_team">+ Ajouter une équipe</string>
+    <string name="setup_remove_team">Supprimer cette équipe</string>
+    <string name="setup_team_name">Nom de l\'équipe</string>
+    <string name="setup_random_name">Nom d\'équipe au hasard</string>
+    <string name="setup_change_emblem">Changer l\'emblème de %1$s</string>
+    <string name="setup_color">Couleur %1$d</string>
+    <string name="setup_switch_team">Faire passer %1$s dans l\'équipe suivante</string>
+    <string name="setup_known_team">%1$s ont déjà joué ensemble, sous le nom %2$s. Reprendre ce nom permet de continuer son palmarès.</string>
+    <string name="setup_known_accept">Reprendre « %1$s »</string>
+    <string name="setup_known_dismiss">Garder « %1$s »</string>
+    <string name="setup_team_empty">Cette équipe n\'a pas encore de joueurs : ajoutez-les juste en dessous.</string>
+    <string name="setup_and">" et "</string>
+    <string name="setup_teams_hint">Ajoutez les joueurs directement dans chaque équipe, ci-dessous.</string>
+    <string name="setup_team_add_player">Ajouter un joueur à cette équipe</string>
+    <string name="setup_add_known_to_team">Ajouter %1$s à %2$s</string>
+    <string name="setup_family">Mode famille</string>
+    <string name="setup_family_hint">Score de départ, objectif réduit ou pas d\'élimination pour certains joueurs.</string>
+    <string name="setup_family_distance">Distance de lancer conseillée : 3 à 4 m ; pour les enfants, rapprochez la ligne (environ 2 m).</string>
+    <string name="setup_family_start">Score de départ</string>
+    <string name="setup_family_target">Objectif</string>
+    <string name="setup_family_exempt">Jamais éliminé</string>
+    <string name="setup_avatar_title">Avatar de %1$s</string>
+    <string name="setup_photo_hint">Ou une photo, qui reste sur ce téléphone (elle n\'apparaît jamais dans un partage sans votre accord).</string>
+    <string name="setup_photo_camera">Prendre une photo</string>
+    <string name="setup_photo_gallery">Choisir dans la galerie</string>
+    <string name="setup_photo_remove">Retirer la photo</string>
+    <string-array name="team_names">
+        <item>Les Bouleaux</item>
+        <item>Les Sapins Hardis</item>
+        <item>Les Quilles en Folie</item>
+        <item>Les Rois du 50</item>
+        <item>Les Bûcherons</item>
+        <item>Les Écorces</item>
+        <item>Les Copeaux</item>
+        <item>Les Pives</item>
+        <item>Les Lanceurs d\'Élite</item>
+        <item>Les Retours à 25</item>
+        <item>Les Douze Quilles</item>
+        <item>Les Strikeurs</item>
+        <item>Les Nordiques</item>
+        <item>Les Rennes Agiles</item>
+        <item>Les Élans</item>
+        <item>Les Saunas</item>
+        <item>Les Aurores Boréales</item>
+        <item>Les Lapons Volants</item>
+        <item>Les Korrigans</item>
+        <item>Les Menhirs</item>
+        <item>Les Galettes Saucisses</item>
+        <item>Les Crêpes Volantes</item>
+        <item>Les Goélands</item>
+        <item>Les Embruns</item>
+        <item>Les Phares</item>
+        <item>Les Marins d\'Eau Douce</item>
+        <item>Les Bigoudènes</item>
+        <item>Les Druides</item>
+        <item>Les Farfadets</item>
+        <item>Les Chênes Têtus</item>
+        <item>Les Hêtres Heureux</item>
+        <item>Les Pommes de Pin</item>
+        <item>Les Écureuils</item>
+        <item>Les Hiboux</item>
+        <item>Les Castors</item>
+        <item>Les Lynx</item>
+        <item>Les Ours Bruns</item>
+        <item>Les Rondins</item>
+        <item>Les Planches</item>
+        <item>Les Brindilles</item>
+        <item>Les Glands</item>
+        <item>Les Champions du Dimanche</item>
+        <item>Les Fines Gâchettes</item>
+        <item>Les Bras Cassés</item>
+        <item>Les Mains d\'Or</item>
+        <item>Les Tireurs du Bocage</item>
+        <item>Les Cinquante Pile</item>
+        <item>Les Zéro Raté</item>
+        <item>Les Mölkky Boys</item>
+        <item>Les Mölkky Girls</item>
+    </string-array>
+    <string name="setup_format">Format</string>
+    <string name="setup_format_single">Une manche</string>
+    <string name="setup_format_match">Match en 2 manches</string>
+    <string name="setup_format_match_hint">Le premier à gagner 2 manches remporte le match. Avant la belle, l\'équipe qui a marqué le plus de points commence ; à égalité, un Mölkkout les départage.</string>
+    <string name="setup_format_match_imo_hint">Le premier à gagner 2 manches remporte le match ; l\'ordre de passage alterne à chaque manche (règlement IMO).</string>
+    <string name="setup_guide">Ajoutez au moins deux joueurs : un pseudo suffit. Puis « Lancer la partie ».</string>
+    <string name="setup_same_player_title">C\'est la même %1$s ?</string>
+    <string name="setup_same_player_text">%1$s fait déjà partie de vos joueurs habituels. Si c\'est la même personne, ses statistiques et son palmarès continuent.</string>
+    <string name="setup_same_player_yes">Oui, c\'est %1$s</string>
+    <string name="setup_same_player_no">Non, quelqu\'un d\'autre</string>
+    <string name="setup_name_in_game">Il y a déjà un joueur « %1$s » dans la partie</string>
+    <string name="setup_name_other_player">Un autre nom pour ce nouveau joueur que « %1$s »</string>
+    <string name="setup_name_hint">Deux joueurs ne peuvent pas porter le même nom : ajoutez une initiale (« Léa B. ») ou un numéro.</string>
+    <string name="setup_name_still_taken">Ce nom est déjà pris.</string>
+    <string name="setup_name_add">Ajouter</string>
+    <string name="setup_name_cancel">Annuler</string>
+    <string name="setup_duplicate_team">Deux équipes s\'appellent « %1$s » : renommez l\'une d\'elles.</string>
+</resources>

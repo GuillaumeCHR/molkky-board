@@ -173,14 +173,14 @@ private fun PhotoButtons(hasPhoto: Boolean, actions: ShareActions) {
     }
     var capture by remember { mutableStateOf<Uri?>(null) }
     val camera =
-        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { taken ->
+        rememberTakePicture { taken ->
             if (taken) load(capture)
         }
     val gallery = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia(), load)
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(
             onClick = {
-                capture = MomentPhoto.captureUri(context).also(camera::launch)
+                capture = MomentPhoto.captureUri(context).also(camera)
             },
             modifier = Modifier.heightIn(min = MBDimens.MinTouch),
         ) { Text(stringResource(R.string.share_photo_camera)) }

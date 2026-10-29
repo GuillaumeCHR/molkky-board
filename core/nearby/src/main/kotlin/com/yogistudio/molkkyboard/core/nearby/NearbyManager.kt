@@ -576,6 +576,6 @@ class NearbyManager
             const val RECONNECT_DELAY_MS = 2_000L
             const val ANSWER_TIMEOUT_MS = 10_000L
             const val STOP_TIMEOUT_MS = 1_000
-            const val INVITE_RENEW_MS = 90_000L
+            const val INVITE_RENEW_MS = 60_000L
         }
     }

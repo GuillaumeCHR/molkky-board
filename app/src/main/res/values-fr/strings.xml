@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="placeholder_tagline">Le tableau de score du Mölkky</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Accueil</string>
+    <string name="nav_history">Historique</string>
+    <string name="nav_hall_of_fame">Hall of Fame</string>
+    <string name="nav_settings">Réglages</string>
+    <string name="nav_back">Retour</string>
+
+    <!-- Accueil -->
+    <string name="home_new_game">Nouvelle partie</string>
+    <string name="home_join">Rejoindre</string>
+    <string name="home_no_game">Aucune partie en cours</string>
+    <string name="home_no_game_hint">Ajoutez les joueurs, lancez la partie : Molkky Board compte les points.</string>
+    <string name="home_ongoing">Partie en cours</string>
+    <string name="home_ongoing_turn">Au tour de %1$s</string>
+    <string name="home_resume">Reprendre</string>
+    <string name="home_placement">Placer les quilles</string>
+    <string name="home_rules">Règles du jeu</string>
+    <string name="shortcut_new_game">Nouvelle partie</string>
+    <string name="shortcut_placement">Placer les quilles</string>
+    <string name="shortcut_rules">Règles du jeu</string>
+
+    <!-- Écrans à venir -->
+    <string name="coming_soon">Bientôt disponible</string>
+    <string name="join_title">Rejoindre une partie</string>
+
+
+    <!-- Réglages -->
+    <string name="settings_display">Affichage</string>
+    <string name="settings_sunlight">Plein soleil</string>
+    <string name="settings_sunlight_hint">Contraste renforcé pour jouer en plein soleil</string>
+    <string name="settings_language">Langue</string>
+    <string name="settings_language_fr">Français</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_game">Partie</string>
+    <string name="settings_input_mode">Mode de saisie</string>
+    <string name="settings_input_pins">Quilles</string>
+    <string name="settings_input_quick">Rapide</string>
+    <string name="settings_input_hint">Quilles : on touche celles qui sont tombées (statistiques par quille). Rapide : pavé de 0 à 12.</string>
+    <string name="settings_voice">Annonces vocales</string>
+    <string name="settings_sounds">Sons</string>
+    <string name="settings_voice_hint">« Tour 4 », « Au tour de Léa, il lui faut 7 », « Retour à 25 ! »… par la synthèse vocale du téléphone. Muettes en silencieux et avec TalkBack.</string>
+    <string name="settings_guide">Revoir la prise en main</string>
+    <string name="settings_guide_hint">Rejoue les 4 bulles d\'aide sur une nouvelle partie.</string>
+    <string name="settings_voice_rate">Débit de la voix</string>
+    <string name="settings_voice_volume">Volume de la voix</string>
+    <string name="settings_notification">Notification de partie en cours</string>
+    <string name="settings_notification_hint">Le tour, qui doit lancer et les scores, avec « Saisir le lancer ».</string>
+    <string name="notification_channel_name">Partie en cours</string>
+    <string name="notification_channel_description">Tour, joueur à qui c\'est le tour et scores de la partie en cours.</string>
+    <string name="notification_title">Tour %1$d · au tour de %2$s</string>
+    <string name="notification_title_finished">Manche terminée</string>
+    <string name="notification_action_throw">Saisir le lancer</string>
+    <string name="notification_permission_title">Afficher la partie en cours ?</string>
+    <string name="notification_permission_text">Une notification discrète montre le tour, qui doit lancer et les scores, pour revenir à la partie en un geste. Tout reste sur le téléphone.</string>
+    <string name="notification_permission_allow">Continuer</string>
+    <string name="notification_permission_later">Plus tard</string>
+    <string name="settings_coming_hint">Choc de l\'intro, « 12 ! », victoire et élimination : des sons maison, coupés seulement en mode silencieux.</string>
+    <string name="settings_about">À propos</string>
+    <string name="settings_rules">Règles du jeu</string>
+    <string name="settings_rules_hint">Installation des quilles, points, 50 exactement, ratés, questions fréquentes.</string>
+    <string name="settings_playful_rules">Règles du mode Ludique</string>
+    <string name="settings_playful_rules_hint">Choisir les exceptions aux règles officielles : élimination, dépassement, cible…</string>
+
+    <string name="settings_ready_card">Carte « Prêts à jouer ? »</string>
+    <string name="settings_ready_card_hint">Au début de chaque partie, un rappel du placement des quilles (affichée d\'office aux 3 premières parties).</string>
+
+    <!-- Données -->
+    <string name="settings_data">Données</string>
+    <string name="settings_backup">Sauvegarder mes données</string>
+    <string name="settings_backup_hint">Parties, joueurs habituels et équipes dans un fichier JSON lisible, que vous rangez où vous voulez. Les photos restent sur le téléphone.</string>
+    <string name="settings_backup_file">molkky-board-%1$s.json</string>
+    <string name="settings_backup_done">Sauvegarde enregistrée.</string>
+    <string name="settings_backup_failed">La sauvegarde n\'a pas pu être écrite.</string>
+    <string name="settings_restore">Restaurer une sauvegarde</string>
+    <string name="settings_restore_hint">Ajoute les parties d\'un fichier de sauvegarde. Rien n\'est écrasé : les parties déjà présentes sont ignorées.</string>
+    <string name="settings_restore_not_backup">Ce fichier n\'est pas une sauvegarde Molkky Board.</string>
+    <string name="settings_restore_newer">Cette sauvegarde vient d\'une version plus récente de Molkky Board : mettez l\'application à jour.</string>
+    <string name="settings_restore_too_large">Fichier trop volumineux (20 Mo au maximum).</string>
+    <string name="settings_restore_unreadable">Le fichier n\'a pas pu être lu.</string>
+    <plurals name="settings_restore_added">
+        <item quantity="one">%d partie ajoutée</item>
+        <item quantity="other">%d parties ajoutées</item>
+    </plurals>
+    <plurals name="settings_restore_present">
+        <item quantity="one">%d déjà présente</item>
+        <item quantity="other">%d déjà présentes</item>
+    </plurals>
+    <plurals name="settings_restore_invalid">
+        <item quantity="one">%d écartée (fichier modifié ou abîmé)</item>
+        <item quantity="other">%d écartées (fichier modifié ou abîmé)</item>
+    </plurals>
+    <string name="settings_delete_all">Supprimer toutes mes données</string>
+    <string name="settings_delete_all_hint">Parties, historique, Hall of Fame, joueurs habituels et photos. Les réglages sont conservés.</string>
+    <string name="settings_delete_all_title">Tout supprimer ?</string>
+    <string name="settings_delete_all_text">Toutes les parties, l\'historique, le Hall of Fame, les joueurs habituels et leurs photos seront effacés de ce téléphone. C\'est définitif : faites une sauvegarde avant si vous voulez les garder.</string>
+    <string name="settings_delete_all_confirm">Tout supprimer</string>
+    <string name="settings_delete_all_done">Toutes les données ont été supprimées.</string>
+    <string name="settings_cancel">Annuler</string>
+
+    <!-- À propos -->
+    <string name="about_version">Version %1$s</string>
+    <string name="about_publisher">Une application Yogi Studio</string>
+    <string name="about_contact">Contact : %1$s</string>
+    <string name="about_privacy_title">Vie privée</string>
+    <string name="about_privacy_headline">Aucune donnée collectée. Molkky Board ne se connecte jamais à Internet.</string>
+    <string name="about_privacy_no_ads">Molkky Board ne contient aucune publicité, aucun traceur publicitaire, aucun outil de mesure d\'audience, et ne revend aucune donnée.</string>
+    <string name="about_privacy_local">Quand plusieurs téléphones jouent ensemble, ils échangent directement entre eux, en chiffré, sur le réseau local. Le reste ne quitte votre téléphone que si vous choisissez de le partager.</string>
+    <string name="about_privacy_control">Vous pouvez sauvegarder, exporter ou supprimer vos données à tout moment, dans Réglages › Données.</string>
+    <string name="about_privacy_open_source">Construite avec des bibliothèques open source (liste ci-dessous).</string>
+    <string name="about_credits">Crédits</string>
+    <string name="about_licenses">Bibliothèques open source</string>
+    <string name="about_licenses_list">Liste des bibliothèques</string>
+    <string name="about_feedback_title">Version de test</string>
+    <string name="about_feedback_hint">Un bug, une idée ? Le message contient seulement la version de l\'app et le modèle du téléphone.</string>
+    <string name="about_feedback">Envoyer un retour</string>
+    <string name="about_feedback_subject">Retour sur Molkky Board</string>
+    <string name="about_feedback_body">Votre retour :\n\n\n—\n%1$s</string>
+    <string name="crash_title">Molkky Board s\'est arrêté</string>
+    <string name="crash_text">Vous pouvez envoyer ce rapport par e-mail pour aider à corriger le problème. Il ne contient que ce qui suit : aucune donnée de partie, aucun nom, aucun identifiant. Rien n\'est envoyé sans vous.</string>
+    <string name="crash_send">Envoyer par e-mail</string>
+    <string name="crash_ignore">Ne pas envoyer</string>
+    <string name="crash_subject">Rapport de plantage Molkky Board</string>
+
+    <!-- Crédits (ton léger, mais chaque affirmation est vraie) -->
+    <string name="credits_terminal_pins">Initialisation des quilles</string>
+    <string name="credits_terminal_molkky">Calibrage du mölkky</string>
+    <string name="credits_terminal_trackers">Recherche de traceurs</string>
+    <string name="credits_terminal_none">0 trouvé</string>
+    <string name="credits_terminal_loading">Chargement des crédits</string>
+    <string name="credits_terminal_description">Initialisation terminée, 0 traceur trouvé.</string>
+    <string name="credits_version">Version %1$s (build %2$d)</string>
+    <string name="credits_compiled">Compilée avec amour, café et ./gradlew %1$s.</string>
+    <string name="credits_production">Production</string>
+    <string name="credits_production_name">Yogi Studio</string>
+    <string name="credits_production_note">Studio indépendant, effectif total : une personne et une quille en posture du lotus.</string>
+    <string name="credits_dev">Développement, design, tests et service après-vente</string>
+    <string name="credits_dev_name">Yogi</string>
+    <string name="credits_dev_note">A aussi tenu le rôle de stagiaire, de chef de projet et de Product Owner. Les réunions ont été courtes. Toute ressemblance avec la quille du logo est purement volontaire.</string>
+    <string name="credits_pair">Pair programming</string>
+    <string name="credits_pair_name">Claude (Anthropic), via Claude Code</string>
+    <string name="credits_pair_note">N\'a jamais lancé une seule quille, mais connaît la règle du retour à 25 par cœur.</string>
+    <string name="credits_engine">Moteur de score</string>
+    <string name="credits_engine_name">Une fonction pure</string>
+    <string name="credits_engine_note">Sans effet de bord. On ne peut pas en dire autant d\'un mölkky lancé trop fort.</string>
+    <string name="credits_physics">Physique des quilles</string>
+    <string name="credits_physics_name">Isaac Newton</string>
+    <string name="credits_physics_note">Consultant posthume, non rémunéré. La gravité a fonctionné du premier coup.</string>
+    <string name="credits_art">Direction artistique</string>
+    <string name="credits_art_name">« Nordic Bold »</string>
+    <string name="credits_art_note">Bouleau #F4EBDD, forêt #1F4D3A, safran #F2A93B, corail #E8604C. Aucun arbre n\'a été abattu pour réaliser cette application.</string>
+    <string name="credits_fonts">Typographies</string>
+    <string name="credits_fonts_names">Bricolage Grotesque — Mathieu Triay — SIL Open Font License 1.1\nInter — Rasmus Andersson — SIL Open Font License 1.1</string>
+    <string name="credits_fonts_note">Chiffres tabulaires activés : les scores ne sautent pas, seules les quilles tombent.</string>
+    <string name="credits_game_title">Le jeu</string>
+    <string name="credits_game">Le Mölkky a été inventé en Finlande en 1996. Kiitos !\nLes règles présentées dans l\'app sont reformulées à partir des règles officielles.\nMölkky® est une marque de Tactic Games Oy. Molkky Board est une application indépendante, ni affiliée ni approuvée par le détenteur de la marque.</string>
+    <string name="credits_hardware_title">Matériel de test</string>
+    <string name="credits_hardware">Un PC portable vaillant sous Zorin OS et son émulateur Android</string>
+    <string name="credits_hardware_note">Ventilateurs en régime « décollage » pendant chaque build Gradle. Aucun PC n\'a été blessé. Presque.</string>
+    <string name="credits_stats_title">Statistiques de production</string>
+    <string name="credits_stat_ads">Publicités</string>
+    <string name="credits_stat_trackers">Traceurs</string>
+    <string name="credits_stat_analytics">SDK d\'analytics</string>
+    <string name="credits_stat_cookies">Cookies</string>
+    <string name="credits_stat_cookies_value">0 (pas les crêpes)</string>
+    <string name="credits_stat_sold">Données revendues</string>
+    <string name="credits_stat_pins">Quilles</string>
+    <string name="credits_stat_target">Points pour gagner</string>
+    <string name="credits_stat_target_value">50, pas un de plus</string>
+    <string name="credits_thanks_title">Remerciements</string>
+    <string name="credits_thanks_players">Aux joueurs qui ont dit « c\'était 7, pas 8 » : la fonction « Corriger un lancer » existe grâce à vous.</string>
+    <string name="credits_thanks_pin12">À la quille n° 12, toujours au centre, toujours visée, rarement touchée seule.</string>
+    <string name="credits_outro">Aucune quille n\'a été maltraitée pendant le développement de cette application. Elles se sont toutes envolées de leur plein gré.</string>
+    <string name="credits_post_credits">Scène post-générique : ✨ … quelque part, loin au fond de l\'écran, une quille scintille encore.</string>
+    <string name="about_license_title">Licence et contact</string>
+    <string name="about_license">Molkky Board est un logiciel libre, sous licence GNU GPL v3 (ou toute version ultérieure) : vous pouvez l\'étudier, le modifier et le redistribuer selon ses termes. Il est fourni sans aucune garantie.</string>
+    <string name="about_license_trademarks">Les noms Molkky Board et Yogi Studio, leurs logos et l\'icône de l\'application ne sont pas couverts par la licence. Mölkky® est une marque de Tactic Games Oy : Molkky Board est une application indépendante, ni affiliée ni approuvée par le détenteur de la marque.</string>
+    <string name="about_source">Code source : %1$s</string>
+    <string name="about_source_button">Voir le code source</string>
+    <string name="about_contact_button">Écrire à Yogi Studio</string>
+    <string name="about_contact_subject">Molkky Board</string>
+    <string name="about_privacy_policy">Politique de confidentialité</string>
+    <string name="about_terms">Conditions d\'utilisation</string>
+    <string name="about_privacy_policy_url">https://guillaumechr.github.io/molkky-board-site/fr/confidentialite.html</string>
+    <string name="about_terms_url">https://guillaumechr.github.io/molkky-board-site/fr/conditions.html</string>
+</resources>

@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="history_title">Historique</string>
-    <string name="history_empty">Aucune partie terminée pour l\'instant. Vos parties apparaîtront ici, avec leur déroulé.</string>
-    <string name="history_sets">%1$d manches</string>
-    <string name="history_abandoned">Abandonnée</string>
-    <string name="history_modified">Modifiée après la fin · hors records</string>
-    <string name="history_corrected">Corrigée en cours de partie</string>
-    <string name="history_delete">Supprimer la partie</string>
-    <string name="history_delete_title">Supprimer cette partie ?</string>
-    <string name="history_delete_text">Elle disparaîtra de l\'historique, des statistiques et du Hall of Fame. Cette action est définitive.</string>
-    <string name="history_delete_confirm">Supprimer</string>
-    <string name="history_cancel">Annuler</string>
-    <string name="history_open">Voir le déroulé</string>
-    <string name="history_winner">vainqueur</string>
+    <string name="history_title">History</string>
+    <string name="history_empty">No finished games yet. Your games will show up here, with every throw.</string>
+    <string name="history_sets">%1$d sets</string>
+    <string name="history_abandoned">Abandoned</string>
+    <string name="history_modified">Changed after the end · no records</string>
+    <string name="history_corrected">Corrected during the game</string>
+    <string name="history_delete">Delete game</string>
+    <string name="history_delete_title">Delete this game?</string>
+    <string name="history_delete_text">It will disappear from the history, the statistics and the Hall of Fame. This cannot be undone.</string>
+    <string name="history_delete_confirm">Delete</string>
+    <string name="history_cancel">Cancel</string>
+    <string name="history_open">See every throw</string>
+    <string name="history_winner">winner</string>
 </resources>

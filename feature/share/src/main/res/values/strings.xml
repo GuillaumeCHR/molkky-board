@@ -1,64 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="share_title">Partager</string>
-    <string name="share_button">Partager</string>
+    <string name="share_title">Share</string>
+    <string name="share_button">Share</string>
     <string name="share_whatsapp">WhatsApp</string>
-    <string name="share_save">Enregistrer dans la galerie</string>
-    <string name="share_saved">Image enregistrée dans la galerie</string>
-    <string name="share_save_failed">Impossible d\'enregistrer l\'image</string>
+    <string name="share_save">Save to gallery</string>
+    <string name="share_saved">Image saved to the gallery</string>
+    <string name="share_save_failed">Could not save the image</string>
     <string name="share_format_story">Story 9:16</string>
-    <string name="share_format_portrait">Fil 4:5</string>
-    <string name="share_format_square">Carré 1:1</string>
-    <string name="share_text_label">Texte d\'accompagnement</string>
-    <string name="share_template_hint">Glissez pour changer de modèle</string>
-    <string name="share_chooser">Partager la partie</string>
-    <string name="share_preview_description">Aperçu de la vignette : %1$s</string>
-    <string name="share_nothing">Rien à partager pour cette partie.</string>
+    <string name="share_format_portrait">Feed 4:5</string>
+    <string name="share_format_square">Square 1:1</string>
+    <string name="share_text_label">Caption</string>
+    <string name="share_template_hint">Swipe to change the design</string>
+    <string name="share_chooser">Share the game</string>
+    <string name="share_preview_description">Card preview: %1$s</string>
+    <string name="share_nothing">Nothing to share for this game.</string>
 
-    <!-- Titres des moments -->
-    <string name="moment_victory">Victoire !</string>
-    <string name="moment_perfect">Partie parfaite !</string>
-    <string name="moment_record">Nouveau record !</string>
-    <string name="moment_comeback">Quelle remontée !</string>
-    <string name="moment_twelve">12 !</string>
-    <string name="moment_strike">Strike !</string>
-    <string name="moment_reset">Aïe !</string>
-    <string name="moment_eliminated">Aïe !</string>
+    <!-- Moment titles -->
+    <string name="moment_victory">Victory!</string>
+    <string name="moment_perfect">Perfect game!</string>
+    <string name="moment_record">New record!</string>
+    <string name="moment_comeback">What a comeback!</string>
+    <string name="moment_twelve">12!</string>
+    <string name="moment_strike">Strike!</string>
+    <string name="moment_reset">Ouch!</string>
+    <string name="moment_eliminated">Ouch!</string>
 
-    <!-- Sous-titres et chiffres clés -->
-    <string name="card_key_victory">%1$d en %2$d lancers · tour %3$d</string>
-    <string name="card_key_perfect">50 en 5 lancers : impossible de faire mieux</string>
-    <string name="card_key_record">%1$d lancers pour gagner</string>
-    <string name="card_key_comeback">Mené de %1$d points… et vainqueur</string>
-    <string name="card_key_twelve">La quille 12, seule</string>
-    <string name="card_key_strike">Les 12 quilles d\'un coup</string>
-    <string name="card_key_reset">À 49 points… retour à 25</string>
-    <string name="card_key_eliminated">Trois ratés de suite : hors jeu</string>
-    <string name="card_scan">Comptez vos parties avec</string>
+    <!-- Subtitles and key figures -->
+    <string name="card_key_victory">%1$d in %2$d throws · round %3$d</string>
+    <string name="card_key_perfect">50 in 5 throws: it can\'t be done better</string>
+    <string name="card_key_record">%1$d throws to win</string>
+    <string name="card_key_comeback">%1$d points behind… and the winner</string>
+    <string name="card_key_twelve">Pin 12, on its own</string>
+    <string name="card_key_strike">All 12 pins in one throw</string>
+    <string name="card_key_reset">On 49 points… back to 25</string>
+    <string name="card_key_eliminated">Three misses in a row: out</string>
+    <string name="card_scan">Keep score with</string>
     <string name="card_hashtag">#molkky</string>
 
-    <!-- Textes d'accompagnement proposés -->
-    <string name="share_text_victory">🏆 %1$s gagne en %2$d lancers ! Partie comptée avec Molkky Board #molkky</string>
-    <string name="share_text_perfect">✨ Partie parfaite pour %1$s : 50 en 5 lancers ! Comptée avec Molkky Board #molkky</string>
-    <string name="share_text_record">🏆 Nouveau record pour %1$s : victoire en %2$d lancers ! Molkky Board #molkky</string>
-    <string name="share_text_comeback">🔥 %1$s remonte %2$d points et gagne ! Partie comptée avec Molkky Board #molkky</string>
-    <string name="share_text_twelve">🎯 12 ! pour %1$s. Partie comptée avec Molkky Board #molkky</string>
-    <string name="share_text_strike">💥 Strike : les 12 quilles d\'un coup pour %1$s ! Molkky Board #molkky</string>
-    <string name="share_text_reset">😅 %1$s à 49… retour à 25. C\'est ça, le Mölkky ! Molkky Board #molkky</string>
-    <string name="share_text_eliminated">😅 Trois ratés pour %1$s : hors jeu. Partie comptée avec Molkky Board #molkky</string>
-    <string name="reel_video">Créer une vidéo</string>
-    <string name="reel_gif">GIF (sans vidéo)</string>
-    <string name="reel_progress">Création en cours… %1$d %%</string>
-    <string name="reel_cancel">Annuler</string>
-    <string name="reel_failed">La création n\'a pas abouti. Réessayez, ou partagez l\'image.</string>
-    <string name="reel_round">Tour %1$d</string>
-    <string name="reel_reset">Retour à 25 !</string>
-    <string name="reel_eliminated">Éliminé</string>
-    <string name="share_photo_camera">Prendre une photo</string>
-    <string name="share_photo_gallery">Choisir une photo</string>
-    <string name="share_photo_remove">Retirer la photo</string>
-    <string name="share_photo_hint">Photo du moment : elle n\'est pas conservée par l\'app, et l\'image partagée ne contient aucune métadonnée (ni lieu ni appareil).</string>
+    <!-- Suggested captions -->
+    <string name="share_text_victory">🏆 %1$s wins in %2$d throws! Scored with Molkky Board #molkky</string>
+    <string name="share_text_perfect">✨ Perfect game for %1$s: 50 in 5 throws! Scored with Molkky Board #molkky</string>
+    <string name="share_text_record">🏆 New record for %1$s: a win in %2$d throws! Molkky Board #molkky</string>
+    <string name="share_text_comeback">🔥 %1$s comes back from %2$d points down and wins! Scored with Molkky Board #molkky</string>
+    <string name="share_text_twelve">🎯 12! for %1$s. Scored with Molkky Board #molkky</string>
+    <string name="share_text_strike">💥 Strike: all 12 pins in one throw for %1$s! Molkky Board #molkky</string>
+    <string name="share_text_reset">😅 %1$s on 49… back to 25. That\'s Mölkky! Molkky Board #molkky</string>
+    <string name="share_text_eliminated">😅 Three misses for %1$s: out of the game. Scored with Molkky Board #molkky</string>
+    <string name="reel_video">Create a video</string>
+    <string name="reel_gif">GIF (no video)</string>
+    <string name="reel_progress">Creating… %1$d %%</string>
+    <string name="reel_cancel">Cancel</string>
+    <string name="reel_failed">Creation failed. Try again, or share the image.</string>
+    <string name="reel_round">Round %1$d</string>
+    <string name="reel_reset">Back to 25!</string>
+    <string name="reel_eliminated">Out</string>
+    <string name="share_photo_camera">Take a photo</string>
+    <string name="share_photo_gallery">Choose a photo</string>
+    <string name="share_photo_remove">Remove photo</string>
+    <string name="share_photo_hint">Photo of the moment: the app does not keep it, and the shared image contains no metadata (no location, no device).</string>
     <string name="photo_stat_score">SCORE</string>
-    <string name="photo_stat_throws">LANCERS</string>
-    <string name="photo_stat_round">TOUR</string>
+    <string name="photo_stat_throws">THROWS</string>
+    <string name="photo_stat_round">ROUND</string>
 </resources>

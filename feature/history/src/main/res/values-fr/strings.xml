@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_title">Historique</string>
+    <string name="history_empty">Aucune partie terminée pour l\'instant. Vos parties apparaîtront ici, avec leur déroulé.</string>
+    <string name="history_sets">%1$d manches</string>
+    <string name="history_abandoned">Abandonnée</string>
+    <string name="history_modified">Modifiée après la fin · hors records</string>
+    <string name="history_corrected">Corrigée en cours de partie</string>
+    <string name="history_delete">Supprimer la partie</string>
+    <string name="history_delete_title">Supprimer cette partie ?</string>
+    <string name="history_delete_text">Elle disparaîtra de l\'historique, des statistiques et du Hall of Fame. Cette action est définitive.</string>
+    <string name="history_delete_confirm">Supprimer</string>
+    <string name="history_cancel">Annuler</string>
+    <string name="history_open">Voir le déroulé</string>
+    <string name="history_winner">vainqueur</string>
+</resources>

@@ -80,6 +80,17 @@ internal fun AboutScreen(onBack: () -> Unit, onLicenses: () -> Unit) {
                 ).forEach {
                     Text(stringResource(it), style = MaterialTheme.typography.bodyLarge)
                 }
+                // Pages du site, dans la langue de l'app (exigées par Google Play) : ouvertes dans le navigateur.
+                val privacyUrl = stringResource(R.string.about_privacy_policy_url)
+                val termsUrl = stringResource(R.string.about_terms_url)
+                OutlinedButton(
+                    onClick = { openUrl(context, privacyUrl) },
+                    modifier = Modifier.heightIn(min = MBDimens.MinTouch),
+                ) { Text(stringResource(R.string.about_privacy_policy)) }
+                OutlinedButton(
+                    onClick = { openUrl(context, termsUrl) },
+                    modifier = Modifier.heightIn(min = MBDimens.MinTouch),
+                ) { Text(stringResource(R.string.about_terms)) }
             }
             LicenseCard()
             if (BuildConfig.FEEDBACK) {

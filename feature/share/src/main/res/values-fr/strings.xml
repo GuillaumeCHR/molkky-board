@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="share_title">Partager</string>
+    <string name="share_button">Partager</string>
+    <string name="share_whatsapp">WhatsApp</string>
+    <string name="share_save">Enregistrer dans la galerie</string>
+    <string name="share_saved">Image enregistrée dans la galerie</string>
+    <string name="share_save_failed">Impossible d\'enregistrer l\'image</string>
+    <string name="share_format_story">Story 9:16</string>
+    <string name="share_format_portrait">Fil 4:5</string>
+    <string name="share_format_square">Carré 1:1</string>
+    <string name="share_text_label">Texte d\'accompagnement</string>
+    <string name="share_template_hint">Glissez pour changer de modèle</string>
+    <string name="share_chooser">Partager la partie</string>
+    <string name="share_preview_description">Aperçu de la vignette : %1$s</string>
+    <string name="share_nothing">Rien à partager pour cette partie.</string>
+
+    <!-- Titres des moments -->
+    <string name="moment_victory">Victoire !</string>
+    <string name="moment_perfect">Partie parfaite !</string>
+    <string name="moment_record">Nouveau record !</string>
+    <string name="moment_comeback">Quelle remontée !</string>
+    <string name="moment_twelve">12 !</string>
+    <string name="moment_strike">Strike !</string>
+    <string name="moment_reset">Aïe !</string>
+    <string name="moment_eliminated">Aïe !</string>
+
+    <!-- Sous-titres et chiffres clés -->
+    <string name="card_key_victory">%1$d en %2$d lancers · tour %3$d</string>
+    <string name="card_key_perfect">50 en 5 lancers : impossible de faire mieux</string>
+    <string name="card_key_record">%1$d lancers pour gagner</string>
+    <string name="card_key_comeback">Mené de %1$d points… et vainqueur</string>
+    <string name="card_key_twelve">La quille 12, seule</string>
+    <string name="card_key_strike">Les 12 quilles d\'un coup</string>
+    <string name="card_key_reset">À 49 points… retour à 25</string>
+    <string name="card_key_eliminated">Trois ratés de suite : hors jeu</string>
+    <string name="card_scan">Comptez vos parties avec</string>
+    <string name="card_hashtag">#molkky</string>
+
+    <!-- Textes d'accompagnement proposés -->
+    <string name="share_text_victory">🏆 %1$s gagne en %2$d lancers ! Partie comptée avec Molkky Board #molkky</string>
+    <string name="share_text_perfect">✨ Partie parfaite pour %1$s : 50 en 5 lancers ! Comptée avec Molkky Board #molkky</string>
+    <string name="share_text_record">🏆 Nouveau record pour %1$s : victoire en %2$d lancers ! Molkky Board #molkky</string>
+    <string name="share_text_comeback">🔥 %1$s remonte %2$d points et gagne ! Partie comptée avec Molkky Board #molkky</string>
+    <string name="share_text_twelve">🎯 12 ! pour %1$s. Partie comptée avec Molkky Board #molkky</string>
+    <string name="share_text_strike">💥 Strike : les 12 quilles d\'un coup pour %1$s ! Molkky Board #molkky</string>
+    <string name="share_text_reset">😅 %1$s à 49… retour à 25. C\'est ça, le Mölkky ! Molkky Board #molkky</string>
+    <string name="share_text_eliminated">😅 Trois ratés pour %1$s : hors jeu. Partie comptée avec Molkky Board #molkky</string>
+    <string name="reel_video">Créer une vidéo</string>
+    <string name="reel_gif">GIF (sans vidéo)</string>
+    <string name="reel_progress">Création en cours… %1$d %%</string>
+    <string name="reel_cancel">Annuler</string>
+    <string name="reel_failed">La création n\'a pas abouti. Réessayez, ou partagez l\'image.</string>
+    <string name="reel_round">Tour %1$d</string>
+    <string name="reel_reset">Retour à 25 !</string>
+    <string name="reel_eliminated">Éliminé</string>
+    <string name="share_photo_camera">Prendre une photo</string>
+    <string name="share_photo_gallery">Choisir une photo</string>
+    <string name="share_photo_remove">Retirer la photo</string>
+    <string name="share_photo_hint">Photo du moment : elle n\'est pas conservée par l\'app, et l\'image partagée ne contient aucune métadonnée (ni lieu ni appareil).</string>
+    <string name="photo_stat_score">SCORE</string>
+    <string name="photo_stat_throws">LANCERS</string>
+    <string name="photo_stat_round">TOUR</string>
+</resources>

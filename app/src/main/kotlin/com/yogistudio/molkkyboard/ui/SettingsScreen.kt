@@ -73,7 +73,7 @@ private enum class AppLanguage(
         fun current(): AppLanguage {
             val chosen = AppCompatDelegate.getApplicationLocales()
             val tag = if (chosen.isEmpty) Locale.getDefault().language else chosen[0]?.language
-            return entries.firstOrNull { it.tag == tag } ?: French
+            return entries.firstOrNull { it.tag == tag } ?: English
         }
     }
 }

@@ -68,8 +68,8 @@ class HostSession(
     private val clock: () -> Long = System::currentTimeMillis,
     private val random: SecureRandom = SecureRandom(),
 ) {
-    private var invite: String? = null
-    private var inviteExpiresAt = 0L
+    /** Jetons d'invitation encore valables et leur expiration : celui du QR code affiché et le précédent. */
+    private val invites = linkedMapOf<String, Long>()
     private val pendingJoins = linkedMapOf<ConnectionId, JoinCandidate>()
     private val devices = linkedMapOf<DeviceId, GuestDevice>()
     private val revoked = mutableSetOf<String>()
@@ -93,11 +93,16 @@ class HostSession(
         ) : Result
     }
 
-    /** Nouveau jeton d'invitation (le précédent n'est plus valable) : il va dans le QR code. */
+    /**
+     * Nouveau jeton d'invitation, pour le QR code. Le précédent reste valable jusqu'à sa propre expiration : un invité
+     * qui l'a scanné juste avant le renouvellement (le temps d'accepter le réseau de la partie) n'est pas refusé.
+     */
     fun newInvite(): String {
+        val now = clock()
+        invites.entries.removeAll { it.value < now }
+        while (invites.size >= KEPT_INVITES) invites.remove(invites.keys.first())
         val token = randomHex(INVITE_BYTES)
-        invite = token
-        inviteExpiresAt = clock() + INVITE_TTL_MS
+        invites[token] = now + INVITE_TTL_MS
         return token
     }
 
@@ -175,7 +180,7 @@ class HostSession(
 
     /** Fin du partage : tous les jetons tombent. */
     fun end(): List<Outgoing> {
-        invite = null
+        invites.clear()
         // Destinataires relevés avant de tout oublier : chacun reçoit la fin, puis sa connexion est fermée.
         val connections = devices.values.mapNotNull { it.connection } + pendingJoins.keys
         devices.values.forEach { revoked += it.sessionToken }
@@ -188,14 +193,20 @@ class HostSession(
     val connectedGuests: List<ConnectionId> get() = devices.values.mapNotNull { it.connection }
 
     private fun join(connection: ConnectionId, request: Message.JoinRequest): List<Outgoing> {
-        val expected = invite
+        val now = clock()
+        // Comparaison à temps constant avec chacun des jetons encore valables (deux au plus).
+        val matched =
+            invites.entries.firstOrNull { (token, expiresAt) ->
+                constantTimeEquals(token, request.token) &&
+                    now <= expiresAt
+            }
         val rejection =
             when {
                 request.version != PROTOCOL_VERSION -> {
                     JoinRejection.VERSION
                 }
 
-                expected == null || clock() > inviteExpiresAt || !constantTimeEquals(expected, request.token) -> {
+                matched == null -> {
                     JoinRejection.TOKEN_INVALID
                 }
 
@@ -210,8 +221,8 @@ class HostSession(
         if (rejection != null) {
             return listOf(Outgoing.To(connection, Message.JoinRejected(rejection)), Outgoing.Close(connection))
         }
-        // Jeton consommé : le QR code suivant en portera un nouveau.
-        invite = null
+        // Jeton consommé (usage unique) : le QR code suivant en portera un nouveau.
+        invites.remove(request.token)
         val nickname = request.nickname.cleanNickname()
         pendingJoins[connection] = JoinCandidate(connection, nickname, request.avatar?.take(MAX_AVATAR))
         return listOf(Outgoing.To(connection, Message.JoinPending))
@@ -272,6 +283,7 @@ class HostSession(
 
     companion object {
         const val INVITE_TTL_MS = 2 * 60 * 1000L
+        private const val KEPT_INVITES = 2
         private const val INVITE_BYTES = 16
         private const val SESSION_BYTES = 32
         private const val ID_BYTES = 8

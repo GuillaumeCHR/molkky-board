@@ -827,7 +827,7 @@ private fun FamilySection(state: SetupUiState, actions: SetupActions) {
 private fun AvatarSheet(player: SetupPlayer, actions: SetupActions, onDismiss: () -> Unit) {
     var capture by remember { mutableStateOf<Uri?>(null) }
     val camera =
-        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
+        rememberTakePicture { saved ->
             capture?.takeIf { saved }?.let { actions.onPhoto(player.id, it) }
             onDismiss()
         }
@@ -884,7 +884,7 @@ private fun AvatarSheet(player: SetupPlayer, actions: SetupActions, onDismiss: (
             Row(horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap)) {
                 TextButton(onClick = {
                     capture = actions.captureUri()
-                    capture?.let(camera::launch)
+                    capture?.let(camera)
                 }) { Text(stringResource(R.string.setup_photo_camera)) }
                 TextButton(onClick = {
                     gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))

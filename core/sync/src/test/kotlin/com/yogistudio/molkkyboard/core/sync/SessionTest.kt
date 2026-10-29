@@ -170,6 +170,37 @@ class SessionTest {
         }
 
     @Test
+    fun `QR renouvele - le precedent reste valable jusqu'a son expiration, pas l'avant-dernier`() =
+        runTest {
+            val first = host.newInvite()
+            now += 30_000
+            val second = host.newInvite()
+            now += 30_000
+            host.newInvite()
+            // Le jeton scanné juste avant le renouvellement passe encore.
+            send(aliceConn, aliceGuest.joinRequest(second, "Alice", null))
+            assertEquals(1, host.candidates.size)
+            // Trois QR plus loin, le plus ancien n'est plus accepté, même avant ses 2 minutes.
+            send(brunoConn, brunoGuest.joinRequest(first, "Bruno", null))
+            assertEquals(JoinRejection.TOKEN_INVALID, brunoGuest.rejection)
+            // Le précédent expire à la fin de ses 2 minutes.
+            val other = GuestSession(FakeStore()) { "x" }
+            val previous = host.newInvite()
+            host.newInvite()
+            now += HostSession.INVITE_TTL_MS + 1
+            assertEquals(
+                Message.JoinRejected(JoinRejection.TOKEN_INVALID),
+                (
+                    host
+                        .receive(
+                            ConnectionId(5),
+                            other.joinRequest(previous, "Chloé", null),
+                        ).first() as Outgoing.To
+                ).message,
+            )
+        }
+
+    @Test
     fun `refus de l'organisateur`() =
         runTest {
             send(aliceConn, aliceGuest.joinRequest(host.newInvite(), "Alice", null))
