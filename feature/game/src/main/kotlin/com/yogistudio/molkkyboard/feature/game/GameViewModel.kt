@@ -167,6 +167,8 @@ class GameViewModel
         private fun GameSnapshot.showsReadyCard(prefs: UserSettings, seen: Boolean): Boolean =
             prefs.showReadyCard &&
                 !seen &&
+                // Rappel destiné à l'organisateur : un téléphone invité ne l'affiche pas.
+                origin != GameOrigin.JOINED &&
                 currentSet.index == 0 &&
                 currentSet.replay.effectiveLog.isEmpty() &&
                 currentSet.replay.state.status == SetStatus.IN_PROGRESS

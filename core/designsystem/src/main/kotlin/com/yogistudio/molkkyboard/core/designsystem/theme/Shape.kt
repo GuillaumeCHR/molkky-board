@@ -22,4 +22,10 @@ object MBDimens {
     val ScreenPadding = 20.dp
     val Gap = 12.dp
     val SmallGap = 8.dp
+
+    /** Largeur maximale du contenu sur grand écran (tablette, pliable ouvert) ; sans effet sur téléphone. */
+    val MaxContentWidth = 640.dp
+
+    /** À partir de cette largeur, en paysage, l'écran de jeu passe sur deux colonnes. */
+    val TwoPaneMinWidth = 600.dp
 }

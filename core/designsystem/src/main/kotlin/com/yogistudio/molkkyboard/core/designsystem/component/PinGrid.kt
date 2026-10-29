@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
@@ -39,7 +40,8 @@ fun PinGrid(
     visible: Set<Int>? = null,
     pinModifier: (Int) -> Modifier = { Modifier },
 ) {
-    BoxWithConstraints(modifier) {
+    // La grille a sa propre taille : elle est centrée dans la place qu'on lui donne.
+    BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {
         val rows = PIN_FORMATION.size
         val widest = PIN_FORMATION.maxOf { it.size }
         val byWidth = maxWidth / (1 + (widest - 1) * COLUMN_STEP)

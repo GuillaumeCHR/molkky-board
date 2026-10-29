@@ -1,6 +1,7 @@
 package com.yogistudio.molkkyboard.navigation
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
@@ -24,10 +25,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -36,6 +39,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.yogistudio.molkkyboard.R
 import com.yogistudio.molkkyboard.core.designsystem.component.MolkkyBoardLogotype
+import com.yogistudio.molkkyboard.core.designsystem.component.ReadableWidth
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.UserSettings
@@ -139,7 +143,7 @@ fun MolkkyBoardNavHost(
                         logotype = { MolkkyBoardLogotype(it.then(logotype), fontSize = INTRO_LOGOTYPE_SIZE) },
                     )
                 }
-                composable<HomeRoute> {
+                readable<HomeRoute> {
                     if (crashReport != null) CrashReportDialog(crashReport, onCrashReportHandled)
                     HomeScreen(
                         onNewGame = { navController.navigate(SetupRoute) },
@@ -147,19 +151,19 @@ fun MolkkyBoardNavHost(
                         onResume = { navController.navigate(GameRoute(it)) },
                         onRules = { navController.navigate(RulesRoute) },
                         onPlacement = { navController.navigate(PlacementRoute) },
-                        logotypeModifier = with(shared) { sharedLogotype(this@composable) },
+                        logotypeModifier = with(shared) { sharedLogotype(this@readable) },
                     )
                 }
-                composable<HistoryRoute> { HistoryScreen(onOpenGame = { navController.navigate(GameRoute(it)) }) }
-                composable<HallOfFameRoute> {
+                readable<HistoryRoute> { HistoryScreen(onOpenGame = { navController.navigate(GameRoute(it)) }) }
+                readable<HallOfFameRoute> {
                     HallOfFameScreen(
                         onOpenGame = { navController.navigate(GameRoute(it)) },
                         onOpenStats = { navController.navigate(StatsRoute) },
                     )
                 }
-                composable<StatsRoute> { StatsScreen(onBack = navController::navigateUp) }
-                composable<ShareRoute> { ShareScreen(onBack = navController::navigateUp) }
-                composable<SettingsRoute> {
+                readable<StatsRoute> { StatsScreen(onBack = navController::navigateUp) }
+                readable<ShareRoute> { ShareScreen(onBack = navController::navigateUp) }
+                readable<SettingsRoute> {
                     SettingsScreen(
                         onAbout = { navController.navigate(AboutRoute) },
                         onPlayfulRules = { navController.navigate(PlayfulRulesRoute) },
@@ -167,27 +171,27 @@ fun MolkkyBoardNavHost(
                         onReplayGuide = { navController.navigate(SetupRoute) },
                     )
                 }
-                composable<AboutRoute> {
+                readable<AboutRoute> {
                     AboutScreen(
                         onBack = navController::navigateUp,
                         onLicenses = { navController.navigate(LicensesRoute) },
                     )
                 }
-                composable<LicensesRoute> { LicensesScreen(onBack = navController::navigateUp) }
-                composable<PlayfulRulesRoute> { PlayfulRulesScreen(onBack = navController::navigateUp) }
-                composable<RulesRoute> { RulesScreen(onBack = navController::navigateUp) }
-                composable<PlacementRoute> { PlacementScreen(onBack = navController::navigateUp) }
-                composable<JoinRoute> { entry ->
+                readable<LicensesRoute> { LicensesScreen(onBack = navController::navigateUp) }
+                readable<PlayfulRulesRoute> { PlayfulRulesScreen(onBack = navController::navigateUp) }
+                readable<RulesRoute> { RulesScreen(onBack = navController::navigateUp) }
+                readable<PlacementRoute> { PlacementScreen(onBack = navController::navigateUp) }
+                readable<JoinRoute> { entry ->
                     JoinScreen(
                         initialLink = entry.toRoute<JoinRoute>().link,
                         onBack = navController::navigateUp,
                         onJoined = { id -> navController.navigate(GameRoute(id)) { popUpTo<HomeRoute>() } },
                     )
                 }
-                composable<InviteRoute> { entry ->
+                readable<InviteRoute> { entry ->
                     InviteScreen(entry.toRoute<InviteRoute>().gameId, onBack = navController::navigateUp)
                 }
-                composable<SetupRoute> {
+                readable<SetupRoute> {
                     SetupScreen(
                         onBack = navController::navigateUp,
                         onGameCreated = { id ->
@@ -279,3 +283,14 @@ private fun showsBottomBar(d: NavDestination): Boolean =
             PlacementRoute::class,
             StatsRoute::class,
         ).any { d.hasRoute(it) }
+
+/**
+ * Destination à largeur lisible : sur tablette ou pliable ouvert, le contenu est centré et limité en largeur
+ * ([ReadableWidth]) ; sur téléphone, rien ne change. L'intro et l'écran de jeu gèrent eux-mêmes la place.
+ */
+private inline fun <reified T : Any> NavGraphBuilder.readable(
+    noinline content: @Composable AnimatedContentScope.(NavBackStackEntry) -> Unit,
+) = composable<T> { entry ->
+    val scope = this
+    ReadableWidth { scope.content(entry) }
+}

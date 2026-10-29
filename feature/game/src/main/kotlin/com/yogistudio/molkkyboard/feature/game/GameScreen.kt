@@ -18,10 +18,12 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -427,24 +429,23 @@ fun GameContent(
                 }, onOpenPlacement = { showPlacement = true })
                 if (state.loading) return@Column
                 GuestBanner(state, connection, onLeave = actions.onLeaveSharing)
-                ScoresStrip(state, onOpen = { showScoreboard = true })
-                ActiveCard(state)
-                PreviewLine(state, actions)
                 // Pendant « 12 ! », les quilles de la grille s'effacent (elles s'envolent) puis reviennent en fondu.
                 val pinsAlpha by animateFloatAsState(if (twelve != null) TWELVE_PINS_ALPHA else 1f, label = "pins")
-                Box(Modifier.weight(1f).fillMaxWidth()) {
-                    InputArea(
-                        state,
-                        actions,
-                        Modifier.fillMaxSize().alpha(pinsAlpha).guideAnchor(anchors, GUIDE_INPUT),
-                        // Pendant l'envol, les quilles touchées quittent la grille, puis reviennent avec un rebond.
-                        flying = flight?.pins.orEmpty(),
-                    )
-                    // Les quilles s'envolent depuis la grille ; la bulle claque au centre de la zone de saisie.
-                    TwelveOverlay(twelve, onTwelveDone)
-                    ThrowFlightOverlay(flight, onFlightDone)
+                val input: @Composable (Modifier) -> Unit = { modifier ->
+                    Box(modifier.fillMaxWidth()) {
+                        InputArea(
+                            state,
+                            actions,
+                            Modifier.fillMaxSize().alpha(pinsAlpha).guideAnchor(anchors, GUIDE_INPUT),
+                            // Pendant l'envol, les quilles touchées quittent la grille, puis reviennent avec un rebond.
+                            flying = flight?.pins.orEmpty(),
+                        )
+                        // Les quilles s'envolent depuis la grille ; la bulle claque au centre de la zone de saisie.
+                        TwelveOverlay(twelve, onTwelveDone)
+                        ThrowFlightOverlay(flight, onFlightDone)
+                    }
                 }
-                ActionButtons(state, actions, anchors)
+                GameBody(state, actions, anchors, { showScoreboard = true }, input, Modifier.weight(1f).fillMaxWidth())
             }
             SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp))
             OvershootSticker(overshoot, onOvershootShown, Modifier.align(Alignment.Center))
@@ -497,6 +498,44 @@ private fun GameSheets(
     if (scoreboard) ScoreboardSheet(state, onDismiss = { onDismiss(Sheet.SCOREBOARD) })
     if (log) LogSheet(state, actions, logMessage, onDismiss = { onDismiss(Sheet.LOG) })
     if (players) PlayersSheet(state, actions, logMessage, onDismiss = { onDismiss(Sheet.PLAYERS) })
+}
+
+/**
+ * Joueur actif, scores et saisie. Sur grand écran en paysage (tablette, pliable ouvert) : joueur actif à gauche, saisie
+ * à droite. Sur téléphone (toujours en portrait, moins de 600 dp de large) : une seule colonne.
+ */
+@Composable
+private fun GameBody(
+    state: GameUiState,
+    actions: GameActions,
+    anchors: GuideAnchors,
+    onOpenScoreboard: () -> Unit,
+    input: @Composable (Modifier) -> Unit,
+    modifier: Modifier,
+) {
+    BoxWithConstraints(modifier) {
+        if (maxWidth >= MBDimens.TwoPaneMinWidth && maxWidth > maxHeight) {
+            Row(Modifier.fillMaxSize()) {
+                Column(Modifier.weight(1f).fillMaxHeight()) {
+                    ScoresStrip(state, onOpen = onOpenScoreboard)
+                    ActiveCard(state)
+                    PreviewLine(state, actions)
+                }
+                Column(Modifier.weight(1f).fillMaxHeight()) {
+                    input(Modifier.weight(1f))
+                    ActionButtons(state, actions, anchors)
+                }
+            }
+        } else {
+            Column(Modifier.fillMaxSize()) {
+                ScoresStrip(state, onOpen = onOpenScoreboard)
+                ActiveCard(state)
+                PreviewLine(state, actions)
+                input(Modifier.weight(1f))
+                ActionButtons(state, actions, anchors)
+            }
+        }
+    }
 }
 
 /** Grille de quilles ou pavé rapide, selon le mode de saisie. */

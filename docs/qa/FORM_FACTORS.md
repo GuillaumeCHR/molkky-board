@@ -41,3 +41,16 @@ souris), écrans de fin, de partage et « Gérer les téléphones » en paysage,
    au targetSdk 37.
 3. **Exclure les tablettes** de la distribution (catalogue d'appareils de la Play Console) : fastidieux et incomplet
    (les pliables sont des téléphones).
+
+## Correctif — version 0.8.3 (2026-10-29)
+- **Écrans de liste et de formulaire** (accueil, création, réglages, historique, Hall of Fame, statistiques, À propos,
+  règles, placement, partage, Rejoindre, Gérer les téléphones) : contenu centré, largeur limitée à 640 dp
+  (`ReadableWidth`). Plus étroit qu'un téléphone, sans effet sur téléphone.
+- **Écran de jeu** : au-delà de 600 dp de large en paysage, deux colonnes (joueurs et joueur actif à gauche, grille et
+  boutons à droite) ; une seule colonne sinon, inchangée.
+- **Grille de quilles** centrée dans sa zone (elle était calée en haut à gauche) : seul changement visible sur
+  téléphone, voulu.
+- **Non-régression téléphone** : `verifyRoborazziDebug` sur tous les modules. Seules les 36 captures où figure la grille
+  changent (designsystem et jeu), et uniquement à l'emplacement de la grille ; toutes les autres sont identiques au pixel.
+- Vérifié sur l'émulateur Android 17 en grand écran (800 dp) : accueil et création centrés, écran de jeu sur deux
+  colonnes en paysage, une colonne en portrait.
