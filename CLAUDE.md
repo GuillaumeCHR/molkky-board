@@ -1134,6 +1134,15 @@ Priorités : **P2** = V2, **P3** = plus tard.
 - **P2 — Saisie vocale** hors ligne (« sept », « deux quilles », « raté », « annule »), sans envoi audio sur un serveur, avec confirmation visuelle
 - **P3 — Commentateur** : phrases humoristiques contextuelles ajoutées aux annonces vocales
 
+### Saisie rapide : saisie directe du score (à faire, non implémenté)
+* **Constat :** dans l'écran de saisie rapide, choisir entre « valeur de la quille » et « nombre de quilles
+  touchées » n'a pas d'intérêt.
+* **Correction :** supprimer ce choix. Le joueur calcule lui-même ses points du lancer et saisit directement
+  le score (0 à 12).
+* **À vérifier à l'implémentation :** les règles qui dépendent du lancer continuent de fonctionner avec une saisie
+  directe (0 = lancer manqué, 3 manqués de suite, dépassement de 50) ; textes et aide de l'écran mis à jour en
+  français et en anglais.
+
 ### Modes de jeu
 - **P2 — Mode entraînement solo** : défis et suivi de progression
 - **P2 — Tournoi** : poules puis élimination directe, arbre du tableau, plusieurs terrains en parallèle
