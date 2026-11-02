@@ -3,8 +3,8 @@
 > Analyse de risques légère inspirée d'EBIOS Risk Manager. Première version : 2026-10-28, **avant la phase 3 bis
 > (« Partie à côté »)**. À mettre à jour à chaque fonctionnalité qui ajoute des données ou une surface
 > d'exposition (partie à côté, partage, lien spectateur, comptes, groupes, photos).
-> Statut : **proposition, en attente de validation.** Les mesures marquées ✅ existent déjà dans l'app ; les autres
-> sont prévues au jalon indiqué (`ARCHITECTURE.md` § 9).
+> Statut : **à jour au 2026-11-02 (0.8.5)**, partie à côté livrée : les mesures N1–N12 sont en place ; détail des
+> contrôles et des corrections dans `MASVS_CHECKLIST.md`.
 
 ## 1. Périmètre
 
@@ -58,15 +58,21 @@ local ou point d'accès, QR code affiché.
 | N4 | **Rejeu d'événements** (message capturé ou renvoyé) | TLS (pas de capture en clair) ; idempotence par `eventId` (un doublon reçoit la même réponse sans être appliqué) ; numérotation par l'hôte ; `STALE` pour une correction fondée sur un état dépassé | faible |
 | N5 | **Client modifié qui force un score** ou saisit pour un autre | l'hôte valide chaque proposition avec la fonction pure partagée (appareil accepté, droits, tour, lancer cohérent) et recalcule l'état ; l'invité ne fait que proposer ; seul l'hôte numérote | faible ; **un hôte modifié** peut tout falsifier dans sa partie : accepté (c'est l'organisateur), les records de groupe en tiendront compte en phase 4 |
 | N6 | **Hôte qui quitte la partie** (départ, batterie, app tuée) | service de premier plan ; redémarrage avec le même certificat et reconnaissance par jeton ; sinon partie en lecture seule chez les invités, chacun garde son historique | moyen (disponibilité) : transfert du rôle d'hôte en P3 |
-| N7 | **Inondation de messages** (déni de service local) | 64 Ko par message, 12 téléphones au plus, débit limité par téléphone, fermeture des connexions non authentifiées après délai, serveur sur l'interface du réseau de la partie uniquement et port aléatoire | faible à moyen sur un Wi-Fi public : le mode point d'accès est conseillé |
+| N7 | **Inondation de messages** (déni de service local) | trames et messages de 64 Ko au plus (trame refusée avant lecture), 12 invités et 24 connexions au plus, 20 messages/s par connexion, **connexion sans jeton valable fermée au bout de 15 s** (un `Ping` ne suffit pas à rester), serveur sur l'adresse du réseau de la partie et port aléatoire | faible à moyen sur un Wi-Fi public : le mode point d'accès est conseillé |
 | N8 | Trafic qui part par les données mobiles ou vers Internet | l'invité lie ses sockets au `Network` de la partie ; test automatisé (adresses privées et lien-local uniquement) et contrôle logcat | faible |
-| N9 | Fuite des jetons ou de la clé de partie | clé dans l'Android Keystore, supprimée à la fin ; jetons chiffrés avec une clé du Keystore, exclus des sauvegardes Android (`dataExtractionRules`) ; aucun jeton dans les journaux (pas de logs en release) | faible |
+| N9 | Fuite des jetons ou de la clé de partie | clé dans l'Android Keystore, non exportable, supprimée à la fin ; **jeton de session gardé en mémoire seulement** (jamais sur le disque, donc ni dans une sauvegarde ni dans un transfert d'appareil) ; aucun jeton dans les journaux (pas de logs en release) | faible |
+| N13 | **Tapjacking** : une app superposée fait accepter un téléphone ou supprimer les données | `filterTouchesWhenObscured` sur « Gérer les téléphones » et sur la confirmation de suppression | faible |
+| N14 | Négociation d'un TLS affaibli | TLS 1.3, repli TLS 1.2 (Android 8-9) avec `ECDHE_ECDSA` et suites AEAD seulement ; TLS 1.0/1.1 et CBC refusés des deux côtés | faible |
 | N10 | Lien `molkkyboard://join#…` forgé ouvert depuis une autre app | validation stricte de tous les paramètres (version, adresse privée uniquement, port, longueur exacte de l'empreinte et du jeton) ; aucune action sans le parcours normal (vérification de l'empreinte, validation humaine) | faible |
 | N11 | Pseudo malveillant transmis par un invité | même filtrage que la saisie locale (`withoutUnsafeChars`, longueur bornée), appliqué par l'hôte à la réception | faible |
 | N12 | Photo d'un joueur transmise aux autres | jamais : seuls pseudo, avatar emoji ou mascotte et événements transitent | nul |
 
 ## 5. Choix documentés
 
+- **TLS 1.2 accepté en repli** : Android 8 et 9 ne savent pas faire TLS 1.3 ; le repli est limité aux suites
+  `ECDHE_ECDSA` AEAD (confidentialité persistante). Retirer `TLSv1.2` exclurait ces téléphones de la partie à côté.
+- **Jeton de session en mémoire** : si l'app de l'invité est tuée, la partie reste en lecture seule chez lui et il
+  rescanne le QR code (l'organisateur le reconnaît comme nouvelle arrivée).
 - **Pas d'épinglage vers un backend** (phase 4) : risque de panne lors des rotations de certificat du fournisseur.
   **Épinglage strict en partie à côté** : le certificat est éphémère, il n'y a aucune rotation à craindre.
 - **Base Room non chiffrée** : données peu sensibles, protégées par le chiffrement du système de fichiers Android.
@@ -76,4 +82,5 @@ local ou point d'accès, QR code affiché.
 
 - Phase 4 (comptes, serveur, groupes, codes à 6 caractères, énumération), si elle reste dans la V1.
 - Lien spectateur web, photos synchronisées : quand ces fonctions seront planifiées.
-- Après le prototype P0 : confirmer N2 (épinglage), N7 (limites) et N8 (liaison au `Network`) sur appareils réels.
+- Test d'intrusion léger sur appareils réels (porteur du projet) : N1–N14, en particulier N7 (limites) et N8
+  (liaison au `Network`).

@@ -11,6 +11,7 @@ import com.yogistudio.molkkyboard.core.scoring.Throw
 import com.yogistudio.molkkyboard.core.scoring.ThrowResult
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -167,6 +168,28 @@ class SessionTest {
                 Message.JoinRejected(JoinRejection.VERSION),
                 (host.receive(ConnectionId(4), old).first() as Outgoing.To).message,
             )
+        }
+
+    @Test
+    fun `connexion reconnue seulement avec un jeton valable - sinon fermee par le delai d'admission`() =
+        runTest {
+            val stranger = ConnectionId(42)
+            assertFalse(host.knows(stranger))
+            // Un Ping ne suffit pas : l'intrus reçoit Pong, mais reste inconnu (le serveur le fermera).
+            host.receive(stranger, Message.Ping)
+            assertFalse(host.knows(stranger))
+            // Mauvais jeton : refusé, toujours inconnu.
+            host.receive(stranger, Message.JoinRequest(PROTOCOL_VERSION, "0".repeat(32), "Intrus", null))
+            assertFalse(host.knows(stranger))
+            // Jeton valable : en attente de l'organisateur, donc reconnu ; puis accepté.
+            send(aliceConn, aliceGuest.joinRequest(host.newInvite(), "Alice", null))
+            assertTrue(host.knows(aliceConn))
+            deliver(host.accept(aliceConn, alice))
+            assertTrue(host.knows(aliceConn))
+            // Refusé par l'organisateur : plus reconnu.
+            send(brunoConn, brunoGuest.joinRequest(host.newInvite(), "Bruno", null))
+            host.refuse(brunoConn)
+            assertFalse(host.knows(brunoConn))
         }
 
     @Test

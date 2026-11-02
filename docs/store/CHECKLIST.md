@@ -47,10 +47,10 @@ publication**, **F-Droid après le Play Store**.
 ## Sécurité et vie privée
 | Point | Statut | Note |
 |---|---|---|
-| Modèle de menaces à jour (partie à côté livrée : compteur, arbitre, départ, fin automatique) | 🟡 | `docs/security/THREAT_MODEL.md` |
-| Revue MASVS (`docs/security/MASVS_CHECKLIST.md`) | ⬜ | |
-| Jeton de session de l'invité chiffré (Keystore) | ⬜ | à vérifier dans le code (il est déjà exclu des sauvegardes : toutes les données le sont) |
-| Protection contre le tapjacking sur « accepter un téléphone » | ⬜ | prévue par la spec |
+| Modèle de menaces à jour (partie à côté livrée : compteur, arbitre, départ, fin automatique) | ✅ | `docs/security/THREAT_MODEL.md`, 2026-11-02 (N13, N14) |
+| Revue MASVS (`docs/security/MASVS_CHECKLIST.md`) | ✅ | 2026-11-02 ; 5 corrections (TLS imposé, trames bornées, connexions sans jeton fermées, fermeture accusée, tapjacking) |
+| Jeton de session de l'invité | ✅ | en mémoire seulement, jamais sur le disque (plus strict que le chiffrement prévu) |
+| Protection contre le tapjacking sur « accepter un téléphone » | ✅ | et sur « Supprimer toutes mes données » |
 | Vérification des dépendances, osv-scanner, SBOM, MobSF | ⬜ | |
 | Registre des traitements (`docs/privacy/REGISTRE.md`) | ⬜ | presque vide sans compte |
 | `SECURITY.md` et `security.txt` | ✅ | `security.txt` sur le site |

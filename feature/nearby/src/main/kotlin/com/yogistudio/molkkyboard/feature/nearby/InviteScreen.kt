@@ -53,6 +53,7 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionButton
 import com.yogistudio.molkkyboard.core.designsystem.component.BigActionKind
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
+import com.yogistudio.molkkyboard.core.designsystem.component.ObscuredTouchGuard
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.PlayerId
@@ -70,6 +71,8 @@ import com.yogistudio.molkkyboard.core.sync.JoinCandidate
  */
 @Composable
 fun InviteScreen(gameId: String, onBack: () -> Unit, viewModel: NearbyViewModel = hiltViewModel()) {
+    // On accepte ici des téléphones dans la partie : aucun toucher à travers une fenêtre qui recouvre l'écran.
+    ObscuredTouchGuard()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val players by viewModel.freePlayers.collectAsStateWithLifecycle()
     var mode by rememberSaveable { mutableStateOf(NetworkMode.HOTSPOT) }

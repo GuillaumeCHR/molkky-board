@@ -210,6 +210,7 @@ class NearbyManager
                                         publishHost()
                                     }
                                 },
+                                isKnown = { id, answer -> scope.launch { answer(host?.knows(id) == true) } },
                             )
                         val port = nearby.startAndWait()
                         check(port > 0)

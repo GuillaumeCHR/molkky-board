@@ -50,6 +50,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yogistudio.molkkyboard.R
 import com.yogistudio.molkkyboard.core.data.RestoreError
 import com.yogistudio.molkkyboard.core.designsystem.component.MBTopBar
+import com.yogistudio.molkkyboard.core.designsystem.component.ObscuredTouchGuard
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.model.InputMode
@@ -243,7 +244,10 @@ private fun DataSection(viewModel: SettingsViewModel) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
             title = { Text(stringResource(R.string.settings_delete_all_title)) },
-            text = { Text(stringResource(R.string.settings_delete_all_text)) },
+            text = {
+                ObscuredTouchGuard()
+                Text(stringResource(R.string.settings_delete_all_text))
+            },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDelete = false

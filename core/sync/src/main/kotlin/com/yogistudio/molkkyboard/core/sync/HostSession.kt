@@ -80,6 +80,11 @@ class HostSession(
     val organizer = Author(DeviceId("hote"), Role.ORGANIZER)
 
     val candidates: List<JoinCandidate> get() = pendingJoins.values.toList()
+
+    /** La connexion a présenté un jeton valable : arrivée en attente de l'organisateur, ou téléphone accepté. */
+    fun knows(connection: ConnectionId): Boolean =
+        connection in pendingJoins || devices.values.any { it.connection == connection }
+
     val guests: List<GuestDevice> get() = devices.values.toList()
     val lastSeq: Long get() = events.size.toLong()
 
