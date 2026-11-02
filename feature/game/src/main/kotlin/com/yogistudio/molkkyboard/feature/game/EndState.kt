@@ -5,6 +5,8 @@ import com.yogistudio.molkkyboard.core.data.toStatsGame
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.scoring.MatchStatus
 import com.yogistudio.molkkyboard.core.scoring.NextStarter
+import com.yogistudio.molkkyboard.core.scoring.SeriesPoint
+import com.yogistudio.molkkyboard.core.scoring.scoreSeries
 import com.yogistudio.molkkyboard.core.stats.PERFECT_GAME_THROWS
 import com.yogistudio.molkkyboard.core.stats.SetSummary
 import com.yogistudio.molkkyboard.core.stats.series
@@ -22,6 +24,8 @@ data class EndUi(
     val match: MatchUi? = null,
     /** Récapitulatif quand les mêmes équipes enchaînent les manches (au moins deux). */
     val series: SeriesUi? = null,
+    /** Courbe de la manche (`SCORING_SPEC.md` § 18) ; `null` si aucun tour n'a été joué. */
+    val curve: CurveUi? = null,
 )
 
 /** Une équipe dans les statistiques de la manche. */
@@ -52,6 +56,23 @@ data class MolkkoutUi(
     val nextPlayer: String?,
     val winner: String?,
     val throws: Int,
+)
+
+/**
+ * Courbe de la partie : une ligne par équipe, dans l'ordre de passage ; [highlight] : la ligne et le tour du moment
+ * fort (remontée, chute, élimination) sur lequel l'animation zoome.
+ */
+data class CurveUi(
+    val lines: List<CurveLineUi>,
+    val rounds: Int,
+    val target: Int,
+    val highlight: Pair<Int, Int>? = null,
+)
+
+data class CurveLineUi(
+    val team: TeamUi,
+    val points: List<SeriesPoint>,
+    val winner: Boolean,
 )
 
 data class SeriesUi(
@@ -115,7 +136,23 @@ internal fun GameSnapshot.endUi(teamsUi: List<TeamUi>, history: List<SetSummary>
         teamStats = teamStats,
         match = matchUi(byId),
         series = seriesUi,
+        curve = curveUi(byId),
     )
+}
+
+/** Courbe de la manche en cours, recalculée depuis son journal effectif (une correction la redessine). */
+private fun GameSnapshot.curveUi(byId: Map<TeamId, TeamUi>): CurveUi? {
+    val series = scoreSeries(config, currentSet.lineup, currentSet.replay.effectiveLog) ?: return null
+    if (series.rounds == 0) return null
+    val lines =
+        series.teams.mapNotNull { line ->
+            byId[line.team]?.let { CurveLineUi(it, line.points, series.winner == line.team) }
+        }
+    val highlight =
+        series.highlight?.let { moment ->
+            lines.indexOfFirst { it.team.id == moment.team }.takeIf { it >= 0 }?.let { it to moment.round }
+        }
+    return CurveUi(lines, series.rounds, series.target, highlight)
 }
 
 private fun GameSnapshot.matchUi(byId: Map<TeamId, TeamUi>): MatchUi? {

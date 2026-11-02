@@ -3,16 +3,9 @@ package com.yogistudio.molkkyboard.feature.share
 import androidx.compose.ui.graphics.toArgb
 import com.yogistudio.molkkyboard.core.data.GameSnapshot
 import com.yogistudio.molkkyboard.core.designsystem.theme.TeamPalette
-import com.yogistudio.molkkyboard.core.model.TeamId
-import com.yogistudio.molkkyboard.core.scoring.Fault
-import com.yogistudio.molkkyboard.core.scoring.SetState
-import com.yogistudio.molkkyboard.core.scoring.Throw
-import com.yogistudio.molkkyboard.core.scoring.WrongTeam
-import com.yogistudio.molkkyboard.core.scoring.describe
-import com.yogistudio.molkkyboard.core.scoring.getOrNull
-import com.yogistudio.molkkyboard.core.scoring.getOrThrow
-import com.yogistudio.molkkyboard.core.scoring.reduce
-import com.yogistudio.molkkyboard.core.scoring.start
+import com.yogistudio.molkkyboard.core.scoring.SeriesMark
+import com.yogistudio.molkkyboard.core.scoring.SeriesStep
+import com.yogistudio.molkkyboard.core.scoring.scoreSeries
 
 /** Une équipe dans le clip : nom et couleur ARGB (le clip, dessiné en `Canvas`, n'a pas d'emblème). */
 data class ReelTeam(
@@ -55,20 +48,13 @@ fun GameSnapshot.reelData(content: ShareContent, title: String, keyFigure: Strin
     val palette = TeamPalette.colors(dark = false)
     val index = content.teams.withIndex().associate { (i, team) -> team.id to i }
     val teams = content.teams.map { ReelTeam(it.name, palette[it.colorIndex % palette.size].fill.toArgb()) }
-    val initial = start(config, currentSet.lineup).getOrNull()
-    val steps = mutableListOf<ReelStep>()
-    if (initial != null) {
-        var state: SetState = initial
-        describe(initial, currentSet.replay.effectiveLog).forEach { entry ->
-            val before = state
-            state = reduce(state, entry.event).getOrThrow()
-            val team = entry.team?.takeIf { entry.event is Throw || entry.event is Fault || entry.event is WrongTeam }
-            val i = team?.let(index::get) ?: return@forEach
-            val after = state.team(team) ?: return@forEach
-            val kind = stepKind(before, state, team, after.score)
-            steps += ReelStep(i, after.score, entry.round, kind)
-        }
-    }
+    // Même série que la courbe de l'écran de fin (`SCORING_SPEC.md` § 18), passage par passage.
+    val steps =
+        scoreSeries(config, currentSet.lineup, currentSet.replay.effectiveLog)
+            ?.steps
+            .orEmpty()
+            .filter { it.mark != SeriesMark.LEFT }
+            .mapNotNull { step -> index[step.team]?.let { ReelStep(it, step.score, step.round, step.kind()) } }
     return ReelData(
         teams = teams,
         steps = steps,
@@ -80,14 +66,12 @@ fun GameSnapshot.reelData(content: ShareContent, title: String, keyFigure: Strin
     )
 }
 
-/** Nature d'un lancer pour la mise en scène : victoire, élimination, retour en arrière, raté ou points. */
-private fun stepKind(before: SetState, after: SetState, team: TeamId, score: Int): StepKind {
-    val previous = before.team(team)
-    return when {
-        after.winner == team -> StepKind.WIN
-        after.team(team)?.eliminated == true && previous?.eliminated == false -> StepKind.ELIMINATED
-        score < (previous?.score ?: 0) -> StepKind.RESET
-        score == (previous?.score ?: 0) -> StepKind.MISS
+/** Nature d'un passage pour la mise en scène : victoire, élimination, retour en arrière, raté ou points. */
+private fun SeriesStep.kind(): StepKind =
+    when {
+        mark == SeriesMark.WIN -> StepKind.WIN
+        mark == SeriesMark.ELIMINATED -> StepKind.ELIMINATED
+        mark == SeriesMark.RESET -> StepKind.RESET
+        miss -> StepKind.MISS
         else -> StepKind.POINTS
     }
-}

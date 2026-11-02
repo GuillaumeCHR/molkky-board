@@ -263,4 +263,18 @@
     <string name="guest_your_turn">À vous de lancer : saisissez le lancer de %1$s.</string>
     <string name="guest_other_turn">Au tour de %1$s : vous pouvez saisir son lancer.</string>
     <string name="guest_finished">Partie terminée. Vous pouvez vous déconnecter.</string>
+    <!-- Courbe de la partie (écran de fin) -->
+    <string name="end_curve_title">Courbe de la partie</string>
+    <string name="end_curve_skip">Passer l\'animation</string>
+    <string name="end_curve_round">Tour %1$d</string>
+    <string name="end_curve_previous">Tour précédent</string>
+    <string name="end_curve_next">Tour suivant</string>
+    <string name="end_curve_score">%1$s : %2$d</string>
+    <string name="end_curve_not_yet">%1$s : pas encore en jeu</string>
+    <string name="end_curve_summary">Courbe de la partie sur %1$d tours : %2$s</string>
+    <string name="end_curve_summary_win">%1$s gagne au tour %2$d</string>
+    <string name="end_curve_summary_reset">%1$s retombe à %2$d au tour %3$d</string>
+    <string name="end_curve_summary_out">%1$s est hors jeu au tour %2$d</string>
+    <string name="end_curve_summary_left">%1$s quitte la partie au tour %2$d</string>
+    <string name="end_curve_replay">Rejouer</string>
 </resources>

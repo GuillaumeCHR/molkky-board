@@ -1,6 +1,6 @@
 # Molkky Board — prompt de référence
 
-> Prompt de référence : `01-specifications-molkky-board.md` (version du 2026-10-28 soir, « Partie à côté » et « Modes de jeu »), **mis à jour
+> Prompt de référence : `01-specifications-molkky-board.md` (version du 2026-11-02, « Courbe de la partie » ; avant : 2026-10-28 soir, « Partie à côté » et « Modes de jeu »), **mis à jour
 > d'après les retours des tests sur téléphone** (27-28 octobre) : coach et mode débutant supprimés, placement en vue
 > globale, intro courte retirée, icône podium au lieu du geste, emblèmes au trait au lieu des emoji, vignettes sans QR
 > code ni masquage des noms, voix et sons coupés en silencieux seulement, écran en portrait, code publié sous GPL v3.
@@ -118,7 +118,8 @@ validation avant de passer à la suivante.
    - le **numéro du tour courant**, déduit du journal (et non stocké), y compris quand un joueur est
      éliminé, retiré ou ajouté en retard (il rejoint le tour en cours) et quand on corrige un lancer passé ;
    - les deux modes de saisie (quilles touchées / saisie rapide) ;
-   - les scores de départ et objectifs personnalisés du mode famille.
+   - les scores de départ et objectifs personnalisés du mode famille ;
+   - la **série de scores par tour** qui alimente la courbe de la partie, déduite du journal.
 
 👉 Arrête-toi et montre-moi RULES.md et SCORING_SPEC.md.
 
@@ -198,7 +199,8 @@ Produis `docs/ARCHITECTURE.md` et un plan d'implémentation découpé en jalons.
   **ajouter un joueur en retard** (il démarre à 0), **retirer un joueur** qui part
 
 ### Fin de partie, historique et statistiques
-- Écran de fin avec animation de victoire, classement, stats de la manche et bouton « Revanche »
+- Écran de fin avec animation de victoire, classement, **courbe de la partie** (voir « Courbe de la
+  partie »), stats de la manche et bouton « Revanche »
 - Ordre pour la manche suivante paramétrable : identique, rotation, le dernier commence,
   le vainqueur joue en dernier
 - **Historique complet et fiable** : chaque partie terminée y apparaît, avec son déroulé ;
@@ -540,7 +542,8 @@ généreuses. Ni skeuomorphisme ni texture bois réaliste : on évoque le bois p
    - l'undo en bouton discret avec snackbar, et l'accès au déroulé et à la gestion des joueurs
 4. **Déroulé de la partie** : liste chronologique des lancers, groupée par tour (« Tour 1 », « Tour 2 »…),
    chaque lancer modifiable ou supprimable
-5. **Fin de partie** : animation de victoire, classement, stats de la manche, bouton « Revanche »
+5. **Fin de partie** : animation de victoire, classement, courbe de la partie, stats de la manche,
+   bouton « Revanche » toujours visible, sans défilement
 6. **Stats** : graphiques Vico, records personnels
 7. **Réglages** : mode de saisie, annonces vocales, sons, revoir la prise en main, « Plein soleil »,
    données (sauvegarde, export, suppression)
@@ -576,7 +579,7 @@ généreuses. Ni skeuomorphisme ni texture bois réaliste : on évoque le bois p
 
 👉 Avant de coder les écrans, crée le module `core:designsystem` (thème, tokens, typographie,
 composants de base : PinView, QuickPad, ScoreRing, PlayerChip, BigActionButton, RoundBadge,
-ScoreboardRow) avec des `@Preview`
+ScoreboardRow, GameCurve) avec des `@Preview`
 clair/sombre, et montre-moi les captures Roborazzi pour validation.
 
 ---
@@ -684,6 +687,49 @@ Les quilles restent **entières** : elles ne se brisent pas, elles s'envolent.
 - Sur une partie partagée (à côté ou à distance), l'animation se joue **simultanément sur tous les téléphones connectés**
 - Si une correction de lancer annule la victoire, l'écran de fin se referme et la partie reprend
 - Version allégée, un simple fondu avec le trophée, si l'option système « Réduire les animations » est active
+
+### Courbe de la partie
+Moment graphique de l'écran de fin qui raconte la course vers 50, tour par tour. C'est une **mise en
+scène stylisée**, pas un graphique mathématique : elle vise l'effet, comme l'intro et ses codes manga.
+- **Lecture** : axe horizontal en tours, axe vertical de 0 à l'objectif de la partie (50 par défaut),
+  avec une ligne de repère sur l'objectif. Une ligne par joueur ou équipe, à sa couleur, avec un point
+  par tour et un **emblème ou avatar en bout de ligne** : la couleur n'est jamais le seul repère
+- **Événements visibles** : un retour à 25 apparaît comme une chute marquée d'un point corail ;
+  une élimination arrête la ligne sur une petite croix corail ; le point final du vainqueur est mis en
+  avant en safran. Un joueur arrivé en retard commence au tour où il a rejoint la partie ; un joueur
+  retiré s'arrête au tour de son départ. En mode famille, chaque ligne part du score de départ du joueur
+- **Style** : traits épais et arrondis, courbes souples entre les points, chutes et remontées
+  légèrement exagérées, aplats « Nordic Bold », sans grille ni graduation fine. Seule **la forme** est
+  libre : l'ordre des événements et le score à chaque tour restent exacts, et les points affichés au tap
+  donnent les vraies valeurs
+- **Interaction** : une fois l'animation finie, un tap sur un tour affiche le score exact de chacun à
+  ce moment. Pas de zoom manuel, pour rester simple. Le bouton « Revanche » reste accessible sans faire défiler l'écran
+- **Animation** (3 s maximum, après la séquence de victoire, passable d'un tap) :
+  1. les lignes se tracent de gauche à droite, avec des lignes de vitesse derrière la pointe de tête ;
+  2. la caméra suit la course et fait un **bref zoom** sur le moment fort de la partie, s'il y en a un
+     (retour à 25, élimination, remontée) ;
+  3. **zoom final** sur le point gagnant, image d'impact figée environ 80 ms, puis **explosion** : éclat
+     radial à pointes arrondies et quilles-confettis aux couleurs du vainqueur, qui filent hors champ ;
+  4. dézoom vers la vue complète de la courbe, qui reste affichée et lisible
+- **Contraintes d'animation** : mêmes règles que l'intro (un seul flash d'impact, fond safran ou couleur
+  d'équipe et jamais de blanc plein écran, moins de 3 flashs par seconde, éléments animés bornés, graine
+  fixe pour des captures stables). L'explosion reste plus courte que l'animation de victoire qui la
+  précède, pour ne pas la répéter. Vibration brève à l'impact ; son optionnel, désactivé par défaut.
+  « Réduire les animations » : la courbe finale s'affiche en fondu, sans zoom ni explosion
+- **Données** : la série de scores par tour est **calculée à partir du journal** par `core:scoring`,
+  jamais stockée. Une correction de lancer la met donc à jour, et une partie à côté donne la même courbe
+  sur tous les téléphones. Aucune donnée supplémentaire n'est transmise ni conservée
+- **Rendu** : composant `GameCurve` en Canvas Compose dans `core:designsystem`, sans dépendance
+  supplémentaire. Le calcul de la série est aussi utilisé par la « course vers 50 » du mini-reel
+- **Modes de jeu** : la courbe est fournie pour le mode classique et ses options. Après la V1, chaque
+  mode déclare s'il peut l'afficher (voir « Modes de jeu » : un mode sans score, comme le Killer, ne
+  l'affiche pas)
+- **Accessibilité** : TalkBack lit un résumé (« Léa gagne au tour 8, Tom retombe à 25 au tour 6 ») et
+  chaque tour est consultable sans geste précis ; lisible jusqu'au facteur de police 2,0
+- **Tests** : cas de `SCORING_SPEC.md` sur la série par tour (retour à 25, élimination, ajout et retrait
+  de joueur, correction d'un lancer ancien) ; captures Roborazzi de l'image d'impact et de la vue
+  finale en clair et en sombre, avec 2 et 6 participants, et avec beaucoup de tours ; test UI du tap
+  qui passe l'animation
 
 ### Animation « 12 ! »
 - Déclenchée quand un lancer validé rapporte **12 points**, de l'une des deux façons possibles :
@@ -1711,3 +1757,6 @@ et tiens-la à jour jusqu'à la publication.
 - 2026-11-02 — **Saisie rapide : saisie directe du score** (demandée, avancée du backlog) : le sélecteur « quille seule / nombre de quilles » est retiré, le pavé 0 à 12 enregistre `Points(n, SCORE)` ; 0 reste un raté (3 de suite = sanction), le dépassement est inchangé. Un 12 saisi joue le « 12 ! » de la quille seule (jamais « Strike ! »). Anciens lancers lus tels quels, `SCORE` après correction. Protocole de la partie à côté en **version 2** (un téléphone en 0.8.4 ou avant est refusé, « version incompatible »). `SCORING_SPEC.md` § 15.3 (Q7–Q9). **Version 0.8.5 (build 13)**.
 - 2026-11-02 — **Revue de sécurité MASVS v2 L1** (`docs/security/MASVS_CHECKLIST.md`, modèle de menaces mis à jour, N13–N14). Corrigé dans la partie à côté : **TLS imposé** des deux côtés (1.3 ; repli 1.2 pour Android 8-9 limité à `ECDHE_ECDSA` + AEAD ; 1.0/1.1 et CBC refusés), **trames bornées à 64 Ko** avant lecture, **connexion sans jeton valable fermée au bout de 15 s** (un `Ping` ne suffit plus), **fermeture accusée** par l'invité (exclusion constatée tout de suite), **tapjacking** (`ObscuredTouchGuard`) sur « Gérer les téléphones » et « Supprimer toutes mes données ». Constaté conforme : jeton de session de l'invité en mémoire seulement (choix retenu), sauvegarde cloud désactivée, seule l'activité principale exportée, aucun log en release. Reste : osv-scanner, SBOM, vérification des dépendances Gradle, MobSF, test d'intrusion du porteur du projet.
 - 2026-11-02 — **Chaîne d'approvisionnement** : SBOM CycloneDX de l'APK de release (plugin `org.cyclonedx.bom` 3.5.1 sur `:app`, configuration `releaseRuntimeClasspath`, 265 composants) analysé par **osv-scanner 2.7.0** en CI (binaire épinglé par SHA-256, SBOM en artefact) ; **Guava relevée à 33.7.2** par contrainte (GHSA-xxph-c9ww-hj94, transitive par Media3, non exploitable : aucune désérialisation Java) ; **vérification des dépendances Gradle** (`gradle/verification-metadata.xml`, 1 077 composants, SHA-256 ; sources et javadoc de confiance pour Android Studio), contre-test fait (une empreinte altérée bloque le build). Toute mise à jour de dépendance, y compris Dependabot, impose de régénérer le fichier (procédure dans `docs/RELEASE.md`). MobSF / mobsfscan : outil externe, en attente d'accord.
+
+### Spécification du 2026-11-02 — « Courbe de la partie »
+- 2026-11-02 — Nouvelle version fournie (`01-specifications-molkky-board.md`, copiée dans `prompt-molkky.md`) : section « Courbe de la partie » (spécifications complémentaires), série de scores par tour dans `SCORING_SPEC.md`, écran de fin avec la courbe et « Revanche » **toujours visible, sans défilement**, composant `GameCurve` du design system. Reportée dans ce fichier sans toucher aux ajustements « retour du test ».

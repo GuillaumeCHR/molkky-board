@@ -109,7 +109,8 @@ validation avant de passer à la suivante.
    - le **numéro du tour courant**, déduit du journal (et non stocké), y compris quand un joueur est
      éliminé, retiré ou ajouté en retard (il rejoint le tour en cours) et quand on corrige un lancer passé ;
    - les deux modes de saisie (quilles touchées / saisie rapide) ;
-   - les scores de départ et objectifs personnalisés du mode famille.
+   - les scores de départ et objectifs personnalisés du mode famille ;
+   - la **série de scores par tour** qui alimente la courbe de la partie, déduite du journal.
 
 👉 Arrête-toi et montre-moi RULES.md et SCORING_SPEC.md.
 
@@ -189,7 +190,8 @@ Produis `docs/ARCHITECTURE.md` et un plan d'implémentation découpé en jalons.
   **ajouter un joueur en retard** (il démarre à 0), **retirer un joueur** qui part
 
 ### Fin de partie, historique et statistiques
-- Écran de fin avec animation de victoire, classement, stats de la manche et bouton « Revanche »
+- Écran de fin avec animation de victoire, classement, **courbe de la partie** (voir « Courbe de la
+  partie »), stats de la manche et bouton « Revanche »
 - Ordre pour la manche suivante paramétrable : identique, rotation, le dernier commence,
   le vainqueur joue en dernier
 - **Historique complet et fiable** : chaque partie terminée y apparaît, avec son déroulé ;
@@ -531,7 +533,8 @@ généreuses. Ni skeuomorphisme ni texture bois réaliste : on évoque le bois p
    - l'undo en bouton discret avec snackbar, et l'accès au déroulé et à la gestion des joueurs
 4. **Déroulé de la partie** : liste chronologique des lancers, groupée par tour (« Tour 1 », « Tour 2 »…),
    chaque lancer modifiable ou supprimable
-5. **Fin de partie** : animation de victoire, classement, stats de la manche, bouton « Revanche »
+5. **Fin de partie** : animation de victoire, classement, courbe de la partie, stats de la manche,
+   bouton « Revanche » toujours visible, sans défilement
 6. **Stats** : graphiques Vico, records personnels
 7. **Réglages** : mode de saisie, annonces vocales, sons, version courte de l'intro,
    revoir la prise en main, « Plein soleil », données (export, suppression)
@@ -561,7 +564,7 @@ généreuses. Ni skeuomorphisme ni texture bois réaliste : on évoque le bois p
 
 👉 Avant de coder les écrans, crée le module `core:designsystem` (thème, tokens, typographie,
 composants de base : PinView, QuickPad, ScoreRing, PlayerChip, BigActionButton, RoundBadge,
-ScoreboardRow) avec des `@Preview`
+ScoreboardRow, GameCurve) avec des `@Preview`
 clair/sombre, et montre-moi les captures Roborazzi pour validation.
 
 ---
@@ -714,6 +717,49 @@ Les quilles restent **entières** : elles ne se brisent pas, elles s'envolent.
 - « Réduire les animations » : la carte passe en grisé avec le tampon, en fondu simple
 - Lien « Pourquoi ? » sous la carte éliminée, vers la règle des trois ratés (voir « Guide des règles »)
 - Test de capture Roborazzi de l'état final et test UI de l'annulation par correction
+
+### Courbe de la partie
+Moment graphique de l'écran de fin qui raconte la course vers 50, tour par tour. C'est une **mise en
+scène stylisée**, pas un graphique mathématique : elle vise l'effet, comme l'intro et ses codes manga.
+- **Lecture** : axe horizontal en tours, axe vertical de 0 à l'objectif de la partie (50 par défaut),
+  avec une ligne de repère sur l'objectif. Une ligne par joueur ou équipe, à sa couleur, avec un point
+  par tour et un **emblème ou avatar en bout de ligne** : la couleur n'est jamais le seul repère
+- **Événements visibles** : un retour à 25 apparaît comme une chute marquée d'un point corail ;
+  une élimination arrête la ligne sur une petite croix corail ; le point final du vainqueur est mis en
+  avant en safran. Un joueur arrivé en retard commence au tour où il a rejoint la partie ; un joueur
+  retiré s'arrête au tour de son départ. En mode famille, chaque ligne part du score de départ du joueur
+- **Style** : traits épais et arrondis, courbes souples entre les points, chutes et remontées
+  légèrement exagérées, aplats « Nordic Bold », sans grille ni graduation fine. Seule **la forme** est
+  libre : l'ordre des événements et le score à chaque tour restent exacts, et les points affichés au tap
+  donnent les vraies valeurs
+- **Interaction** : une fois l'animation finie, un tap sur un tour affiche le score exact de chacun à
+  ce moment. Pas de zoom manuel, pour rester simple. Le bouton « Revanche » reste accessible sans faire défiler l'écran
+- **Animation** (3 s maximum, après la séquence de victoire, passable d'un tap) :
+  1. les lignes se tracent de gauche à droite, avec des lignes de vitesse derrière la pointe de tête ;
+  2. la caméra suit la course et fait un **bref zoom** sur le moment fort de la partie, s'il y en a un
+     (retour à 25, élimination, remontée) ;
+  3. **zoom final** sur le point gagnant, image d'impact figée environ 80 ms, puis **explosion** : éclat
+     radial à pointes arrondies et quilles-confettis aux couleurs du vainqueur, qui filent hors champ ;
+  4. dézoom vers la vue complète de la courbe, qui reste affichée et lisible
+- **Contraintes d'animation** : mêmes règles que l'intro (un seul flash d'impact, fond safran ou couleur
+  d'équipe et jamais de blanc plein écran, moins de 3 flashs par seconde, éléments animés bornés, graine
+  fixe pour des captures stables). L'explosion reste plus courte que l'animation de victoire qui la
+  précède, pour ne pas la répéter. Vibration brève à l'impact ; son optionnel, désactivé par défaut.
+  « Réduire les animations » : la courbe finale s'affiche en fondu, sans zoom ni explosion
+- **Données** : la série de scores par tour est **calculée à partir du journal** par `core:scoring`,
+  jamais stockée. Une correction de lancer la met donc à jour, et une partie à côté donne la même courbe
+  sur tous les téléphones. Aucune donnée supplémentaire n'est transmise ni conservée
+- **Rendu** : composant `GameCurve` en Canvas Compose dans `core:designsystem`, sans dépendance
+  supplémentaire. Le calcul de la série est aussi utilisé par la « course vers 50 » du mini-reel
+- **Modes de jeu** : la courbe est fournie pour le mode classique et ses options. Après la V1, chaque
+  mode déclare s'il peut l'afficher (voir « Modes de jeu » : un mode sans score, comme le Killer, ne
+  l'affiche pas)
+- **Accessibilité** : TalkBack lit un résumé (« Léa gagne au tour 8, Tom retombe à 25 au tour 6 ») et
+  chaque tour est consultable sans geste précis ; lisible jusqu'au facteur de police 2,0
+- **Tests** : cas de `SCORING_SPEC.md` sur la série par tour (retour à 25, élimination, ajout et retrait
+  de joueur, correction d'un lancer ancien) ; captures Roborazzi de l'image d'impact et de la vue
+  finale en clair et en sombre, avec 2 et 6 participants, et avec beaucoup de tours ; test UI du tap
+  qui passe l'animation
 
 ### Annonces vocales
 - Option « Annonces vocales » en synthèse vocale Android hors ligne, désactivée par défaut :

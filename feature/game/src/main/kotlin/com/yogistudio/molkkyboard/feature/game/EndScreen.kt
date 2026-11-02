@@ -48,8 +48,10 @@ import com.yogistudio.molkkyboard.core.scoring.NextStarter
 import java.util.Locale
 
 /**
- * Fin de manche : vainqueur et chiffre clé, classement, statistiques de la manche, match et Mölkkout, série des
- * mêmes équipes, puis « Revanche » (ou « Manche suivante » dans un match). Défile si la place manque.
+ * Fin de manche : vainqueur et chiffre clé, classement, courbe de la partie, statistiques de la manche, match et
+ * Mölkkout, série des mêmes équipes. L'action principale (« Revanche », ou « Manche suivante » dans un match) reste
+ * dans une barre en bas, **toujours visible sans défiler** ; le reste défile au-dessus. [celebrating] : la séquence
+ * de victoire est encore affichée par-dessus (la courbe attend sa fin pour s'animer).
  */
 @Composable
 internal fun EndPanel(
@@ -57,34 +59,96 @@ internal fun EndPanel(
     actions: GameActions,
     onOpenLog: () -> Unit,
     onOpenPlacement: () -> Unit = {},
+    celebrating: Boolean = false,
 ) {
     val end = state.end
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .navigationBarsPadding()
-                .padding(MBDimens.ScreenPadding),
-            verticalArrangement = Arrangement.spacedBy(MBDimens.Gap),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            EndHeadline(state, end)
-            end?.match?.let { MatchCard(it) }
-            end?.match?.molkkout?.let { MolkkoutCard(it, actions) }
-            RankingCard(state, end)
-            end?.series?.let { SeriesCard(it) }
-            if (!state.abandoned) ReplacePins(onOpenPlacement)
-            EndActions(state, end, actions)
-            Row(horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap)) {
-                // Pendant un Mölkkout, seule son annulation est proposée (deux « Annuler » prêteraient à confusion).
-                val molkkoutStarted = (end?.match?.molkkout?.throws ?: 0) > 0
-                if (state.finished && !molkkoutStarted) {
-                    TextButton(onClick = actions.onUndo) { Text(stringResource(R.string.game_undo)) }
+        Column(Modifier.fillMaxSize().navigationBarsPadding()) {
+            Column(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(MBDimens.ScreenPadding),
+                verticalArrangement = Arrangement.spacedBy(MBDimens.Gap),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                EndContent(state, end, actions, onOpenLog, onOpenPlacement, celebrating)
+            }
+            PrimaryEndBar(state, end, actions)
+        }
+    }
+}
+
+@Composable
+private fun EndContent(
+    state: GameUiState,
+    end: EndUi?,
+    actions: GameActions,
+    onOpenLog: () -> Unit,
+    onOpenPlacement: () -> Unit,
+    celebrating: Boolean,
+) {
+    EndHeadline(state, end)
+    end?.match?.let { MatchCard(it) }
+    end?.match?.molkkout?.let { MolkkoutCard(it, actions) }
+    RankingCard(state, end)
+    end?.curve?.let { CurveCard(it, celebrating, state.sounds) }
+    end?.series?.let { SeriesCard(it) }
+    if (!state.abandoned) ReplacePins(onOpenPlacement)
+    EndActions(state, end, actions)
+    Row(horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap)) {
+        // Pendant un Mölkkout, seule son annulation est proposée (deux « Annuler » prêteraient à confusion).
+        val molkkoutStarted = (end?.match?.molkkout?.throws ?: 0) > 0
+        if (state.finished && !molkkoutStarted) {
+            TextButton(onClick = actions.onUndo) { Text(stringResource(R.string.game_undo)) }
+        }
+        TextButton(onClick = onOpenLog) { Text(stringResource(R.string.game_menu_log)) }
+    }
+}
+
+/** Barre du bas : l'action principale de la fin de manche, toujours visible (aucune si un Mölkkout est à jouer). */
+@Composable
+private fun PrimaryEndBar(state: GameUiState, end: EndUi?, actions: GameActions) {
+    val match = end?.match
+    val primary: (@Composable () -> Unit)? =
+        when {
+            match?.nextSet != null -> {
+                {
+                    BigActionButton(
+                        stringResource(R.string.end_next_set, match.nextSet),
+                        actions.onNextSet,
+                        BigActionKind.Primary,
+                        Modifier.fillMaxWidth(),
+                    )
                 }
-                TextButton(onClick = onOpenLog) { Text(stringResource(R.string.game_menu_log)) }
+            }
+
+            match?.molkkout != null && match.winner == null -> {
+                null
+            }
+
+            state.abandoned -> {
+                {
+                    BigActionButton(
+                        stringResource(R.string.game_new_game),
+                        actions.onNewGame,
+                        BigActionKind.Primary,
+                        Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+
+            else -> {
+                { RematchButton(actions) }
             }
         }
+    primary ?: return
+    Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
+        Column(
+            Modifier.padding(horizontal = MBDimens.ScreenPadding, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) { primary() }
     }
 }
 
@@ -319,46 +383,21 @@ private fun SeriesCard(series: SeriesUi) {
 @Composable
 private fun EndActions(state: GameUiState, end: EndUi?, actions: GameActions) {
     val match = end?.match
-    when {
-        match?.nextSet != null -> {
-            BigActionButton(
-                stringResource(R.string.end_next_set, match.nextSet),
-                actions.onNextSet,
-                BigActionKind.Primary,
-                Modifier.fillMaxWidth(),
-            )
-        }
-
-        // Mölkkout à jouer : la manche suivante attend son résultat.
-        match?.molkkout != null && match.winner == null -> {
-            Unit
-        }
-
-        state.abandoned -> {
-            BigActionButton(
-                stringResource(R.string.game_new_game),
-                actions.onNewGame,
-                BigActionKind.Primary,
-                Modifier.fillMaxWidth(),
-            )
-        }
-
-        else -> {
-            // Le partage est proposé, jamais imposé : il ne passe pas devant la revanche.
-            BigActionButton(
-                stringResource(R.string.end_share),
-                actions.onShare,
-                BigActionKind.Secondary,
-                Modifier.fillMaxWidth(),
-            )
-            RematchButton(actions)
-            BigActionButton(
-                stringResource(R.string.game_new_game),
-                actions.onNewGame,
-                BigActionKind.Secondary,
-                Modifier.fillMaxWidth(),
-            )
-        }
+    // L'action principale est dans la barre du bas ; ici, les actions secondaires.
+    if (match?.nextSet == null && !(match?.molkkout != null && match.winner == null) && !state.abandoned) {
+        // Le partage est proposé, jamais imposé : il ne passe pas devant la revanche.
+        BigActionButton(
+            stringResource(R.string.end_share),
+            actions.onShare,
+            BigActionKind.Secondary,
+            Modifier.fillMaxWidth(),
+        )
+        BigActionButton(
+            stringResource(R.string.game_new_game),
+            actions.onNewGame,
+            BigActionKind.Secondary,
+            Modifier.fillMaxWidth(),
+        )
     }
     // Une partie finie se termine par un vrai bouton ; un match en cours reste ouvert et se reprend depuis l'accueil.
     val matchOver = match == null || (match.nextSet == null && (match.molkkout == null || match.winner != null))

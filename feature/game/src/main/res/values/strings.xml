@@ -263,4 +263,18 @@
     <string name="guest_your_turn">Your turn: enter %1$s\'s throw.</string>
     <string name="guest_other_turn">%1$s\'s turn: you can enter the throw.</string>
     <string name="guest_finished">Game over. You can disconnect.</string>
+    <!-- Courbe de la partie (écran de fin) -->
+    <string name="end_curve_title">Game curve</string>
+    <string name="end_curve_skip">Skip the animation</string>
+    <string name="end_curve_round">Round %1$d</string>
+    <string name="end_curve_previous">Previous round</string>
+    <string name="end_curve_next">Next round</string>
+    <string name="end_curve_score">%1$s: %2$d</string>
+    <string name="end_curve_not_yet">%1$s: not yet playing</string>
+    <string name="end_curve_summary">Game curve over %1$d rounds: %2$s</string>
+    <string name="end_curve_summary_win">%1$s wins in round %2$d</string>
+    <string name="end_curve_summary_reset">%1$s falls back to %2$d in round %3$d</string>
+    <string name="end_curve_summary_out">%1$s is out in round %2$d</string>
+    <string name="end_curve_summary_left">%1$s leaves the game in round %2$d</string>
+    <string name="end_curve_replay">Replay</string>
 </resources>

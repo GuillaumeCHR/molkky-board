@@ -453,3 +453,32 @@ GameConfig.isStandard ⇔ mode == OFFICIAL      // records « purs » (remplace 
 | G9 | `Playful`, A à 2 ratés | A rate | A 3 ratés, **pas** éliminée, `misses = 3` (le compteur continue pour les stats) |
 | G10 | `Playful`, A 30/0 | `Fault(A, TRESPASS)` | A 30/**0**, lancer perdu (F9) |
 
+
+## 18. Série de scores par tour (`S`, courbe de la partie, spécification du 2026-11-02)
+
+`scoreSeries(config, lineup, effectiveLog)` rejoue le journal effectif et relève le score de l'équipe concernée après
+chaque passage (lancer, faute, lancer de la mauvaise équipe). Rien n'est stocké : une correction ou une suppression
+redessine la courbe, et tous les téléphones d'une partie à côté obtiennent la même série. Elle alimente la courbe de
+l'écran de fin (un point par tour : le score à la fin du tour, avec la marque la plus forte du tour) et la « course
+vers 50 » du mini-reel (les passages dans l'ordre du journal).
+
+- Départ : tour 0, au score de départ (mode famille compris). Une équipe ajoutée en cours de manche part de son score
+  de départ à la fin du tour précédant son arrivée ; une équipe qui part s'arrête au tour de son départ (`LEFT`).
+- Marques : `RESET` (le score retombe : retour à 25, à 0 ou à la moitié), `ELIMINATED`, `WIN` ; une victoire acquise
+  par l'élimination des autres est marquée sur le dernier point du vainqueur.
+- Axe : de 0 à la plus haute cible de la partie (mode famille compris).
+- Moment fort (zoom de l'animation) : une remontée si le vainqueur a été mené d'au moins 15 points (tour du plus
+  grand retard), sinon la plus forte chute, sinon la première élimination ; jamais le point gagnant.
+
+| # | Cas | Attendu |
+|---|---|---|
+| S1 | A : 12, 12, 12, 12, 2 contre des 1 | A : 0, 12, 24, 36, 48, 50 aux tours 0 à 5, victoire marquée ; passages A, B, A, B… ; pas de moment fort |
+| S2 | A : 12, 12, 12, 9 puis 9 | tour 5 : 25, marqué `RESET` ; moment fort (A, tour 5, chute) |
+| S3 | trois ratés de C (trois équipes) | C : quatre points à 0, le dernier `ELIMINATED` ; moment fort (C, tour 3) |
+| S4 | B éliminé par trois ratés | `ELIMINATED` sur B, `WIN` sur le dernier point de A |
+| S5 | D ajouté après le tour 1, marque 7 au tour 2 | D : (tour 1, 0), (tour 2, 7) |
+| S6 | C retiré pendant le tour 2 | dernier point de C : (tour 2, 6, `LEFT`) |
+| S7 | correction du premier lancer de S1 (12 → 3) | A : 0, 3, 15, 27, 39, 41 ; plus de vainqueur |
+| S8 | B mène 36 à 3 au tour 3, A gagne ensuite | moment fort : remontée (A, tour 3) |
+| S9 | mode famille : B part de 20, cible 40 | B : 20, 25 ; axe jusqu'à 50 |
+| S10 | aucune saisie | un point de départ par équipe, 0 tour, aucun passage |

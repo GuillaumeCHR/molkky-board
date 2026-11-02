@@ -448,7 +448,13 @@ fun GameContent(
             OvershootSticker(overshoot, onOvershootShown, Modifier.align(Alignment.Center))
             // Un 12 gagnant claque d'abord, puis la victoire ; l'écran de fin suit.
             if ((state.finished || state.abandoned) && twelve == null) {
-                EndPanel(state, actions, onOpenLog = { showLog = true }, onOpenPlacement = { showPlacement = true })
+                EndPanel(
+                    state,
+                    actions,
+                    onOpenLog = { showLog = true },
+                    onOpenPlacement = { showPlacement = true },
+                    celebrating = victory != null,
+                )
             }
             EliminationOverlay(elimination, onEliminationDone)
             if (twelve == null) VictoryOverlay(victory, onVictoryDone)
