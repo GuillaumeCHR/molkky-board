@@ -14,8 +14,8 @@ android {
 
     defaultConfig {
         applicationId = "com.yogistudio.molkkyboard"
-        versionCode = 12
-        versionName = "0.8.4"
+        versionCode = 13
+        versionName = "0.8.5"
     }
 
     // Clé d'envoi Play Store (upload key) : jamais dans le dépôt ni dans la CI. Ses coordonnées sont lues dans un

@@ -8,11 +8,11 @@
     <string name="ds_misses">Ratés consécutifs : %1$d sur %2$d</string>
     <string name="ds_player_active">%1$s, à son tour</string>
     <string name="ds_remove">Retirer %1$s</string>
-    <string name="ds_quickpad_single">Quille seule</string>
-    <string name="ds_quickpad_count">Nombre de quilles</string>
-    <string name="ds_quickpad_value_single">Quille %1$d seule</string>
-    <string name="ds_quickpad_value_count">%1$d quilles</string>
-    <string name="ds_quickpad_value_miss">Aucune quille</string>
+    <plurals name="ds_quickpad_value_points">
+        <item quantity="one">%1$d point</item>
+        <item quantity="other">%1$d points</item>
+    </plurals>
+    <string name="ds_quickpad_value_miss">0 point, raté</string>
     <string name="ds_player_score">%1$s : %2$d points</string>
     <string name="ds_back">Retour</string>
     <string name="ds_round">Tour %1$d</string>

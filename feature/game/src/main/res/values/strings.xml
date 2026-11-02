@@ -12,7 +12,7 @@
     <string name="game_switch_to_quick">Quick input</string>
     <string name="game_switch_to_pins">Pins</string>
     <string name="game_hint_pins">Tap the pins that fell</string>
-    <string name="game_hint_quick">Choose the value of the throw</string>
+    <string name="game_hint_quick">Tap the points you scored</string>
     <string name="game_preview_points">+%1$d → %2$d</string>
     <string name="game_preview_miss">Miss · %1$d/%2$d</string>
     <string name="game_preview_elimination">Miss · out!</string>
@@ -54,6 +54,7 @@
     <string name="log_pin_count">%1$d pins (%2$s)</string>
     <string name="log_quick_single">pin %1$d alone, quick input</string>
     <string name="log_quick_count">%1$d pins, quick input</string>
+    <string name="log_quick_score">quick input</string>
     <string name="log_points">+%1$d · %2$s</string>
     <string name="log_points_overshoot">+%1$d · %2$s · over, back to %3$d</string>
     <string name="log_fault">Fault: %1$s</string>

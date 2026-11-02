@@ -12,7 +12,7 @@
     <string name="game_switch_to_quick">Saisie rapide</string>
     <string name="game_switch_to_pins">Quilles</string>
     <string name="game_hint_pins">Touchez les quilles tombées</string>
-    <string name="game_hint_quick">Choisissez la valeur du lancer</string>
+    <string name="game_hint_quick">Touchez les points de votre lancer</string>
     <string name="game_preview_points">+%1$d → %2$d</string>
     <string name="game_preview_miss">Raté · %1$d/%2$d</string>
     <string name="game_preview_elimination">Raté · éliminé !</string>
@@ -54,6 +54,7 @@
     <string name="log_pin_count">%1$d quilles (%2$s)</string>
     <string name="log_quick_single">quille %1$d seule, saisie rapide</string>
     <string name="log_quick_count">%1$d quilles, saisie rapide</string>
+    <string name="log_quick_score">saisie rapide</string>
     <string name="log_points">+%1$d · %2$s</string>
     <string name="log_points_overshoot">+%1$d · %2$s · dépassement, retour à %3$d</string>
     <string name="log_fault">Faute : %1$s</string>

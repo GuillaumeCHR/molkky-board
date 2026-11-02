@@ -73,6 +73,10 @@ class EngineV2Test {
             "Q3, 0, SINGLE_PIN, 0",
             "Q3b, 0, PIN_COUNT, 0",
             "Q2b, 12, PIN_COUNT, 12",
+            "Q7, 1, SCORE, 1",
+            "Q7b, 7, SCORE, 7",
+            "Q7c, 12, SCORE, 12",
+            "Q3c, 0, SCORE, 0",
         )
         fun `saisie rapide valide`(case: String, value: Int, kind: PointsKind, expected: Int) {
             val s = reduce(newSet(), quick(value, kind)).getOrThrow()
@@ -81,7 +85,14 @@ class EngineV2Test {
         }
 
         @ParameterizedTest(name = "{0} : {1} {2}")
-        @CsvSource("Q4, 1, PIN_COUNT", "Q5, 13, SINGLE_PIN", "Q5b, 13, PIN_COUNT", "Q5c, -1, SINGLE_PIN")
+        @CsvSource(
+            "Q4, 1, PIN_COUNT",
+            "Q5, 13, SINGLE_PIN",
+            "Q5b, 13, PIN_COUNT",
+            "Q5c, -1, SINGLE_PIN",
+            "Q8, 13, SCORE",
+            "Q8b, -1, SCORE",
+        )
         fun `saisie rapide invalide`(case: String, value: Int, kind: PointsKind) =
             assertEquals(ScoringError.INVALID_POINTS, reduce(newSet(), quick(value, kind)).errorOrNull(), case)
 
@@ -94,6 +105,24 @@ class EngineV2Test {
                     .let { reduce(it, quick(3, PointsKind.SINGLE_PIN)).getOrThrow() }
                     .let { reduce(it, quick(2, PointsKind.PIN_COUNT)).getOrThrow() }
             assertEquals(pinsOnly.teams.map { it.score }, mixed.teams.map { it.score })
+        }
+
+        @Test
+        fun `Q9 score saisi directement, depassement et trois ratés`() {
+            // A atteint 45 en saisie directe, puis 9 fait dépasser : retour à 25.
+            var s = newSet(teams = soloTeams(3))
+            listOf(12, 12, 12, 9, 9).forEach { v ->
+                s = reduce(s, quick(v, PointsKind.SCORE)).getOrThrow()
+                repeat(2) { s = reduce(s, quick(1, PointsKind.SCORE)).getOrThrow() }
+            }
+            assertEquals(25, s.score(A))
+            // Trois 0 de suite saisis directement : élimination, comme trois ratés en mode Quilles.
+            repeat(3) {
+                s = reduce(s, quick(0, PointsKind.SCORE)).getOrThrow()
+                repeat(2) { s = reduce(s, quick(1, PointsKind.SCORE)).getOrThrow() }
+            }
+            assertEquals(3, s.misses(A))
+            assertTrue(s.team(A)!!.eliminated)
         }
     }
 

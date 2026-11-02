@@ -21,7 +21,7 @@ internal fun validatePins(pins: List<Int>, allowed: (Int) -> Boolean): ScoringEr
         else -> null
     }
 
-/** Saisie rapide : 0 à 12 ; en « nombre de quilles », 1 est refusé (une quille seule vaut sa valeur). */
+/** Saisie rapide : 0 à 12 ; l'ancien « nombre de quilles » refuse 1 (une quille seule vaut sa valeur). */
 internal fun ThrowResult.validate(): ScoringError? =
     when (this) {
         is ThrowResult.Pins -> {
@@ -33,6 +33,7 @@ internal fun ThrowResult.validate(): ScoringError? =
                 value == 0 -> null
                 kind == PointsKind.SINGLE_PIN && value in ALL_PINS -> null
                 kind == PointsKind.PIN_COUNT && value in 2..ALL_PINS.last -> null
+                kind == PointsKind.SCORE && value in ALL_PINS -> null
                 else -> ScoringError.INVALID_POINTS
             }
         }

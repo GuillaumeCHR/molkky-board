@@ -264,7 +264,7 @@ ajoutés, retirés ou réordonnés en cours de partie, records exclus seulement 
 ```
 Throw(id, result: ThrowResult, by: PlayerId?)      // le lanceur est déduit de la position (15.2)
 ThrowResult = Pins(pins: List<Int>)                 // mode « Quilles » : alimente les stats par quille
-            | Points(value: Int, kind: SINGLE_PIN | PIN_COUNT)   // mode « Rapide »
+            | Points(value: Int, kind: SCORE | SINGLE_PIN | PIN_COUNT)   // mode « Rapide » (SCORE depuis la 0.8.5)
 Fault(id, kind, by: PlayerId?)                      // WRONG_PLAYER : by = le joueur fautif (obligatoire)
 WrongTeam(id, team, player, result)                 // inchangé : l'équipe fautive est explicite
 Delete(id, target)                                  // supprime n'importe quel événement du journal effectif
@@ -301,6 +301,15 @@ lanceur attendu. Au rejeu, il est ignoré.
 | Q4 | `Points(1, PIN_COUNT)` | erreur `INVALID_POINTS` | une seule quille vaut sa valeur : saisir en `SINGLE_PIN` |
 | Q5 | `Points(13, …)` | erreur `INVALID_POINTS` | |
 | Q6 | partie mixte `Pins` / `Points` | même score | les stats par quille ne comptent que les lancers `Pins` |
+| Q7 | `Points(1, SCORE)`, `Points(7, SCORE)`, `Points(12, SCORE)` | 1, 7, 12 | saisie directe : le joueur a compté ses points lui-même |
+| Q8 | `Points(13, SCORE)`, `Points(-1, SCORE)` | erreur `INVALID_POINTS` | |
+| Q9 | 45 puis `Points(9, SCORE)` ; trois `Points(0, …)` de suite | retour à 25 ; 3 ratés, élimination | dépassement et ratés inchangés par la saisie directe |
+
+**Saisie directe (0.8.5).** L'écran ne demande plus « quille seule / nombre de quilles » : le pavé enregistre
+`Points(n, SCORE)` (et 0 = raté, enregistré comme `Pins([])`). Un `SCORE` de 12 déclenche le « 12 ! » de la quille
+seule, jamais le « Strike ! » (on ne sait pas comment le 12 a été obtenu). Les anciens `SINGLE_PIN` / `PIN_COUNT`
+restent lus, rejoués et affichés tels quels ; corrigés, ils deviennent des `SCORE`. Le protocole de la partie à côté
+passe en version 2 : un téléphone resté en version 1 est refusé avec « version incompatible ».
 
 ### 15.4 Suppression (`D`)
 

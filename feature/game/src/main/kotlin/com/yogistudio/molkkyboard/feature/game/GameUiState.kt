@@ -1,6 +1,5 @@
 package com.yogistudio.molkkyboard.feature.game
 
-import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.MissPenalty
 import com.yogistudio.molkkyboard.core.model.PlayerId
@@ -110,7 +109,6 @@ data class GameUiState(
     /** Nouvel ordre demandé en plein tour, appliqué au début du tour suivant. */
     val pendingOrder: List<TeamId>? = null,
     val inputMode: InputMode = InputMode.PINS,
-    val quickMode: QuickPadMode = QuickPadMode.SinglePin,
     val selection: Selection = Selection.None,
     val preview: Preview = Preview(),
     val canUndo: Boolean = false,

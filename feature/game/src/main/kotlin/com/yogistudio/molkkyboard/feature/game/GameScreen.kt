@@ -107,7 +107,6 @@ import com.yogistudio.molkkyboard.core.designsystem.component.MissIndicator
 import com.yogistudio.molkkyboard.core.designsystem.component.PinGrid
 import com.yogistudio.molkkyboard.core.designsystem.component.PlayerChip
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPad
-import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.designsystem.component.RollingNumber
 import com.yogistudio.molkkyboard.core.designsystem.component.RoundBadge
 import com.yogistudio.molkkyboard.core.designsystem.component.ScoreRing
@@ -139,7 +138,6 @@ data class GameActions(
     val onBack: () -> Unit = {},
     val onTogglePin: (Int, Boolean) -> Unit = { _, _ -> },
     val onQuick: (Int?) -> Unit = {},
-    val onQuickMode: (QuickPadMode) -> Unit = {},
     val onMiss: () -> Unit = {},
     val onValidate: () -> Unit = {},
     val onUndo: () -> Unit = {},
@@ -295,7 +293,6 @@ fun GameScreen(
                 onBack = onBack,
                 onTogglePin = viewModel::togglePin,
                 onQuick = viewModel::selectQuick,
-                onQuickMode = viewModel::setQuickMode,
                 onMiss = viewModel::toggleMiss,
                 onValidate = viewModel::validate,
                 onUndo = viewModel::undo,
@@ -563,8 +560,6 @@ private fun InputArea(
                     QuickPad(
                         selected = (state.selection as? Selection.Quick)?.value,
                         onSelect = actions.onQuick,
-                        mode = state.quickMode,
-                        onModeChange = actions.onQuickMode,
                     )
                 }
             }

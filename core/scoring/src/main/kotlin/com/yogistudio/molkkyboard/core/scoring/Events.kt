@@ -36,7 +36,10 @@ sealed interface ThrowResult {
         val pins: List<Int>,
     ) : ThrowResult
 
-    /** Saisie rapide : la valeur d'une quille seule, ou un nombre de quilles tombées (0 = raté). */
+    /**
+     * Saisie rapide : les points du lancer (0 = raté). Depuis la 0.8.5, le joueur saisit directement ses points
+     * ([PointsKind.SCORE]) ; les anciens lancers gardent leur type d'origine.
+     */
     @Serializable
     @SerialName("points")
     data class Points(
@@ -45,8 +48,12 @@ sealed interface ThrowResult {
     ) : ThrowResult
 }
 
+/**
+ * Type d'une saisie rapide. [SCORE] : points saisis directement, sans dire comment ils ont été obtenus (seul type
+ * produit par l'app depuis la 0.8.5). [SINGLE_PIN] et [PIN_COUNT] : anciennes saisies, toujours lues et rejouées.
+ */
 @Serializable
-enum class PointsKind { SINGLE_PIN, PIN_COUNT }
+enum class PointsKind { SINGLE_PIN, PIN_COUNT, SCORE }
 
 /**
  * Lancer régulier. Il appartient au lanceur dont c'est le tour **à sa position dans le journal** :

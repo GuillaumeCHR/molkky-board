@@ -37,7 +37,6 @@ import com.yogistudio.molkkyboard.core.designsystem.component.PinGrid
 import com.yogistudio.molkkyboard.core.designsystem.component.PinView
 import com.yogistudio.molkkyboard.core.designsystem.component.PlayerChip
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPad
-import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.designsystem.component.ScoreRing
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
@@ -83,8 +82,7 @@ fun DesignSystemCatalog(modifier: Modifier = Modifier) {
             }
             Section("Saisie rapide") {
                 var value by remember { mutableStateOf<Int?>(7) }
-                var mode by remember { mutableStateOf(QuickPadMode.SinglePin) }
-                QuickPad(value, { value = it }, mode, { mode = it })
+                QuickPad(value, { value = it })
             }
             Section("Jauges : 0, 24, 40 (un lancer de la victoire), 50") {
                 Row(horizontalArrangement = Arrangement.spacedBy(MBDimens.Gap)) {
@@ -174,7 +172,7 @@ fun GameScreenMockup(modifier: Modifier = Modifier, quickMode: Boolean = false) 
                 fontWeight = FontWeight.ExtraBold,
             )
             if (quickMode) {
-                QuickPad(gain, {}, QuickPadMode.PinCount, {})
+                QuickPad(gain, {})
             } else {
                 PinGrid(knocked, onToggle = {
                     pin,

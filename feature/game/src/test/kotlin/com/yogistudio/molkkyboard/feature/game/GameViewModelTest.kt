@@ -269,13 +269,12 @@ class GameViewModelTest {
         }
 
     @Test
-    fun `saisie rapide et changement de mode`() =
+    fun `saisie rapide directe du score`() =
         runTest {
             val vm = viewModel()
             backgroundScope.launchCollect(vm)
             vm.setInputMode(InputMode.QUICK)
             assertEquals(InputMode.QUICK, vm.awaitState { it.inputMode == InputMode.QUICK }.inputMode)
-            vm.setQuickMode(com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode.PinCount)
             vm.selectQuick(3)
             assertEquals(
                 Preview(PreviewKind.POINTS, 3, 3),

@@ -96,7 +96,6 @@ import com.yogistudio.molkkyboard.core.designsystem.component.MissIndicator
 import com.yogistudio.molkkyboard.core.designsystem.component.PinGrid
 import com.yogistudio.molkkyboard.core.designsystem.component.PlayerChip
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPad
-import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.designsystem.component.RoundBadge
 import com.yogistudio.molkkyboard.core.designsystem.component.ScoreRing
 import com.yogistudio.molkkyboard.core.designsystem.component.ScoreboardRow

@@ -15,7 +15,6 @@ import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.data.StatsRepository
 import com.yogistudio.molkkyboard.core.data.memberKey
 import com.yogistudio.molkkyboard.core.data.toStatsGame
-import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.MissPenalty
 import com.yogistudio.molkkyboard.core.model.Overshoot
@@ -109,7 +108,6 @@ class GameViewModel
         /** Carte « Prêts à jouer ? » déjà passée pour cette partie (survit à la recréation de l'écran). */
         private val readySeen = savedStateHandle.getStateFlow(READY_SEEN, false)
         private val selection = MutableStateFlow<Selection>(Selection.None)
-        private val quickMode = MutableStateFlow(QuickPadMode.SinglePin)
 
         /** Nouvel ordre demandé en plein tour : il s'appliquera au début du tour suivant. */
         private val pendingOrder = MutableStateFlow<List<TeamId>?>(null)
@@ -133,10 +131,10 @@ class GameViewModel
             combine(
                 snapshots,
                 settings.settings,
-                combine(selection, quickMode, pendingOrder, readySeen, ::InputState),
+                combine(selection, pendingOrder, readySeen, ::InputState),
                 combine(history, newRecord, avatars, ::Triple),
             ) { snapshot, prefs, input, (past, record, faces) ->
-                snapshot.toUiState(prefs, input.selection, input.mode, past, record, faces).copy(
+                snapshot.toUiState(prefs, input.selection, past, record, faces).copy(
                     pendingOrder = input.pending,
                     readyCard = snapshot.showsReadyCard(prefs, input.readySeen),
                     sounds = prefs.sounds,
@@ -158,7 +156,6 @@ class GameViewModel
 
         private data class InputState(
             val selection: Selection,
-            val mode: QuickPadMode,
             val pending: List<TeamId>?,
             val readySeen: Boolean,
         )
@@ -200,11 +197,6 @@ class GameViewModel
                 }
             }
 
-        fun setQuickMode(mode: QuickPadMode) {
-            quickMode.value = mode
-            selection.update { if (mode == QuickPadMode.PinCount && it == Selection.Quick(1)) Selection.None else it }
-        }
-
         /** « Raté » sélectionne le raté ; il n'est enregistré qu'avec « Valider ». */
         fun toggleMiss() = selection.update { if (it == Selection.Miss) Selection.None else Selection.Miss }
 
@@ -215,7 +207,7 @@ class GameViewModel
 
         fun validate() {
             val chosen = selection.value
-            val result = chosen.toResult(quickMode.value) ?: return
+            val result = chosen.toResult() ?: return
             viewModelScope.launch {
                 // La sélection est vidée avant l'écriture : le joueur suivant n'hérite jamais des quilles du précédent,
                 // même un instant. Elle revient si le moteur refuse le lancer.
@@ -374,7 +366,7 @@ class GameViewModel
         }
 
         /** Le lancer sélectionné, tel qu'il sera enregistré ; `null` sans sélection. */
-        private fun Selection.toResult(mode: QuickPadMode): ThrowResult? =
+        private fun Selection.toResult(): ThrowResult? =
             when (this) {
                 Selection.None -> {
                     null
@@ -389,11 +381,8 @@ class GameViewModel
                 }
 
                 is Selection.Quick -> {
-                    when {
-                        value == 0 -> ThrowResult.Pins(emptyList())
-                        mode == QuickPadMode.SinglePin -> ThrowResult.Points(value, PointsKind.SINGLE_PIN)
-                        else -> ThrowResult.Points(value, PointsKind.PIN_COUNT)
-                    }
+                    // Le joueur saisit directement ses points : un 0 reste un raté comme en mode Quilles.
+                    if (value == 0) ThrowResult.Pins(emptyList()) else ThrowResult.Points(value, PointsKind.SCORE)
                 }
             }
 
@@ -594,7 +583,6 @@ class GameViewModel
         private fun GameSnapshot.toUiState(
             prefs: UserSettings,
             sel: Selection,
-            mode: QuickPadMode,
             history: List<SetSummary>,
             record: Boolean,
             faces: Map<String, String>,
@@ -624,7 +612,6 @@ class GameViewModel
                 joined = origin == GameOrigin.JOINED,
                 missPenalty = config.onMissLimit.takeIf { warning },
                 inputMode = prefs.inputMode,
-                quickMode = mode,
                 selection = sel,
                 preview = current?.let { preview(setState, it, sel) } ?: Preview(),
                 canUndo = replay.effectiveLog.isNotEmpty(),

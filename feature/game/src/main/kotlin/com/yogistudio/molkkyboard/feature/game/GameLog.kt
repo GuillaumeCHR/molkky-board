@@ -47,7 +47,6 @@ import com.yogistudio.molkkyboard.core.designsystem.component.FitToScreen
 import com.yogistudio.molkkyboard.core.designsystem.component.MBDragHandle
 import com.yogistudio.molkkyboard.core.designsystem.component.PinGrid
 import com.yogistudio.molkkyboard.core.designsystem.component.QuickPad
-import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.designsystem.component.RoundBadge
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
@@ -298,10 +297,10 @@ private fun throwDetail(item: LogItemUi): String {
             }
 
             is ThrowResult.Points -> {
-                if (result.kind == PointsKind.SINGLE_PIN) {
-                    stringResource(R.string.log_quick_single, result.value)
-                } else {
-                    stringResource(R.string.log_quick_count, result.value)
+                when (result.kind) {
+                    PointsKind.SINGLE_PIN -> stringResource(R.string.log_quick_single, result.value)
+                    PointsKind.PIN_COUNT -> stringResource(R.string.log_quick_count, result.value)
+                    PointsKind.SCORE -> stringResource(R.string.log_quick_score)
                 }
             }
         }
@@ -330,14 +329,15 @@ private fun faultLabel(kind: FaultKind?): String =
 
 /**
  * Saisie en cours dans l'éditeur d'un lancer passé, avec les mêmes règles que l'écran de jeu : « Raté » exclut
- * les quilles, et une seule quille ne se saisit pas en « nombre de quilles ».
+ * les quilles, et la saisie rapide enregistre directement les points du lancer.
  */
 internal data class ThrowDraft(
     val mode: InputMode,
     val pins: Set<Int> = emptySet(),
     val quick: Int? = null,
-    val quickMode: QuickPadMode = QuickPadMode.SinglePin,
     val miss: Boolean = false,
+    /** Ancienne saisie rapide (quille seule, nombre de quilles) : gardée tant que sa valeur ne change pas. */
+    val legacy: ThrowResult.Points? = null,
 ) {
     /** Le lancer saisi, ou `null` tant que rien n'est choisi. */
     val result: ThrowResult?
@@ -360,16 +360,7 @@ internal data class ThrowDraft(
                 }
 
                 else -> {
-                    ThrowResult.Points(
-                        quick,
-                        if (quickMode ==
-                            QuickPadMode.SinglePin
-                        ) {
-                            PointsKind.SINGLE_PIN
-                        } else {
-                            PointsKind.PIN_COUNT
-                        },
-                    )
+                    legacy?.takeIf { it.value == quick } ?: ThrowResult.Points(quick, PointsKind.SCORE)
                 }
             }
 
@@ -378,9 +369,6 @@ internal data class ThrowDraft(
     fun withPin(pin: Int, knocked: Boolean) = copy(pins = if (knocked) pins + pin else pins - pin, miss = false)
 
     fun withQuick(value: Int?) = copy(quick = value, miss = false)
-
-    fun withQuickMode(mode: QuickPadMode) =
-        copy(quickMode = mode, quick = if (mode == QuickPadMode.PinCount && quick == 1) null else quick)
 
     fun toggleMiss() = copy(miss = !miss)
 
@@ -393,18 +381,7 @@ internal data class ThrowDraft(
                 }
 
                 is ThrowResult.Points -> {
-                    ThrowDraft(
-                        InputMode.QUICK,
-                        quick = result.value,
-                        quickMode =
-                            if (result.kind ==
-                                PointsKind.PIN_COUNT
-                            ) {
-                                QuickPadMode.PinCount
-                            } else {
-                                QuickPadMode.SinglePin
-                            },
-                    )
+                    ThrowDraft(InputMode.QUICK, quick = result.value, legacy = result)
                 }
 
                 null -> {
@@ -512,8 +489,6 @@ private fun EditorInput(draft: ThrowDraft, onChange: (ThrowDraft) -> Unit) {
                     QuickPad(
                         selected = if (draft.miss) null else draft.quick,
                         onSelect = { onChange(draft.withQuick(it)) },
-                        mode = draft.quickMode,
-                        onModeChange = { onChange(draft.withQuickMode(it)) },
                     )
                 }
             }

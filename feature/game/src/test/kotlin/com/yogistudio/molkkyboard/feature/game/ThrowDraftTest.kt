@@ -1,6 +1,5 @@
 package com.yogistudio.molkkyboard.feature.game
 
-import com.yogistudio.molkkyboard.core.designsystem.component.QuickPadMode
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.scoring.PointsKind
 import com.yogistudio.molkkyboard.core.scoring.ThrowResult
@@ -28,17 +27,21 @@ class ThrowDraftTest {
         assertNull(draft.withPin(3, false).result)
         val quick = draft.withMode(InputMode.QUICK)
         assertNull(quick.result)
-        assertEquals(ThrowResult.Points(12, PointsKind.SINGLE_PIN), quick.withQuick(12).result)
+        assertEquals(ThrowResult.Points(12, PointsKind.SCORE), quick.withQuick(12).result)
         assertEquals(ThrowResult.Pins(emptyList()), quick.withQuick(0).result)
     }
 
     @Test
-    fun `une seule quille ne se saisit pas en nombre de quilles`() {
-        val draft = ThrowDraft(InputMode.QUICK).withQuick(1)
-        assertNull(draft.withQuickMode(QuickPadMode.PinCount).result)
-        assertEquals(
-            ThrowResult.Points(5, PointsKind.PIN_COUNT),
-            draft.withQuickMode(QuickPadMode.PinCount).withQuick(5).result,
-        )
+    fun `saisie rapide, les points sont saisis directement, 1 compris`() {
+        assertEquals(ThrowResult.Points(1, PointsKind.SCORE), ThrowDraft(InputMode.QUICK).withQuick(1).result)
+        assertEquals(ThrowResult.Points(5, PointsKind.SCORE), ThrowDraft(InputMode.QUICK).withQuick(5).result)
+    }
+
+    @Test
+    fun `un ancien lancer en nombre de quilles se corrige en saisie directe`() {
+        val draft = ThrowDraft.of(ThrowResult.Points(5, PointsKind.PIN_COUNT))
+        assertEquals(InputMode.QUICK, draft.mode)
+        assertEquals(5, draft.quick)
+        assertEquals(ThrowResult.Points(7, PointsKind.SCORE), draft.withQuick(7).result)
     }
 }

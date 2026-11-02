@@ -11,8 +11,11 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-/** Version du protocole de la partie à côté : un téléphone d'une autre version est refusé avec un motif clair. */
-const val PROTOCOL_VERSION = 1
+/**
+ * Version du protocole de la partie à côté : un téléphone d'une autre version est refusé avec un motif clair.
+ * 2 (0.8.5) : saisie rapide directe du score (`PointsKind.SCORE`), inconnue d'un téléphone en version 1.
+ */
+const val PROTOCOL_VERSION = 2
 
 /** Taille maximale d'un message, en octets (`ARCHITECTURE.md` § 6 bis). */
 const val MAX_MESSAGE_BYTES = 64 * 1024
