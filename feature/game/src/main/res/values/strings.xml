@@ -169,7 +169,7 @@
     </plurals>
     <string name="end_rematch">Rematch</string>
     <string name="end_share">Share this moment</string>
-    <string name="end_rematch_order">Throwing order for the rematch</string>
+    <string name="end_rematch_order_value">Order: %1$s</string>
     <string name="end_order_same">Same</string>
     <string name="end_order_rotate">Rotation (2nd starts)</string>
     <string name="end_order_loser_first">Last place starts</string>
@@ -276,5 +276,9 @@
     <string name="end_curve_summary_reset">%1$s falls back to %2$d in round %3$d</string>
     <string name="end_curve_summary_out">%1$s is out in round %2$d</string>
     <string name="end_curve_summary_left">%1$s leaves the game in round %2$d</string>
+    <plurals name="end_curve_rounds">
+        <item quantity="one">%1$d round</item>
+        <item quantity="other">%1$d rounds</item>
+    </plurals>
     <string name="end_curve_replay">Replay</string>
 </resources>

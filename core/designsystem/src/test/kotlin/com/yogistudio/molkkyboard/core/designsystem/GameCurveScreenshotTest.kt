@@ -49,7 +49,12 @@ class GameCurveScreenshotTest {
     /** Léa gagne au tour 8 après une chute à 25 au tour 6 ; Tom est éliminé au tour 7. */
     private val duel =
         listOf(
-            line(0, listOf(0, 12, 20, 31, 38, 45, 25, 37, 50), mapOf(6 to CurveDotMark.RESET, 8 to CurveDotMark.WIN), winner = true),
+            line(
+                0,
+                listOf(0, 12, 20, 31, 38, 45, 25, 37, 50),
+                mapOf(6 to CurveDotMark.RESET, 8 to CurveDotMark.WIN),
+                winner = true,
+            ),
             line(1, listOf(0, 3, 10, 10, 22, 29, 29, 29), mapOf(7 to CurveDotMark.ELIMINATED)),
         )
 

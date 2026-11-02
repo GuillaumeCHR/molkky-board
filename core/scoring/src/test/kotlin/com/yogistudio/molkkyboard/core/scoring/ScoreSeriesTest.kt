@@ -29,7 +29,15 @@ class ScoreSeriesTest {
 
     /** A marque [first] à chaque tour, B fait 1 entre deux lancers de A. */
     private fun firstWins(vararg first: Int): List<SetEvent> =
-        first.toList().flatMapIndexed { i, p -> if (i == first.lastIndex) listOf(pins(p)) else listOf(pins(p), pins(1)) }
+        first.toList().flatMapIndexed { i, p ->
+            if (i ==
+                first.lastIndex
+            ) {
+                listOf(pins(p))
+            } else {
+                listOf(pins(p), pins(1))
+            }
+        }
 
     @Test
     fun `S1 partie parfaite - un point par tour, victoire marquee`() {
@@ -77,6 +85,10 @@ class ScoreSeriesTest {
         val log = listOf(pins(5), pins(5), AddPlayer(nextId(), PlayerId("Dana"), d), pins(5), pins(5), pins(7))
         val s = series(log)
         assertEquals(listOf(SeriesPoint(1, 0), SeriesPoint(2, 7)), s.of(d))
+        // Avant son arrivée, D compte pour 0 ; ensuite, son dernier score connu.
+        val dana = s.teams.first { it.team == d }
+        assertEquals(0, dana.scoreAt(0))
+        assertEquals(7, dana.scoreAt(5))
     }
 
     @Test
@@ -108,8 +120,9 @@ class ScoreSeriesTest {
 
     @Test
     fun `S9 mode famille - la ligne part du score de depart, l'axe va a la plus haute cible`() {
-        val config = GameConfig.Classic.copy(teamOverrides = mapOf(B to TeamOverride(startScore = 20, targetScore = 40)))
-        val s = series(listOf(pins(5), pins(5)), config = config)
+        val overrides = mapOf(B to TeamOverride(startScore = 20, targetScore = 40), C to TeamOverride(startScore = 5))
+        val config = GameConfig.Classic.copy(teamOverrides = overrides)
+        val s = series(listOf(pins(5), pins(5)), soloTeams(3), config)
         assertEquals(listOf(0, 5), s.of(A).map { it.score })
         assertEquals(listOf(20, 25), s.of(B).map { it.score })
         assertEquals(50, s.target)
@@ -121,5 +134,37 @@ class ScoreSeriesTest {
         assertEquals(0, s.rounds)
         assertEquals(listOf(SeriesPoint(0, 0)), s.of(A))
         assertEquals(emptyList<SeriesStep>(), s.steps)
+    }
+
+    @Test
+    fun `S11 faute et lancer de la mauvaise equipe - un passage chacun, la faute sans point`() {
+        // Tour 1 : A marque 5, B commet une faute. Tour 2 : B lance à la place de A (faute « mauvaise équipe » : B perd
+        // son prochain lancer régulier, `RULES.md`), puis A lance ; le tour suivant revient à A.
+        val log =
+            listOf(
+                pins(5),
+                Fault(nextId(), FaultKind.TRESPASS),
+                WrongTeam(nextId(), B, bruno, ThrowResult.Pins(listOf(4))),
+                pins(6),
+                pins(7),
+            )
+        val s = series(log)
+        assertEquals(listOf(A, B, B, A, A), s.steps.map { it.team })
+        assertEquals(true, s.steps[1].miss)
+        assertEquals(listOf(0, 1, 2), s.of(B).map { it.round })
+        assertEquals(listOf(0, 5, 11, 18), s.of(A).map { it.score })
+    }
+
+    @Test
+    fun `S12 vainqueur qui n'a jamais lance - point a son score de depart`() {
+        val s = series(listOf(RemovePlayer(nextId(), alice)))
+        assertEquals(B, s.winner)
+        assertEquals(SeriesMark.LEFT, s.of(A).last().mark)
+        assertEquals(SeriesPoint(1, 0, SeriesMark.WIN), s.of(B).last())
+    }
+
+    @Test
+    fun `S13 manche qui ne demarre pas - pas de serie`() {
+        assertNull(scoreSeries(GameConfig.Classic, emptyList(), emptyList()))
     }
 }

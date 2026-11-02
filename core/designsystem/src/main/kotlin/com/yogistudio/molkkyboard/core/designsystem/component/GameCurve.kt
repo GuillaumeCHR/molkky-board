@@ -13,7 +13,6 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
@@ -26,8 +25,10 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.VectorPainter
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.vector.VectorGroup
+import androidx.compose.ui.graphics.vector.VectorNode
+import androidx.compose.ui.graphics.vector.VectorPath
+import androidx.compose.ui.graphics.vector.toPath
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
@@ -35,6 +36,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.yogistudio.molkkyboard.core.designsystem.theme.MBColors
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.designsystem.theme.NordicPalette
 import kotlin.math.PI
@@ -93,7 +95,7 @@ object GameCurveTimeline {
  * figée sur un aplat safran (un seul flash, jamais de blanc), éclat radial et quilles-confettis aux couleurs du
  * vainqueur, puis dézoom vers la vue complète, qui reste affichée. Sans vainqueur, la courbe se trace puis se dézoome.
  * Graine fixe : rendu déterministe pour les captures. [selectedRound] trace un repère vertical sur ce tour ;
- * [onTap] reçoit le tour le plus proche du toucher.
+ * [onTap] reçoit le tour le plus proche du toucher ; [roundsLabel] (« 8 tours ») s'affiche en bas à droite.
  */
 @Composable
 fun GameCurve(
@@ -105,70 +107,158 @@ fun GameCurve(
     highlight: GameCurveHighlight? = null,
     selectedRound: Int? = null,
     onTap: ((round: Int) -> Unit)? = null,
+    roundsLabel: String? = null,
     height: Dp = 260.dp,
 ) {
     val colors = MolkkyBoardTheme.colors
     val style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
     val initialStyle = MaterialTheme.typography.labelLarge.copy(color = Color.White)
     val measurer = rememberTextMeasurer()
-    val painters = lines.map { line -> line.emblem?.let { rememberVectorPainter(it) } }
-    val confetti = remember { Confetti.create() }
-    val dash = remember { PathEffect.dashPathEffect(floatArrayOf(22f, 14f)) }
-    val rounded = remember { PathEffect.cornerPathEffect(18f) }
+    val glyphs = remember(lines) { lines.map { line -> line.emblem?.let(::glyphOf) } }
+    val assets = remember { CurveAssets() }
+    val labelWidth =
+        remember(target, style) {
+            measurer
+                .measure(target.toString(), style)
+                .size.width
+                .toFloat()
+        }
     val tap =
         if (onTap == null) {
             Modifier
         } else {
             Modifier.pointerInput(rounds) {
                 detectTapGestures { offset ->
-                    val frame = Frame(size.width.toFloat(), size.height.toFloat(), rounds, target, 0f, density)
+                    val frame = Frame(size.width.toFloat(), size.height.toFloat(), rounds, target, labelWidth, density)
                     onTap(frame.roundAt(offset.x))
                 }
             }
         }
-    Canvas(modifier.fillMaxWidth().height(height).then(tap)) {
-        val labelWidth = measurer.measure(target.toString(), style).size.width.toFloat()
+    val painter =
+        CurvePainter(
+            CurveData(lines, rounds, target, highlight, selectedRound, roundsLabel),
+            CurveLook(colors, style, initialStyle, measurer, glyphs, assets),
+            labelWidth,
+        )
+    Canvas(modifier.fillMaxWidth().height(height).then(tap)) { with(painter) { paint(timeMs) } }
+}
+
+/** Ce que raconte la courbe. */
+private class CurveData(
+    val lines: List<GameCurveLine>,
+    val rounds: Int,
+    val target: Int,
+    val highlight: GameCurveHighlight?,
+    val selectedRound: Int?,
+    val roundsLabel: String?,
+)
+
+/** Objets créés une seule fois (gardés d'une image à l'autre) : confettis à graine fixe, effets de tracé. */
+private class CurveAssets {
+    val confetti = Confetti.create()
+    val dash = PathEffect.dashPathEffect(floatArrayOf(22f, 14f))
+    val rounded = PathEffect.cornerPathEffect(18f)
+}
+
+/** Son apparence, préparée pendant la composition. */
+private class CurveLook(
+    val colors: MBColors,
+    val style: TextStyle,
+    val initialStyle: TextStyle,
+    val measurer: TextMeasurer,
+    val glyphs: List<Glyph?>,
+    val assets: CurveAssets,
+)
+
+/** Dessine une image de la courbe à un instant de l'animation. */
+private class CurvePainter(
+    data: CurveData,
+    look: CurveLook,
+    /** Largeur du libellé de la cible, la même que pour situer un toucher. */
+    private val labelWidth: Float,
+) {
+    private val lines = data.lines
+    private val rounds = data.rounds
+    private val target = data.target
+    private val highlight = data.highlight
+    private val selectedRound = data.selectedRound
+    private val roundsLabel = data.roundsLabel
+    private val colors = look.colors
+    private val style = look.style
+    private val initialStyle = look.initialStyle
+    private val measurer = look.measurer
+    private val glyphs = look.glyphs
+    private val confetti = look.assets.confetti
+    private val dash = look.assets.dash
+    private val rounded = look.assets.rounded
+
+    private val winnerLine = lines.indexOfFirst { it.winner }.takeIf { it >= 0 }
+
+    fun DrawScope.paint(timeMs: Float) {
         val frame = Frame(size.width, size.height, rounds, target, labelWidth, density)
-        val winnerLine = lines.indexOfFirst { it.winner }.takeIf { it >= 0 }
         val winnerDot = winnerLine?.let { lines[it].dots.lastOrNull() }?.let(frame::at)
-        val camera = camera(timeMs, frame, lines, highlight, winnerDot)
+        val camera = camera(timeMs, frame, size, lines, highlight, winnerDot)
         val freeze = winnerDot != null && timeMs >= GameCurveTimeline.ZOOM_END && timeMs < GameCurveTimeline.FREEZE_END
         if (freeze) drawRoundRect(colors.saffron, cornerRadius = CornerRadius(24.dp.toPx()))
         val reveal = frame.left + frame.width * drawProgress(timeMs)
-        scale(camera.scale, camera.pivot) {
-            drawTarget(frame, target, style, measurer, if (freeze) NordicPalette.Forest else colors.saffron, dash)
-            selectedRound?.takeIf { timeMs >= GameCurveTimeline.END }?.let { round ->
-                val x = frame.x(round.toFloat())
-                drawLine(colors.saffron.copy(alpha = 0.6f), Offset(x, frame.top), Offset(x, frame.bottom), 3.dp.toPx())
-            }
-            clipRect(right = reveal + 1f) {
-                lines.withIndex().sortedBy { it.value.winner }.forEach { (_, line) ->
-                    drawLine(frame, line, if (freeze) NordicPalette.Forest else line.color)
+        // La caméra place son point de mire au centre de la vue, sans jamais montrer l'extérieur du graphique.
+        translate(size.width / 2f - camera.pivot.x, size.height / 2f - camera.pivot.y) {
+            scale(camera.scale, camera.pivot) {
+                drawTarget(frame, target, style, measurer, if (freeze) NordicPalette.Forest else colors.saffron, dash)
+                if (timeMs >= GameCurveTimeline.END) selectedRound?.let { drawRoundGuide(frame, it) }
+                clipRect(right = reveal + 1f) {
+                    lines.sortedBy { it.winner }.forEach { line ->
+                        drawLine(frame, line, if (freeze) NordicPalette.Forest else line.color)
+                    }
                 }
-            }
-            lines.forEachIndexed { i, line ->
-                line.dots.forEach { dot ->
-                    val at = frame.at(dot)
-                    if (at.x <= reveal + 1f) drawMark(dot, at, colors.coral, colors.saffron, line, selectedRound)
+                drawDecorations(frame, reveal, timeMs)
+                if (winnerDot != null && winnerLine != null) {
+                    drawBurst(
+                        timeMs,
+                        winnerDot,
+                        lines[winnerLine].color,
+                        colors.saffron,
+                        colors.coral,
+                        confetti,
+                        rounded,
+                    )
                 }
-                val head = frame.head(line, reveal)
-                if (head != null && timeMs < GameCurveTimeline.DRAW_END) drawSpeedLines(head, line.color)
-                val end = line.dots.lastOrNull()?.let(frame::at)
-                if (end != null && end.x <= reveal + 1f) drawEmblem(end, line, painters[i], measurer, initialStyle)
-            }
-            if (winnerDot != null && winnerLine != null) {
-                drawBurst(timeMs, winnerDot, lines[winnerLine].color, colors.saffron, colors.coral, confetti, rounded)
             }
         }
         if (rounds > 0) {
-            val text = measurer.measure(rounds.toString(), style)
+            val text = measurer.measure(roundsLabel ?: rounds.toString(), style)
             drawText(text, topLeft = Offset(frame.right - text.size.width, frame.bottom + 4.dp.toPx()))
+        }
+    }
+
+    private fun DrawScope.drawRoundGuide(frame: Frame, round: Int) {
+        val x = frame.x(round.toFloat())
+        drawLine(colors.saffron.copy(alpha = 0.6f), Offset(x, frame.top), Offset(x, frame.bottom), 3.dp.toPx())
+    }
+
+    /** Marques déjà atteintes par le tracé, pointes avec leurs lignes de vitesse, emblèmes en bout de ligne. */
+    private fun DrawScope.drawDecorations(frame: Frame, reveal: Float, timeMs: Float) {
+        val emblems = emblemCenters(frame, lines, 14.dp.toPx(), 4.dp.toPx())
+        lines.forEachIndexed { i, line ->
+            line.dots.forEach { dot ->
+                val at = frame.at(dot)
+                if (at.x <= reveal + 1f) drawMark(dot, at, colors.coral, colors.saffron, line, selectedRound)
+            }
+            val head = frame.head(line, reveal)
+            if (head != null && timeMs < GameCurveTimeline.DRAW_END) drawSpeedLines(head, line.color)
+            val end = line.dots.lastOrNull()?.let(frame::at)
+            val center = emblems[i]
+            if (end != null && center != null && end.x <= reveal + 1f) {
+                drawEmblem(center, line, glyphs[i], measurer, initialStyle)
+            }
         }
     }
 }
 
 /** Avancement du tracé (0 à 1), en ressort amorti sur la phase de tracé. */
-private fun drawProgress(timeMs: Float): Float = FastOutSlowInEasing.transform((timeMs / GameCurveTimeline.DRAW_END).coerceIn(0f, 1f))
+private fun drawProgress(
+    timeMs: Float,
+): Float = FastOutSlowInEasing.transform((timeMs / GameCurveTimeline.DRAW_END).coerceIn(0f, 1f))
 
 private data class Camera(
     val scale: Float,
@@ -182,18 +272,38 @@ private data class Camera(
 private fun camera(
     timeMs: Float,
     frame: Frame,
+    size: Size,
+    lines: List<GameCurveLine>,
+    highlight: GameCurveHighlight?,
+    winner: Offset?,
+): Camera = rawCamera(timeMs, frame, size, lines, highlight, winner).bounded(size)
+
+/** Point de mire ramené là où la vue zoomée reste entièrement dans le graphique. */
+private fun Camera.bounded(size: Size): Camera {
+    val halfW = size.width / (2f * scale)
+    val halfH = size.height / (2f * scale)
+    return copy(
+        pivot = Offset(pivot.x.coerceIn(halfW, size.width - halfW), pivot.y.coerceIn(halfH, size.height - halfH)),
+    )
+}
+
+private fun rawCamera(
+    timeMs: Float,
+    frame: Frame,
+    size: Size,
     lines: List<GameCurveLine>,
     highlight: GameCurveHighlight?,
     winner: Offset?,
 ): Camera {
-    val center = Offset(frame.width / 2f + frame.left, (frame.top + frame.bottom) / 2f)
+    val center = Offset(size.width / 2f, size.height / 2f)
     if (timeMs >= GameCurveTimeline.END) return Camera(1f, center)
     val reveal = frame.left + frame.width * drawProgress(timeMs)
     val leader = lines.mapNotNull { frame.head(it, reveal) }.minByOrNull { it.y } ?: center
     val follow = Camera(FOLLOW_SCALE, Offset(reveal, leader.y))
-    val drawing = highlightBump(timeMs, frame, highlight)?.let { (bump, at) ->
-        Camera(follow.scale + HIGHLIGHT_ZOOM * bump, lerp(follow.pivot, at, bump))
-    } ?: follow
+    val drawing =
+        highlightBump(timeMs, frame, highlight)?.let { (bump, at) ->
+            Camera(follow.scale + HIGHLIGHT_ZOOM * bump, lerp(follow.pivot, at, bump))
+        } ?: follow
     val settled = if (winner != null) Camera(WIN_SCALE, winner) else drawing
     return when {
         timeMs < GameCurveTimeline.DRAW_END -> {
@@ -201,7 +311,8 @@ private fun camera(
         }
 
         timeMs < GameCurveTimeline.ZOOM_END -> {
-            val t = ease((timeMs - GameCurveTimeline.DRAW_END) / (GameCurveTimeline.ZOOM_END - GameCurveTimeline.DRAW_END))
+            val t =
+                ease((timeMs - GameCurveTimeline.DRAW_END) / (GameCurveTimeline.ZOOM_END - GameCurveTimeline.DRAW_END))
             Camera(drawing.scale + (settled.scale - drawing.scale) * t, lerp(drawing.pivot, settled.pivot, t))
         }
 
@@ -244,7 +355,7 @@ private class Frame(
 ) {
     private val pad = 18f * density
     val left = labelWidth + pad
-    val right = width - pad
+    val right = width - pad - EMBLEM_SPACE * density
     val top = pad * 1.4f
     val bottom = height - pad * 1.6f
     val width = (right - left).coerceAtLeast(1f)
@@ -260,50 +371,109 @@ private class Frame(
     /** Pointe de [line] sur la verticale [reveal] (interpolée entre deux tours), si la ligne y est déjà. */
     fun head(line: GameCurveLine, reveal: Float): Offset? {
         val dots = line.dots.map(::at)
-        if (dots.isEmpty() || reveal < dots.first().x) return null
-        if (reveal >= dots.last().x) return null
-        for (i in 1 until dots.size) {
-            val a = dots[i - 1]
-            val b = dots[i]
-            if (reveal <= b.x) {
-                val t = if (b.x == a.x) 1f else (reveal - a.x) / (b.x - a.x)
-                return Offset(reveal, a.y + (b.y - a.y) * t)
-            }
-        }
-        return null
+        if (dots.size < 2 || reveal < dots.first().x || reveal >= dots.last().x) return null
+        val i = (1 until dots.size).first { reveal <= dots[it].x }
+        val a = dots[i - 1]
+        val b = dots[i]
+        val t = if (b.x == a.x) 1f else (reveal - a.x) / (b.x - a.x)
+        return Offset(reveal, a.y + (b.y - a.y) * t)
     }
 }
 
-private fun DrawScope.drawTarget(frame: Frame, target: Int, style: TextStyle, measurer: TextMeasurer, color: Color, dash: PathEffect) {
+private fun DrawScope.drawTarget(
+    frame: Frame,
+    target: Int,
+    style: TextStyle,
+    measurer: TextMeasurer,
+    color: Color,
+    dash: PathEffect,
+) {
     val y = frame.y(target)
     drawLine(color, Offset(frame.left, y), Offset(frame.right, y), 3.dp.toPx(), StrokeCap.Round, dash)
     val text = measurer.measure(target.toString(), style.copy(color = color))
     drawText(text, topLeft = Offset(frame.left - text.size.width - 8.dp.toPx(), y - text.size.height / 2f))
     // Ligne de base, discrète : le zéro.
-    drawLine(color.copy(alpha = 0.25f), Offset(frame.left, frame.bottom), Offset(frame.right, frame.bottom), 2.dp.toPx(), StrokeCap.Round)
+    drawLine(
+        color.copy(alpha = 0.25f),
+        Offset(frame.left, frame.bottom),
+        Offset(frame.right, frame.bottom),
+        2.dp.toPx(),
+        StrokeCap.Round,
+    )
 }
 
 /**
- * Courbe souple entre les points (tangentes horizontales) ; une chute plonge un peu sous sa valeur avant de s'y
- * poser, une remontée franche dépasse légèrement : la forme est exagérée, jamais les valeurs.
+ * Courbe souple entre les points (spline monotone : jamais de bosse entre deux tours) ; une chute (retour en arrière)
+ * plonge un peu sous sa valeur avant de s'y poser : la forme est exagérée, jamais les valeurs.
  */
 private fun DrawScope.drawLine(frame: Frame, line: GameCurveLine, color: Color) {
     if (line.dots.size < 2) return
-    val path = Path()
     val points = line.dots.map(frame::at)
+    val tangents = monotoneTangents(points)
+    val path = Path()
     path.moveTo(points.first().x, points.first().y)
     for (i in 1 until points.size) {
         val a = points[i - 1]
         val b = points[i]
-        val dx = (b.x - a.x) * SMOOTHNESS
-        val swing = (b.y - a.y) * EXAGGERATION
-        path.cubicTo(a.x + dx, a.y, b.x - dx, b.y + swing, b.x, b.y)
+        val dx = b.x - a.x
+        if (dx <= 0f) {
+            path.lineTo(b.x, b.y)
+            continue
+        }
+        val dip = if (line.dots[i].mark == CurveDotMark.RESET) (b.y - a.y) * EXAGGERATION else 0f
+        path.cubicTo(
+            a.x + dx / 3f,
+            a.y + tangents[i - 1] * dx / 3f,
+            b.x - dx / 3f,
+            b.y - tangents[i] * dx / 3f + dip,
+            b.x,
+            b.y,
+        )
     }
     val width = (if (line.winner) 7.dp else 5.dp).toPx()
     drawPath(path, color, style = Stroke(width, cap = StrokeCap.Round, join = StrokeJoin.Round))
 }
 
-private fun DrawScope.drawMark(dot: CurveDot, at: Offset, coral: Color, saffron: Color, line: GameCurveLine, selected: Int?) {
+/** Pentes de Fritsch-Carlson : la courbe passe par chaque point sans dépasser ses voisins. */
+private fun monotoneTangents(points: List<Offset>): FloatArray {
+    val n = points.size
+    val slopes =
+        FloatArray(n - 1) { i ->
+            val dx = points[i + 1].x - points[i].x
+            if (dx <= 0f) 0f else (points[i + 1].y - points[i].y) / dx
+        }
+    val t = FloatArray(n)
+    t[0] = slopes[0]
+    t[n - 1] = slopes[n - 2]
+    for (i in 1 until n - 1) {
+        t[i] = if (slopes[i - 1] * slopes[i] <= 0f) 0f else (slopes[i - 1] + slopes[i]) / 2f
+    }
+    for (i in 0 until n - 1) {
+        if (slopes[i] == 0f) {
+            t[i] = 0f
+            t[i + 1] = 0f
+            continue
+        }
+        val a = t[i] / slopes[i]
+        val b = t[i + 1] / slopes[i]
+        val h = a * a + b * b
+        if (h > FC_LIMIT) {
+            val k = 3f / kotlin.math.sqrt(h)
+            t[i] = k * a * slopes[i]
+            t[i + 1] = k * b * slopes[i]
+        }
+    }
+    return t
+}
+
+private fun DrawScope.drawMark(
+    dot: CurveDot,
+    at: Offset,
+    coral: Color,
+    saffron: Color,
+    line: GameCurveLine,
+    selected: Int?,
+) {
     if (selected == dot.round) drawCircle(line.color, 7.dp.toPx(), at)
     when (dot.mark) {
         CurveDotMark.NONE, CurveDotMark.LEFT -> {
@@ -344,17 +514,80 @@ private fun DrawScope.drawSpeedLines(head: Offset, color: Color) {
     drawCircle(color, 7.dp.toPx(), head)
 }
 
-/** Emblème (ou initiale) de l'équipe en bout de ligne, blanc sur sa couleur, décalé pour ne pas cacher le point. */
-private fun DrawScope.drawEmblem(end: Offset, line: GameCurveLine, painter: VectorPainter?, measurer: TextMeasurer, style: TextStyle) {
+/**
+ * Centres des emblèmes, à droite du dernier point de chaque ligne, écartés verticalement pour ne jamais se chevaucher
+ * et gardés dans le graphique.
+ */
+private fun emblemCenters(frame: Frame, lines: List<GameCurveLine>, radius: Float, gap: Float): List<Offset?> {
+    val wanted =
+        lines.map { line ->
+            line.dots
+                .lastOrNull()
+                ?.let(frame::at)
+                ?.let { it + Offset(radius * 1.5f, 0f) }
+        }
+    val order = wanted.indices.filter { wanted[it] != null }.sortedBy { wanted[it]!!.y }
+    val placed = wanted.toMutableList()
+    val step = radius * 2 + gap
+    var previous = Float.NEGATIVE_INFINITY
+    order.forEach { i ->
+        val y = maxOf(wanted[i]!!.y, previous + step).coerceAtLeast(frame.top - radius)
+        placed[i] = Offset(wanted[i]!!.x, y)
+        previous = y
+    }
+    // Trop bas : on remonte l'ensemble.
+    val overflow = (previous - (frame.bottom + radius)).coerceAtLeast(0f)
+    return placed.map { it?.let { p -> Offset(p.x, p.y - overflow) } }
+}
+
+/** Tracés d'un emblème au trait (chemins et épaisseur dans son repère de 24 × 24), lus une fois. */
+private class Glyph(
+    val viewport: Float,
+    val strokes: List<Pair<Path, Float>>,
+)
+
+private fun glyphOf(vector: ImageVector): Glyph {
+    val strokes = mutableListOf<Pair<Path, Float>>()
+
+    fun collect(node: VectorNode) {
+        when (node) {
+            is VectorGroup -> node.forEach(::collect)
+            is VectorPath -> strokes += node.pathData.toPath() to node.strokeLineWidth
+        }
+    }
+    collect(vector.root)
+    return Glyph(vector.viewportWidth, strokes)
+}
+
+/** Emblème (ou initiale) de l'équipe en bout de ligne, blanc sur sa couleur. */
+private fun DrawScope.drawEmblem(
+    center: Offset,
+    line: GameCurveLine,
+    glyph: Glyph?,
+    measurer: TextMeasurer,
+    style: TextStyle,
+) {
     val r = 14.dp.toPx()
-    val center = end + Offset(r * 1.2f, -r * 1.2f)
-    val faded = line.dots.lastOrNull()?.mark.let { it == CurveDotMark.ELIMINATED || it == CurveDotMark.LEFT }
+    val faded =
+        line.dots
+            .lastOrNull()
+            ?.mark
+            .let { it == CurveDotMark.ELIMINATED || it == CurveDotMark.LEFT }
     val alpha = if (faded) 0.6f else 1f
     drawCircle(line.color.copy(alpha = alpha), r, center)
-    if (painter != null) {
+    if (glyph != null) {
         val icon = r * 1.2f
+        val k = icon / glyph.viewport
         translate(center.x - icon / 2, center.y - icon / 2) {
-            with(painter) { draw(Size(icon, icon), alpha = alpha, colorFilter = ColorFilter.tint(Color.White)) }
+            scale(k, k, pivot = Offset.Zero) {
+                glyph.strokes.forEach { (path, width) ->
+                    drawPath(
+                        path,
+                        Color.White.copy(alpha = alpha),
+                        style = Stroke(width, cap = StrokeCap.Round, join = StrokeJoin.Round),
+                    )
+                }
+            }
         }
     } else {
         val text = measurer.measure(line.initial.take(1).uppercase(), style)
@@ -374,10 +607,19 @@ private fun DrawScope.drawBurst(
 ) {
     if (timeMs < GameCurveTimeline.ZOOM_END || timeMs >= GameCurveTimeline.BURST_END + 200f) return
     val frozen = timeMs < GameCurveTimeline.FREEZE_END
-    val t = ((timeMs - GameCurveTimeline.FREEZE_END) / (GameCurveTimeline.BURST_END - GameCurveTimeline.FREEZE_END)).coerceIn(0f, 1f)
+    val t =
+        ((timeMs - GameCurveTimeline.FREEZE_END) / (GameCurveTimeline.BURST_END - GameCurveTimeline.FREEZE_END))
+            .coerceIn(
+                0f,
+                1f,
+            )
     val radius = 34.dp.toPx() * if (frozen) 1f else 1f + 1.6f * ease(t)
     val fade = if (frozen) 1f else (1f - t).coerceIn(0f, 1f)
-    drawPath(burst(at, radius), (if (frozen) team else coral).copy(alpha = fade), style = Fill)
+    // Pointes arrondies : le polygone est rempli puis bordé de sa propre couleur, joints ronds.
+    val shape = burst(at, radius)
+    val fill = (if (frozen) team else coral).copy(alpha = fade)
+    drawPath(shape, fill, style = Fill)
+    drawPath(shape, fill, style = Stroke(10.dp.toPx(), join = StrokeJoin.Round))
     drawPath(burst(at, radius * 0.62f), saffron.copy(alpha = fade), style = Stroke(6.dp.toPx(), pathEffect = rounded))
     if (frozen) return
     val distance = size.maxDimension * ease(t)
@@ -438,8 +680,9 @@ private const val FOLLOW_SCALE = 1.25f
 private const val HIGHLIGHT_ZOOM = 0.45f
 private const val HIGHLIGHT_MS = 420f
 private const val WIN_SCALE = 2.1f
-private const val SMOOTHNESS = 0.45f
-private const val EXAGGERATION = 0.12f
+private const val EXAGGERATION = 0.35f
+private const val FC_LIMIT = 9f
+private const val EMBLEM_SPACE = 40f
 private const val SPEED_LINES = 3
 private const val BURST_POINTS = 10
 private const val CONFETTI = 18

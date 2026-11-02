@@ -33,13 +33,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yogistudio.molkkyboard.core.designsystem.component.CurveDot
 import com.yogistudio.molkkyboard.core.designsystem.component.CurveDotMark
@@ -53,6 +55,7 @@ import com.yogistudio.molkkyboard.core.designsystem.sound.rememberSoundEffects
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.scoring.SeriesMark
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -68,24 +71,100 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun CurveCard(curve: CurveUi, celebrating: Boolean, sounds: Boolean) {
     val reduced = MolkkyBoardTheme.reducedMotion
-    var played by rememberSaveable { mutableStateOf(false) }
-    val time = remember { Animatable(if (reduced || played) GameCurveTimeline.END else 0f) }
-    val fade = remember { Animatable(if (reduced && !played) 0f else 1f) }
+    val animation = rememberCurveAnimation(reduced, celebrating)
     var selected by rememberSaveable { mutableStateOf<Int?>(null) }
+    ImpactFeedback(animation.time, sounds)
+    val finished = animation.finished
+    val lines = curveLines(curve)
+    val summary = curveSummary(curve)
+    val skip = stringResource(R.string.end_curve_skip)
+    val skipNow = animation::skip
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            CurveTitle(showReplay = !reduced && finished) {
+                selected = null
+                animation.replay()
+            }
+            GameCurve(
+                lines = lines,
+                rounds = curve.rounds,
+                target = curve.target,
+                timeMs = animation.time.value,
+                highlight = curve.highlight?.let { (line, round) -> GameCurveHighlight(line, round) },
+                selectedRound = selected,
+                roundsLabel = pluralStringResource(R.plurals.end_curve_rounds, curve.rounds, curve.rounds),
+                onTap = { round -> if (finished) selected = round.coerceAtLeast(1) else skipNow() },
+                modifier =
+                    Modifier.alpha(animation.fade.value).semantics {
+                        contentDescription = summary
+                        if (!finished) {
+                            onClick(skip) {
+                                skipNow()
+                                true
+                            }
+                        }
+                    },
+            )
+            if (finished) RoundScores(curve, selected ?: curve.rounds) { selected = it }
+        }
+    }
+}
+
+/** Horloge de l'animation (0 à 3 s) et fondu de « Réduire les animations », joués une seule fois. */
+private class CurveAnimation(
+    val time: Animatable<Float, *>,
+    val fade: Animatable<Float, *>,
+    private val scope: CoroutineScope,
+) {
+    val finished: Boolean get() = time.value >= GameCurveTimeline.END && !time.isRunning
+
+    fun skip() {
+        scope.launch { time.snapTo(GameCurveTimeline.END) }
+    }
+
+    fun replay() {
+        scope.launch {
+            time.snapTo(0f)
+            time.play()
+        }
+    }
+}
+
+/** L'animation part à la fin de la séquence de victoire ([celebrating] faux), une seule fois (même après rotation). */
+@Composable
+private fun rememberCurveAnimation(reduced: Boolean, celebrating: Boolean): CurveAnimation {
+    var played by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val haptic = LocalHapticFeedback.current
-    val effects = rememberSoundEffects(sounds)
+    val animation =
+        remember {
+            CurveAnimation(
+                time = Animatable(if (reduced || played) GameCurveTimeline.END else 0f),
+                fade = Animatable(if (reduced && !played) 0f else 1f),
+                scope = scope,
+            )
+        }
     LaunchedEffect(celebrating) {
         if (celebrating || played) return@LaunchedEffect
         played = true
-        if (reduced) {
-            fade.animateTo(1f, tween(FADE_MS))
-        } else {
-            time.animateTo(GameCurveTimeline.END, tween(GameCurveTimeline.END.toInt(), easing = LinearEasing))
-        }
+        if (reduced) animation.fade.animateTo(1f, tween(FADE_MS)) else animation.time.play()
     }
-    // Impact : une vibration brève, et le son s'il est activé (jamais si l'animation a été passée).
-    LaunchedEffect(Unit) {
+    return animation
+}
+
+/** Joue l'animation complète (3 s), au rythme de l'horloge : chaque phase applique son propre amorti. */
+private suspend fun Animatable<Float, *>.play() =
+    animateTo(GameCurveTimeline.END, tween(GameCurveTimeline.END.toInt(), easing = LinearEasing))
+
+/** Impact : une vibration brève, et le son s'il est activé (jamais si l'animation a été passée d'un tap). */
+@Composable
+private fun ImpactFeedback(time: Animatable<Float, *>, sounds: Boolean) {
+    val haptic = LocalHapticFeedback.current
+    val effects = rememberSoundEffects(sounds)
+    LaunchedEffect(time) {
         snapshotFlow { time.isRunning && time.value >= GameCurveTimeline.IMPACT }
             .distinctUntilChanged()
             .filter { it }
@@ -94,66 +173,37 @@ internal fun CurveCard(curve: CurveUi, celebrating: Boolean, sounds: Boolean) {
                 effects?.play(Sound.IMPACT)
             }
     }
-    val finished = time.value >= GameCurveTimeline.END && !time.isRunning
-    val palette = MolkkyBoardTheme.colors.teams
-    val lines =
-        curve.lines.map { line ->
-            GameCurveLine(
-                color = palette[line.team.colorIndex % palette.size].fill,
-                emblem = emblemIcon(line.team.avatar),
-                initial = line.team.name,
-                dots = line.points.map { CurveDot(it.round, it.score, it.mark.toDotMark()) },
-                winner = line.winner,
-            )
-        }
-    val summary = curveSummary(curve)
-    val skip = stringResource(R.string.end_curve_skip)
-    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    stringResource(R.string.end_curve_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.weight(1f).semantics { heading() },
-                )
-                if (!reduced && finished) {
-                    TextButton(
-                        onClick = {
-                            selected = null
-                            scope.launch {
-                                time.snapTo(0f)
-                                time.animateTo(GameCurveTimeline.END, tween(GameCurveTimeline.END.toInt(), easing = LinearEasing))
-                            }
-                        },
-                        modifier = Modifier.heightIn(min = MBDimens.MinTouch),
-                    ) { Text(stringResource(R.string.end_curve_replay)) }
-                }
+}
+
+/** Titre de la carte, avec « Rejouer » une fois la courbe posée. */
+@Composable
+private fun CurveTitle(showReplay: Boolean, onReplay: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            stringResource(R.string.end_curve_title),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.weight(1f).semantics { heading() },
+        )
+        if (showReplay) {
+            TextButton(onClick = onReplay, modifier = Modifier.heightIn(min = MBDimens.MinTouch)) {
+                Text(stringResource(R.string.end_curve_replay))
             }
-            GameCurve(
-                lines = lines,
-                rounds = curve.rounds,
-                target = curve.target,
-                timeMs = time.value,
-                highlight = curve.highlight?.let { (line, round) -> GameCurveHighlight(line, round) },
-                selectedRound = selected,
-                onTap = { round ->
-                    if (finished) {
-                        selected = round.coerceAtLeast(1)
-                    } else {
-                        scope.launch { time.snapTo(GameCurveTimeline.END) }
-                    }
-                },
-                modifier =
-                    Modifier.alpha(fade.value).semantics {
-                        contentDescription = summary
-                        if (!finished) onClick(skip) {
-                            scope.launch { time.snapTo(GameCurveTimeline.END) }
-                            true
-                        }
-                    },
-            )
-            if (finished) RoundScores(curve, selected ?: curve.rounds) { selected = it }
         }
+    }
+}
+
+/** Lignes du dessin : couleur et emblème de chaque équipe (jamais la couleur seule), points et marques. */
+@Composable
+private fun curveLines(curve: CurveUi): List<GameCurveLine> {
+    val palette = MolkkyBoardTheme.colors.teams
+    return curve.lines.map { line ->
+        GameCurveLine(
+            color = palette[line.team.colorIndex % palette.size].fill,
+            emblem = emblemIcon(line.team.avatar),
+            initial = line.team.name,
+            dots = line.points.map { CurveDot(it.round, it.score, it.mark.toDotMark()) },
+            winner = line.winner,
+        )
     }
 }
 
@@ -167,7 +217,7 @@ private fun RoundScores(curve: CurveUi, round: Int, onRound: (Int) -> Unit) {
             onClick = { onRound(round - 1) },
             enabled = round > 1,
             modifier = Modifier.semantics { contentDescription = previous },
-        ) { Text("‹", style = MaterialTheme.typography.headlineMedium) }
+        ) { Text("‹", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black) }
         Text(
             stringResource(R.string.end_curve_round, round),
             style = MaterialTheme.typography.titleMedium,
@@ -178,7 +228,7 @@ private fun RoundScores(curve: CurveUi, round: Int, onRound: (Int) -> Unit) {
             onClick = { onRound(round + 1) },
             enabled = round < curve.rounds,
             modifier = Modifier.semantics { contentDescription = next },
-        ) { Text("›", style = MaterialTheme.typography.headlineMedium) }
+        ) { Text("›", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black) }
     }
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(MBDimens.Gap),
@@ -212,10 +262,23 @@ private fun curveSummary(curve: CurveUi): String {
     curve.lines.forEach { line ->
         line.points.forEach { point ->
             when (point.mark) {
-                SeriesMark.RESET -> parts += stringResource(R.string.end_curve_summary_reset, line.team.name, point.score, point.round)
-                SeriesMark.ELIMINATED -> parts += stringResource(R.string.end_curve_summary_out, line.team.name, point.round)
-                SeriesMark.LEFT -> parts += stringResource(R.string.end_curve_summary_left, line.team.name, point.round)
-                SeriesMark.NONE, SeriesMark.WIN -> Unit
+                SeriesMark.RESET -> {
+                    parts +=
+                        stringResource(R.string.end_curve_summary_reset, line.team.name, point.score, point.round)
+                }
+
+                SeriesMark.ELIMINATED -> {
+                    parts +=
+                        stringResource(R.string.end_curve_summary_out, line.team.name, point.round)
+                }
+
+                SeriesMark.LEFT -> {
+                    parts += stringResource(R.string.end_curve_summary_left, line.team.name, point.round)
+                }
+
+                SeriesMark.NONE, SeriesMark.WIN -> {
+                    Unit
+                }
             }
         }
     }

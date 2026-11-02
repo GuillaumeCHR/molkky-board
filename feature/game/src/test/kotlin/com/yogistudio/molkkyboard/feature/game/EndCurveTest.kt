@@ -1,13 +1,13 @@
 package com.yogistudio.molkkyboard.feature.game
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
-import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.test.hasContentDescription
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
 import com.yogistudio.molkkyboard.core.model.TeamId
@@ -33,11 +33,20 @@ class EndCurveTest {
                 listOf(
                     CurveLineUi(
                         lea,
-                        listOf(SeriesPoint(0, 0), SeriesPoint(1, 12), SeriesPoint(2, 38), SeriesPoint(3, 25, SeriesMark.RESET)) +
+                        listOf(
+                            SeriesPoint(0, 0),
+                            SeriesPoint(1, 12),
+                            SeriesPoint(2, 38),
+                            SeriesPoint(3, 25, SeriesMark.RESET),
+                        ) +
                             SeriesPoint(4, 50, SeriesMark.WIN),
                         winner = true,
                     ),
-                    CurveLineUi(tom, listOf(SeriesPoint(0, 0), SeriesPoint(1, 7), SeriesPoint(2, 17), SeriesPoint(3, 29)), winner = false),
+                    CurveLineUi(
+                        tom,
+                        listOf(SeriesPoint(0, 0), SeriesPoint(1, 7), SeriesPoint(2, 17), SeriesPoint(3, 29)),
+                        winner = false,
+                    ),
                 ),
             rounds = 4,
             target = 50,
@@ -70,8 +79,10 @@ class EndCurveTest {
     fun `chaque tour se consulte avec les fleches`() {
         show()
         compose.mainClock.advanceTimeBy(3_500)
+        // Animation finie : l'horloge reprend son cours pour traiter le toucher.
+        compose.mainClock.autoAdvance = true
         compose.onNodeWithContentDescription("Tour précédent").performClick()
-        compose.mainClock.advanceTimeBy(100)
+        compose.waitForIdle()
         compose.onNodeWithText("Tour 3").assertIsDisplayed()
         compose.onNodeWithText("Léa : 25").assertIsDisplayed()
         compose.onNodeWithText("Tom : 29").assertIsDisplayed()

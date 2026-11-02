@@ -170,6 +170,8 @@
     <string name="credits_stat_pins">Quilles</string>
     <string name="credits_stat_target">Points pour gagner</string>
     <string name="credits_stat_target_value">50, pas un de plus</string>
+    <string name="credits_stat_gradle">Plantages du démon Gradle</string>
+    <string name="credits_stat_gradle_value">On a arrêté de compter. Il s\'est toujours relevé, comme une quille.</string>
     <string name="credits_thanks_title">Remerciements</string>
     <string name="credits_thanks_players">Aux joueurs qui ont dit « c\'était 7, pas 8 » : la fonction « Corriger un lancer » existe grâce à vous.</string>
     <string name="credits_thanks_pin12">À la quille n° 12, toujours au centre, toujours visée, rarement touchée seule.</string>

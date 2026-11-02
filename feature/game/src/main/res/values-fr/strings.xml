@@ -169,7 +169,7 @@
     </plurals>
     <string name="end_rematch">Revanche</string>
     <string name="end_share">Partager ce moment</string>
-    <string name="end_rematch_order">Ordre de passage de la revanche</string>
+    <string name="end_rematch_order_value">Ordre : %1$s</string>
     <string name="end_order_same">Identique</string>
     <string name="end_order_rotate">Rotation (le 2e commence)</string>
     <string name="end_order_loser_first">Le dernier commence</string>
@@ -276,5 +276,9 @@
     <string name="end_curve_summary_reset">%1$s retombe à %2$d au tour %3$d</string>
     <string name="end_curve_summary_out">%1$s est hors jeu au tour %2$d</string>
     <string name="end_curve_summary_left">%1$s quitte la partie au tour %2$d</string>
+    <plurals name="end_curve_rounds">
+        <item quantity="one">%1$d tour</item>
+        <item quantity="other">%1$d tours</item>
+    </plurals>
     <string name="end_curve_replay">Rejouer</string>
 </resources>

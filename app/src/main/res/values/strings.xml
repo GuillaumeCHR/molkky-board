@@ -170,6 +170,8 @@
     <string name="credits_stat_pins">Pins</string>
     <string name="credits_stat_target">Points to win</string>
     <string name="credits_stat_target_value">50, not one more</string>
+    <string name="credits_stat_gradle">Gradle daemon crashes</string>
+    <string name="credits_stat_gradle_value">We stopped counting. It always got back up, like a pin.</string>
     <string name="credits_thanks_title">Thanks</string>
     <string name="credits_thanks_players">To the players who said “that was 7, not 8”: “Correct a throw” exists thanks to you.</string>
     <string name="credits_thanks_pin12">To pin no. 12, always in the middle, always aimed at, rarely hit alone.</string>

@@ -319,6 +319,7 @@ class GameScreenshotTest {
                             SeriesRowUi("Chloé", 2, 0, listOf(18, 40, 12), 70),
                         ),
                 ),
+            curve = sampleCurve(ranked),
         )
     private val finished =
         playing.copy(finished = true, winnerName = "Alice", ranking = ranked, teams = ranked, round = 7, end = end)

@@ -237,6 +237,7 @@ private fun ProductionStats() {
             stringResource(R.string.credits_stat_sold) to "0",
             stringResource(R.string.credits_stat_pins) to "12",
             stringResource(R.string.credits_stat_target) to stringResource(R.string.credits_stat_target_value),
+            stringResource(R.string.credits_stat_gradle) to stringResource(R.string.credits_stat_gradle_value),
         )
     Surface(
         shape = MaterialTheme.shapes.large,

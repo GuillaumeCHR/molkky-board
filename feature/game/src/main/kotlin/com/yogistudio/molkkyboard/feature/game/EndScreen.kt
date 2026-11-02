@@ -384,7 +384,8 @@ private fun SeriesCard(series: SeriesUi) {
 private fun EndActions(state: GameUiState, end: EndUi?, actions: GameActions) {
     val match = end?.match
     // L'action principale est dans la barre du bas ; ici, les actions secondaires.
-    if (match?.nextSet == null && !(match?.molkkout != null && match.winner == null) && !state.abandoned) {
+    val molkkoutPending = match?.molkkout != null && match.winner == null
+    if (match?.nextSet == null && !molkkoutPending && !state.abandoned) {
         // Le partage est proposé, jamais imposé : il ne passe pas devant la revanche.
         BigActionButton(
             stringResource(R.string.end_share),
@@ -421,7 +422,7 @@ private fun RematchButton(actions: GameActions) {
     Box {
         TextButton(onClick = { open = true }) {
             Text(
-                stringResource(R.string.end_rematch_order) + " : " + stringResource(order.label()),
+                stringResource(R.string.end_rematch_order_value, stringResource(order.label())),
                 style = MaterialTheme.typography.labelLarge,
             )
         }

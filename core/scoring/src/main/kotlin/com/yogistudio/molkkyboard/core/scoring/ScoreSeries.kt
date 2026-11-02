@@ -67,7 +67,8 @@ fun scoreSeries(config: GameConfig, lineup: List<TeamLineup>, effectiveLog: List
     for (event in effectiveLog) {
         val before = state
         val round = before.round
-        state = reduce(before, event).getOrNull() ?: continue
+        // Le journal effectif est déjà validé par le moteur : le rejouer ne peut pas échouer.
+        state = reduce(before, event).getOrThrow()
         state.teams.forEach { team ->
             starts.getOrPut(team.id) { SeriesPoint((round - 1).coerceAtLeast(0), team.score) }
         }
@@ -81,16 +82,23 @@ fun scoreSeries(config: GameConfig, lineup: List<TeamLineup>, effectiveLog: List
             steps += step(before, state, team, round)
         }
         // Départ d'une équipe : sa ligne s'arrête là.
-        state.teams.filter { it.left && before.team(it.id)?.left == false }.forEach {
+        val leftBefore =
+            before.teams
+                .filter { it.left }
+                .map { it.id }
+                .toSet()
+        state.teams.filter { it.left && it.id !in leftBefore }.forEach {
             steps += SeriesStep(it.id, round, it.score, SeriesMark.LEFT)
         }
+        // Une manche gagnée n'accepte plus d'événement : un vainqueur apparaît donc au plus une fois.
         val winner = state.winner
-        if (winner != null && winner != before.winner && winner != team) {
+        if (winner != null && winner != team) {
             val last = steps.indexOfLast { it.team == winner }
             if (last >= 0) {
                 steps[last] = steps[last].copy(mark = SeriesMark.WIN)
             } else {
-                steps += SeriesStep(winner, round, state.team(winner)?.score ?: 0, SeriesMark.WIN)
+                // Vainqueur qui n'a jamais lancé (tous les autres sont partis) : un point à son score de départ.
+                steps += SeriesStep(winner, round, state.teams.first { it.id == winner }.score, SeriesMark.WIN)
             }
         }
     }
@@ -99,31 +107,35 @@ fun scoreSeries(config: GameConfig, lineup: List<TeamLineup>, effectiveLog: List
     return ScoreSeries(
         steps = steps,
         teams = teams,
-        rounds = teams.maxOf { series -> series.points.maxOf { it.round } },
+        rounds = teams.flatMap { it.points }.map { it.round }.max(),
         target = target,
         winner = state.winner,
         highlight = highlight(teams, state.winner),
     )
 }
 
+/** Passage de [team] (présente avant et après : c'est elle qui vient de jouer). */
 private fun step(before: SetState, after: SetState, team: TeamId, round: Int): SeriesStep {
-    val previous = before.team(team)
-    val now = after.team(team)
-    val score = now?.score ?: previous?.score ?: 0
+    val previous = before.teams.first { it.id == team }
+    val now = after.teams.first { it.id == team }
     val mark =
         when {
-            after.winner == team && before.winner != team -> SeriesMark.WIN
-            now?.eliminated == true && previous?.eliminated == false -> SeriesMark.ELIMINATED
-            score < (previous?.score ?: 0) -> SeriesMark.RESET
+            // Une équipe gagnante ou éliminée ne joue plus : ces états sont donc nouveaux.
+            after.winner == team -> SeriesMark.WIN
+
+            now.eliminated -> SeriesMark.ELIMINATED
+
+            now.score < previous.score -> SeriesMark.RESET
+
             else -> SeriesMark.NONE
         }
-    return SeriesStep(team, round, score, mark, miss = score == (previous?.score ?: 0))
+    return SeriesStep(team, round, now.score, mark, miss = now.score == previous.score)
 }
 
 /** Un point par tour : le score à la fin du tour, avec la marque la plus forte du tour. */
 private fun perRound(steps: List<SeriesStep>): List<SeriesPoint> =
     steps.groupBy { it.round }.map { (round, inRound) ->
-        SeriesPoint(round, inRound.last().score, inRound.maxOf { it.mark })
+        SeriesPoint(round, inRound.last().score, inRound.map { it.mark }.max())
     }
 
 /**
@@ -149,17 +161,15 @@ private fun highlight(teams: List<TeamSeries>, winner: TeamId?): SeriesHighlight
 private fun comeback(teams: List<TeamSeries>, winner: TeamId?): SeriesHighlight? {
     val mine = teams.firstOrNull { it.team == winner } ?: return null
     val others = teams.filter { it.team != winner }
-    var best: Pair<Int, Int>? = null
-    for (point in mine.points) {
-        val leader = others.maxOfOrNull { other -> other.scoreAt(point.round) } ?: continue
-        val gap = leader - point.score
-        if (gap >= COMEBACK_GAP && gap > (best?.second ?: 0)) best = point.round to gap
-    }
-    return best?.let { (round, _) -> SeriesHighlight(mine.team, round, HighlightKind.COMEBACK) }
+    // Il y a toujours un autre participant : on ne gagne pas seul.
+    val gaps = mine.points.map { point -> others.map { it.scoreAt(point.round) }.max() - point.score }
+    val gap = gaps.max()
+    val round = mine.points[gaps.indexOf(gap)].round
+    return if (gap >= COMEBACK_GAP) SeriesHighlight(mine.team, round, HighlightKind.COMEBACK) else null
 }
 
-/** Score de l'équipe à la fin du tour [round] (dernier point connu à ce moment). */
-fun TeamSeries.scoreAt(round: Int): Int = points.lastOrNull { it.round <= round }?.score ?: points.first().score
+/** Score de l'équipe à la fin du tour [round] (dernier point connu ; 0 avant son arrivée). */
+fun TeamSeries.scoreAt(round: Int): Int = points.lastOrNull { it.round <= round }?.score ?: 0
 
 /** Retard minimal d'une « remontée » (même seuil que les moments partageables, `STATS_SPEC.md` § 8). */
 const val COMEBACK_GAP = 15

@@ -122,6 +122,7 @@ class StoreScreenshotTest {
                                 SeriesRowUi(n.chloe, 2, 0, listOf(18, 40, 12), 70),
                             ),
                     ),
+                curve = sampleCurve(ranked),
             )
         val finished =
             playing(
