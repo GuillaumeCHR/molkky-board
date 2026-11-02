@@ -12,7 +12,7 @@
     <string name="game_switch_to_quick">Saisie rapide</string>
     <string name="game_switch_to_pins">Quilles</string>
     <string name="game_hint_pins">Touchez les quilles tombées</string>
-    <string name="game_hint_quick">Touchez les points de votre lancer</string>
+    <string name="game_hint_quick">Touchez vos points</string>
     <string name="game_preview_points">+%1$d → %2$d</string>
     <string name="game_preview_miss">Raté · %1$d/%2$d</string>
     <string name="game_preview_elimination">Raté · éliminé !</string>

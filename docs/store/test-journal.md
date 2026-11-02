@@ -30,6 +30,7 @@ Le compte à rebours démarre au premier jour où **au moins 12 testeurs** sont 
 | 2026-10-29 | Revue avant publication | Liens vers la politique de confidentialité exigés dans l'app | Liens dans À propos | 0.8.2 |
 | 2026-10-29 | Audit grands écrans | Mise en page étirée sur tablette (portrait ignoré au targetSdk 37) | Contenu centré, écran de jeu sur deux colonnes ; grille centrée | 0.8.3 |
 | 2026-10-29 | Tournage de la vidéo | « Ready to play? » affiché sur le téléphone invité | Réservé à l'organisateur | 0.8.3 |
+| 2026-11-02 | Porteur du projet (Fairphone 6) | Saisie rapide : le choix « quille seule / nombre de quilles » ne sert à rien | Saisie directe du score (0 à 12) ; testée sur téléphone : score, ratés, retour à 25, « 12 ! », déroulé, ancienne partie conformes | 0.8.5 |
 
 ## Réponses préparées pour la demande d'accès à la production
 À compléter à la fin des 14 jours avec les chiffres réels. Les questions de Google évoluent : les relire au moment de la

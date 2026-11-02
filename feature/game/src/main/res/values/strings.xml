@@ -12,7 +12,7 @@
     <string name="game_switch_to_quick">Quick input</string>
     <string name="game_switch_to_pins">Pins</string>
     <string name="game_hint_pins">Tap the pins that fell</string>
-    <string name="game_hint_quick">Tap the points you scored</string>
+    <string name="game_hint_quick">Tap your points</string>
     <string name="game_preview_points">+%1$d → %2$d</string>
     <string name="game_preview_miss">Miss · %1$d/%2$d</string>
     <string name="game_preview_elimination">Miss · out!</string>
