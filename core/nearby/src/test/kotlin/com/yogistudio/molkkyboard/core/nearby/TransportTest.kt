@@ -22,7 +22,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLHandshakeException
+import javax.net.ssl.SSLException
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.X509TrustManager
 
@@ -62,8 +62,8 @@ class TransportTest {
         return server.startAndWait()
     }
 
-    /** Poignée de main TLS brute avec un protocole et une suite imposés ; renvoie le protocole négocié. */
-    private fun handshake(port: Int, protocol: String, suite: String): String {
+    /** Contexte TLS client du test (aucune vérification : on ne teste que la négociation). */
+    private val clientContext: SSLContext by lazy {
         val trustAll =
             object : X509TrustManager {
                 override fun checkClientTrusted(chain: Array<out X509Certificate>, authType: String?) = Unit
@@ -72,8 +72,12 @@ class TransportTest {
 
                 override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
             }
-        val context = SSLContext.getInstance("TLS").apply { init(null, arrayOf(trustAll), null) }
-        (context.socketFactory.createSocket("127.0.0.1", port) as SSLSocket).use { socket ->
+        SSLContext.getInstance("TLS").apply { init(null, arrayOf(trustAll), null) }
+    }
+
+    /** Poignée de main TLS brute avec un protocole et une suite imposés ; renvoie le protocole négocié. */
+    private fun handshake(port: Int, protocol: String, suite: String): String {
+        (clientContext.socketFactory.createSocket("127.0.0.1", port) as SSLSocket).use { socket ->
             socket.soTimeout = 10_000
             socket.enabledProtocols = arrayOf(protocol)
             socket.enabledCipherSuites = arrayOf(suite)
@@ -171,14 +175,11 @@ class TransportTest {
     fun `TLS 1_2 accepte seulement avec une suite AEAD et ECDHE`() {
         val port = startServer()
         assertEquals("TLSv1.2", handshake(port, "TLSv1.2", "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"))
-        val weak =
-            SSLContext
-                .getDefault()
-                .supportedSSLParameters.cipherSuites
-                .filter { "ECDHE_ECDSA" in it && "CBC" in it }
-        assertTrue("le JDK propose au moins une suite CBC", weak.isNotEmpty())
+        // Suites faibles que le client de ce test sait proposer (le fournisseur TLS varie d'une machine à l'autre).
+        val weak = clientContext.supportedSSLParameters.cipherSuites.filter { "ECDHE_ECDSA" in it && "CBC" in it }
+        assertTrue("le client propose au moins une suite CBC", weak.isNotEmpty())
         weak.forEach { suite ->
-            assertThrows(suite, SSLHandshakeException::class.java) { handshake(port, "TLSv1.2", suite) }
+            assertThrows(suite, SSLException::class.java) { handshake(port, "TLSv1.2", suite) }
         }
     }
 }
