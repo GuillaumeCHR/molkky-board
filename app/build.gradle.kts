@@ -1,4 +1,6 @@
 import com.android.build.api.artifact.SingleArtifact
+import org.cyclonedx.gradle.CyclonedxDirectTask
+import org.cyclonedx.model.Component
 import java.util.Properties
 
 plugins {
@@ -7,6 +9,15 @@ plugins {
     alias(libs.plugins.molkkyboard.hilt)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.aboutlibraries)
+    alias(libs.plugins.cyclonedx)
+}
+
+// SBOM CycloneDX de ce qui est livré dans l'APK de release (dépendances d'exécution, modules du projet compris) :
+// ./gradlew :app:cyclonedxDirectBom → app/build/reports/cyclonedx-direct/bom.json, analysé par osv-scanner en CI.
+tasks.named<CyclonedxDirectTask>("cyclonedxDirectBom") {
+    projectType = Component.Type.APPLICATION
+    componentName = "Molkky Board"
+    includeConfigs = listOf("releaseRuntimeClasspath")
 }
 
 android {
@@ -65,6 +76,11 @@ aboutLibraries {
 }
 
 dependencies {
+    constraints {
+        // Guava (transitive, Media3) : version corrigée de GHSA-xxph-c9ww-hj94. Non exploitable ici (aucune
+        // désérialisation Java), relevée pour que l'analyse osv-scanner reste propre.
+        implementation(libs.guava)
+    }
     implementation(projects.core.scoring)
     implementation(projects.core.designsystem)
     implementation(projects.feature.intro)

@@ -50,7 +50,7 @@
 |---|---|---|
 | CODE-1 : plateforme à jour | ✅ | targetSdk 37, minSdk 26 |
 | CODE-2 : mécanisme de mise à jour | ✅ | Play Store ; protocole versionné (`PROTOCOL_VERSION = 2`) : un téléphone d'une autre version est refusé avec un message clair |
-| CODE-3 : dépendances sans vulnérabilité connue | 🟡 | Dependabot (alertes et correctifs) actif sur le dépôt ; contrôle « aucun traceur » en CI. **À faire** : osv-scanner, SBOM CycloneDX, vérification des dépendances Gradle (`verification-metadata.xml`) |
+| CODE-3 : dépendances sans vulnérabilité connue | 🛠️ | **SBOM CycloneDX** de l'APK de release (`:app:cyclonedxDirectBom`, 265 composants) analysé par **osv-scanner** en CI (binaire épinglé par SHA-256) ; l'SBOM est conservé comme artefact. Première analyse : Guava 33.3.1 (transitive, Media3) touchée par GHSA-xxph-c9ww-hj94 (CVSS 8.2, désérialisation Java), **non exploitable** ici (aucune désérialisation `ObjectInputStream`), **relevée à 33.7.2** par contrainte ; analyse propre ensuite. **Vérification des dépendances Gradle** (`gradle/verification-metadata.xml`, SHA-256 de chaque bibliothèque et plugin). Dependabot actif ; contrôle « aucun traceur » en CI |
 | CODE-4 : entrées non fiables validées | ✅ | Messages du protocole : 64 Ko, JSON décodé avec un schéma fermé, champs texte bornés ; lien d'invitation : adresses IPv4 privées seulement, longueurs exactes de l'empreinte et du jeton ; fichier de sauvegarde : 20 Mo, champs bornés, journaux rejoués, restauration en ajout seul |
 
 ## MASVS-RESILIENCE — résistance à l'analyse et à la modification
@@ -70,7 +70,6 @@
 
 ## Suites à donner
 
-1. Chaîne d'approvisionnement (CODE-3) : osv-scanner et SBOM CycloneDX en CI, vérification des dépendances Gradle.
+1. Analyse statique MobSF / mobsfscan (non lancée : outil externe à installer, voir `CHECKLIST.md`).
 2. Test d'intrusion léger par le porteur du projet, en particulier sur la partie à côté (scénarios N1–N11 du modèle de
    menaces).
-3. Analyse statique MobSF sur l'AAB de release avant la production.

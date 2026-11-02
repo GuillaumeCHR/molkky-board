@@ -77,6 +77,28 @@ Vérifier la signature :
 keytool -printcert -jarfile app/build/outputs/bundle/release/app-release.aab | grep SHA256
 ```
 
+Avant l'envoi, vérifier les dépendances livrées (aussi fait par la CI) :
+
+```bash
+./gradlew :app:cyclonedxDirectBom          # SBOM : app/build/reports/cyclonedx-direct/bom.json
+osv-scanner scan source -L app/build/reports/cyclonedx-direct/bom.json
+```
+
+Joindre `bom.json` à la version GitHub (SBOM de la release).
+
+### Mettre à jour une dépendance
+
+`gradle/verification-metadata.xml` contient l'empreinte SHA-256 de chaque bibliothèque et plugin : une dépendance
+nouvelle ou mise à jour (y compris par Dependabot) fait échouer le build tant que ses empreintes n'y sont pas. Après
+avoir vérifié la mise à jour, régénérer les empreintes en lançant les tâches de la CI :
+
+```bash
+./gradlew --write-verification-metadata sha256 --no-configuration-cache --max-workers=1 \
+  ktlintCheck detekt lintDebug test :app:assembleDebug :app:bundleRelease :app:cyclonedxDirectBom
+```
+
+puis relire le diff du fichier (seules les bibliothèques attendues doivent apparaître) avant de le committer.
+
 ## 5. Tester la release avant l'envoi
 
 L'AAB ne s'installe pas directement. Pour tester exactement ce qui sera envoyé, construis l'APK release signé

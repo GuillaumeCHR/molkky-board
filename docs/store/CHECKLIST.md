@@ -51,7 +51,8 @@ publication**, **F-Droid après le Play Store**.
 | Revue MASVS (`docs/security/MASVS_CHECKLIST.md`) | ✅ | 2026-11-02 ; 5 corrections (TLS imposé, trames bornées, connexions sans jeton fermées, fermeture accusée, tapjacking) |
 | Jeton de session de l'invité | ✅ | en mémoire seulement, jamais sur le disque (plus strict que le chiffrement prévu) |
 | Protection contre le tapjacking sur « accepter un téléphone » | ✅ | et sur « Supprimer toutes mes données » |
-| Vérification des dépendances, osv-scanner, SBOM, MobSF | ⬜ | |
+| Vérification des dépendances, osv-scanner, SBOM | ✅ | 2026-11-02 ; `verification-metadata.xml`, SBOM CycloneDX + osv-scanner en CI ; Guava relevée (GHSA-xxph-c9ww-hj94) |
+| Analyse statique MobSF (ou mobsfscan) | ⬜ 👤 | outil externe à installer (Docker pour MobSF, `pipx` pour mobsfscan) : à lancer avec ton accord |
 | Registre des traitements (`docs/privacy/REGISTRE.md`) | ⬜ | presque vide sans compte |
 | `SECURITY.md` et `security.txt` | ✅ | `security.txt` sur le site |
 | Test d'intrusion léger | ⬜ 👤 | |
