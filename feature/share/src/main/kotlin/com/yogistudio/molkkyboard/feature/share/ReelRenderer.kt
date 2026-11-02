@@ -59,7 +59,7 @@ class ReelRenderer(
             rank,
             team,
             ->
-            "${rank + 1}. ${data.teams[team].name}".take(NAME_MAX)
+            "${rank + 1}. ${data.teams[team].name.take(NAME_MAX)}"
         }
     private val roundLabels = (0..data.steps.maxOfOrNull { it.round }.let { it ?: 1 }).map(data.labels.round)
     private val winnerName = data.winner?.let { data.teams[it].name.take(NAME_MAX) }
@@ -95,7 +95,7 @@ class ReelRenderer(
         }
         if (t >= IMPACT_MS + FREEZE_MS) {
             val pop = spring(((t - IMPACT_MS - FREEZE_MS) / BUBBLE_MS.toFloat()).coerceIn(0f, 1f))
-            big.textSize = 150f * unit * pop
+            big.fit(data.title, 150f * unit * pop)
             big.color = FOREST
             canvas.drawText(data.title, width / 2f, height * 0.62f, big)
         }
@@ -121,9 +121,10 @@ class ReelRenderer(
         }
         previousScores.fill(0)
         for (s in 0 until (done - 1).coerceAtLeast(0)) previousScores[steps[s].team] = steps[s].score
-        big.textSize = 64f * unit
+        val roundLabel = roundLabels[round.coerceIn(0, roundLabels.lastIndex)]
+        big.fit(roundLabel, 64f * unit)
         big.color = SAFFRON
-        canvas.drawText(roundLabels[round.coerceIn(0, roundLabels.lastIndex)], width / 2f, height * 0.12f, big)
+        canvas.drawText(roundLabel, width / 2f, height * 0.12f, big)
         val rows = data.teams.size.coerceAtMost(MAX_ROWS)
         val rowH = height * 0.62f / rows
         for (i in 0 until rows) {
@@ -136,7 +137,9 @@ class ReelRenderer(
                 } else {
                     scores[i].toFloat()
                 }
-            text.textSize = 40f * unit
+            val score = shown.toInt().toString()
+            big.textSize = 56f * unit
+            text.fit(rowLabels[i], 40f * unit, contentWidth - big.measureText(score) - GAP * unit)
             text.color = BIRCH
             text.textAlign = Paint.Align.LEFT
             canvas.drawText(rowLabels[i], MARGIN * unit, top + 44f * unit, text)
@@ -146,10 +149,9 @@ class ReelRenderer(
             rect.right = rect.left + (rect.width() * (shown / data.target)).coerceIn(0f, rect.width())
             fill.color = if (out[i]) GREY else team.color
             canvas.drawRoundRect(rect, 20f * unit, 20f * unit, fill)
-            big.textSize = 56f * unit
             big.color = if (out[i]) GREY else BIRCH
             big.textAlign = Paint.Align.RIGHT
-            canvas.drawText(shown.toInt().toString(), width - MARGIN * unit, top + 44f * unit, big)
+            canvas.drawText(score, width - MARGIN * unit, top + 44f * unit, big)
             big.textAlign = Paint.Align.CENTER
             if (out[i]) stamp(canvas, data.labels.eliminated, width * 0.62f, top + 84f * unit, CORAL)
             val justReset = last?.team == i && last.kind == StepKind.RESET
@@ -185,15 +187,15 @@ class ReelRenderer(
             canvas.restore()
         }
         val pop = spring((p * 2f).coerceIn(0f, 1f))
-        big.textSize = 300f * unit * pop
+        big.fit(data.target.toString(), 300f * unit * pop)
         big.color = color
         canvas.drawText(data.target.toString(), width / 2f, height * 0.45f, big)
         if (winnerName != null) {
-            big.textSize = 90f * unit
+            big.fit(winnerName, 90f * unit)
             big.color = FOREST
             canvas.drawText(winnerName, width / 2f, height * 0.6f, big)
         }
-        text.textSize = 44f * unit
+        text.fit(data.keyFigure, 44f * unit)
         text.color = INK
         text.textAlign = Paint.Align.CENTER
         canvas.drawText(data.keyFigure, width / 2f, height * 0.68f, text)
@@ -201,7 +203,7 @@ class ReelRenderer(
 
     private fun drawOutro(canvas: Canvas) {
         canvas.drawColor(BIRCH)
-        big.textSize = 110f * unit
+        big.fit(data.title, 110f * unit)
         big.color = FOREST
         canvas.drawText(data.title, width / 2f, height * 0.16f, big)
         val rows = data.teams.size.coerceAtMost(MAX_ROWS)
@@ -209,22 +211,22 @@ class ReelRenderer(
             val index = outroOrder[i]
             val team = data.teams[index]
             val y = height * 0.28f + i * 90f * unit
-            text.textSize = 48f * unit
+            big.textSize = 56f * unit
+            text.fit(rankLabels[i], 48f * unit, contentWidth - big.measureText(finalScores[index]) - GAP * unit)
             text.color = INK
             text.textAlign = Paint.Align.LEFT
             canvas.drawText(rankLabels[i], MARGIN * unit, y, text)
-            big.textSize = 56f * unit
             big.color = team.color
             big.textAlign = Paint.Align.RIGHT
             canvas.drawText(finalScores[index], width - MARGIN * unit, y, big)
             big.textAlign = Paint.Align.CENTER
         }
         text.textAlign = Paint.Align.CENTER
-        text.textSize = 40f * unit
+        text.fit(data.labels.scan, 40f * unit)
         text.color = INK
         canvas.drawText(data.labels.scan, width / 2f, height * 0.76f, text)
         // Logotype : « Molkky » vert forêt, « Board » safran, même ligne de base.
-        big.textSize = 96f * unit
+        big.fit("Molkky Board", 96f * unit)
         val molkky = big.measureText("Molkky ")
         val board = big.measureText("Board")
         val start = (width - molkky - board) / 2f
@@ -234,7 +236,7 @@ class ReelRenderer(
         big.color = SAFFRON
         canvas.drawText("Board", start + molkky, height * 0.84f, big)
         big.textAlign = Paint.Align.CENTER
-        text.textSize = 36f * unit
+        text.fit(data.labels.hashtag, 36f * unit)
         canvas.drawText(data.labels.hashtag, width / 2f, height * 0.9f, text)
     }
 
@@ -246,7 +248,7 @@ class ReelRenderer(
     private fun stamp(canvas: Canvas, label: String, cx: Float, cy: Float, color: Int) {
         canvas.save()
         canvas.rotate(STAMP_ANGLE, cx, cy)
-        text.textSize = 40f * unit
+        text.fit(label, 40f * unit, width * STAMP_MAX - 48f * unit)
         text.textAlign = Paint.Align.CENTER
         val w = text.measureText(label) / 2 + 24f * unit
         rect.set(cx - w, cy - 34f * unit, cx + w, cy + 22f * unit)
@@ -255,6 +257,23 @@ class ReelRenderer(
         text.color = WHITE
         canvas.drawText(label, cx, cy + 6f * unit, text)
         canvas.restore()
+    }
+
+    /** Largeur utile entre les marges : aucun texte ne la dépasse. */
+    private val contentWidth: Float get() = width - 2 * MARGIN * unit
+
+    /**
+     * Taille [size], réduite si besoin pour que [text] tienne dans [maxWidth] : les titres longs (« Quelle
+     * remontée ! », « What a comeback! »), les noms d'équipe et les tampons ne débordent jamais de l'image.
+     */
+    internal fun Paint.fit(text: String, size: Float, maxWidth: Float = contentWidth) {
+        textSize = size
+        // La largeur n'est pas tout à fait proportionnelle à la taille (arrondis du rendu) : on affine.
+        repeat(FIT_PASSES) {
+            val measured = measureText(text)
+            if (measured <= maxWidth || measured <= 0f) return
+            textSize *= maxWidth / measured * FIT_SLACK
+        }
     }
 
     private fun textPaint(typeface: Typeface, size: Float) =
@@ -281,6 +300,10 @@ class ReelRenderer(
         private const val MAX_ROWS = 6
         private const val NAME_MAX = 22
         private const val MARGIN = 80f
+        private const val GAP = 24f
+        private const val STAMP_MAX = 0.7f
+        private const val FIT_PASSES = 4
+        private const val FIT_SLACK = 0.98f
         private const val PIN_W = 34f
         private const val PIN_H = 46f
         private const val GRAVITY = 0.9f
