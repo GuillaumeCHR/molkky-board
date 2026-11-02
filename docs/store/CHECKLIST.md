@@ -1,6 +1,6 @@
 # Checklist de publication sur le Google Play Store
 
-Mise à jour : 2026-10-29 (version 0.8.3, build 11). Statuts : ✅ fait · 🟡 en cours · ⬜ à faire · 👤 action du porteur
+Mise à jour : 2026-11-02 (version 0.8.4, build 12). Statuts : ✅ fait · 🟡 en cours · ⬜ à faire · 👤 action du porteur
 du projet (compte, identité, décision). Décisions : V1 **sans compte** (phase 4 en V2), **modes de jeu après la
 publication**, **F-Droid après le Play Store**.
 
@@ -27,9 +27,9 @@ publication**, **F-Droid après le Play Store**.
 | Point | Statut | Note |
 |---|---|---|
 | Fiche créée (`com.yogistudio.molkkyboard`, Application, Sports, gratuite) | ✅ | 2026-10-29 |
-| AAB signé | ✅ | 0.8.3 (11), construit avec `-Pmolkky.feedback=true` pour le test fermé |
+| AAB signé | ✅ | 0.8.4 (12), construit le 2026-11-02 avec `-Pmolkky.feedback=true` pour le test fermé |
 | Test interne | ✅ | 0.8.1 (9) publié le 2026-10-29 |
-| Test fermé | 🟡 | 0.8.2 (10) envoyé le 2026-10-29, en cours d'examen ; 0.8.3 (11) prête |
+| Test fermé | 🟡 | 0.8.2 (10) envoyé le 2026-10-29 ; 0.8.4 (12) à envoyer (notes : `docs/store/release-notes/0.8.4.md`) |
 | Release minifiée testée sur téléphone | 🟡 👤 | 0.8.0 sur Fairphone (partie, reprise, partage, sauvegarde) ; à refaire avec la 0.8.3 depuis le Play Store, dont la partie à côté |
 | targetSdk (API 36 minimum) | ✅ | 37 |
 | Grands écrans (≥ 600 dp, portrait ignoré au targetSdk 37) | ✅ | mise en page adaptative 0.8.3 (`docs/qa/FORM_FACTORS.md`) |

@@ -9,7 +9,8 @@ qui le corrige.
 |---|---|---|---|---|
 | 2026-10-29 | — | — | 0.8.1 (9) | Test interne publié (porteur du projet) |
 | 2026-10-29 | — | — | 0.8.2 (10) | Test fermé envoyé à l'examen de Google |
-| | | | 0.8.3 (11) | Prête : grands écrans, bouton « Send feedback » |
+| — | — | — | 0.8.3 (11) | Construite, jamais envoyée (remplacée par la 0.8.4) |
+| 2026-11-02 | — | — | 0.8.4 (12) | AAB construit depuis `2666242` avec « Send feedback », à envoyer en test fermé à la place de la 0.8.2 |
 
 Le compte à rebours démarre au premier jour où **au moins 12 testeurs** sont inscrits ; s'il passe sous 12, il repart
 à zéro.
