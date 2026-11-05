@@ -32,6 +32,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -62,8 +64,9 @@ import kotlinx.coroutines.launch
 
 /**
  * « Courbe de la partie » sur l'écran de fin (spécification « Courbe de la partie »). L'animation (3 s au plus) part
- * quand la séquence de victoire est finie ([celebrating] faux), une seule fois ; un tap la passe. Vibration brève à
- * l'impact, son optionnel (réglage « Sons »). « Réduire les animations » : la courbe finale apparaît en fondu. Une
+ * quand la séquence de victoire est finie ([celebrating] faux) et que la carte est à l'écran, une seule fois ; un tap
+ * la passe. Vibration brève à l'impact, son optionnel (réglage « Sons »). « Réduire les animations » : la courbe
+ * finale apparaît en fondu. Une
  * fois la courbe posée, un tap sur un tour, ou les flèches « Tour précédent / suivant », donnent le score exact de
  * chacun à ce moment ; TalkBack lit le résumé de la partie. Une correction de lancer redessine la courbe sans
  * rejouer l'animation.
@@ -71,7 +74,10 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun CurveCard(curve: CurveUi, celebrating: Boolean, sounds: Boolean) {
     val reduced = MolkkyBoardTheme.reducedMotion
-    val animation = rememberCurveAnimation(reduced, celebrating)
+    // L'animation attend que la carte soit à l'écran : sur l'écran de fin, elle est souvent plus bas et se jouerait
+    // hors de vue pendant qu'on fait défiler.
+    var onScreen by remember { mutableStateOf(false) }
+    val animation = rememberCurveAnimation(reduced, waiting = celebrating || !onScreen)
     var selected by rememberSaveable { mutableStateOf<Int?>(null) }
     ImpactFeedback(animation.time, sounds)
     val finished = animation.finished
@@ -82,7 +88,12 @@ internal fun CurveCard(curve: CurveUi, celebrating: Boolean, sounds: Boolean) {
     Surface(
         shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier.fillMaxWidth().onGloballyPositioned { coordinates ->
+                // Partie visible, rognée par le défilement et la barre du bas.
+                val visible = coordinates.boundsInWindow().height
+                onScreen = coordinates.size.height > 0 && visible >= coordinates.size.height * VISIBLE_SHARE
+            },
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             CurveTitle(showReplay = !reduced && finished) {
@@ -134,9 +145,12 @@ private class CurveAnimation(
     }
 }
 
-/** L'animation part à la fin de la séquence de victoire ([celebrating] faux), une seule fois (même après rotation). */
+/**
+ * L'animation part quand plus rien ne la retient ([waiting] faux : séquence de victoire finie et carte à l'écran), une
+ * seule fois (même après rotation).
+ */
 @Composable
-private fun rememberCurveAnimation(reduced: Boolean, celebrating: Boolean): CurveAnimation {
+private fun rememberCurveAnimation(reduced: Boolean, waiting: Boolean): CurveAnimation {
     var played by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val animation =
@@ -147,8 +161,8 @@ private fun rememberCurveAnimation(reduced: Boolean, celebrating: Boolean): Curv
                 scope = scope,
             )
         }
-    LaunchedEffect(celebrating) {
-        if (celebrating || played) return@LaunchedEffect
+    LaunchedEffect(waiting) {
+        if (waiting || played) return@LaunchedEffect
         played = true
         if (reduced) animation.fade.animateTo(1f, tween(FADE_MS)) else animation.time.play()
     }
@@ -295,3 +309,6 @@ private fun SeriesMark.toDotMark(): CurveDotMark =
     }
 
 private const val FADE_MS = 600
+
+/** Part de la carte qui doit être à l'écran pour lancer l'animation. */
+private const val VISIBLE_SHARE = 0.6f

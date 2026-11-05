@@ -1,5 +1,6 @@
 package com.yogistudio.molkkyboard.core.designsystem.component
 
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -75,10 +76,10 @@ data class GameCurveHighlight(
 
 /** Chronologie de l'animation (3 s maximum), en millisecondes. */
 object GameCurveTimeline {
-    const val DRAW_END = 1_700f
+    const val DRAW_END = 1_550f
     const val ZOOM_END = 1_950f
     const val FREEZE_END = 2_030f
-    const val BURST_END = 2_550f
+    const val BURST_END = 2_450f
     const val END = 3_000f
 
     /** Image d'impact figée (≈ 80 ms) : la vibration et le son éventuel partent à son début. */
@@ -312,7 +313,9 @@ private fun rawCamera(
 
         timeMs < GameCurveTimeline.ZOOM_END -> {
             val t =
-                ease((timeMs - GameCurveTimeline.DRAW_END) / (GameCurveTimeline.ZOOM_END - GameCurveTimeline.DRAW_END))
+                cameraEase(
+                    (timeMs - GameCurveTimeline.DRAW_END) / (GameCurveTimeline.ZOOM_END - GameCurveTimeline.DRAW_END),
+                )
             Camera(drawing.scale + (settled.scale - drawing.scale) * t, lerp(drawing.pivot, settled.pivot, t))
         }
 
@@ -321,7 +324,10 @@ private fun rawCamera(
         }
 
         else -> {
-            val t = ease((timeMs - GameCurveTimeline.BURST_END) / (GameCurveTimeline.END - GameCurveTimeline.BURST_END))
+            val t =
+                cameraEase(
+                    (timeMs - GameCurveTimeline.BURST_END) / (GameCurveTimeline.END - GameCurveTimeline.BURST_END),
+                )
             Camera(settled.scale + (1f - settled.scale) * t, lerp(settled.pivot, center, t))
         }
     }
@@ -341,6 +347,11 @@ private fun highlightBump(timeMs: Float, frame: Frame, highlight: GameCurveHighl
 }
 
 private fun ease(t: Float) = FastOutSlowInEasing.transform(t.coerceIn(0f, 1f))
+
+/** Amorti symétrique de la caméra : le zoom et le dézoom démarrent et s'arrêtent en douceur, sans à-coup. */
+private val CameraEasing = CubicBezierEasing(0.65f, 0f, 0.35f, 1f)
+
+private fun cameraEase(t: Float) = CameraEasing.transform(t.coerceIn(0f, 1f))
 
 private fun lerp(a: Offset, b: Offset, t: Float) = Offset(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
 
@@ -679,7 +690,7 @@ private class Confetti(
 private const val FOLLOW_SCALE = 1.25f
 private const val HIGHLIGHT_ZOOM = 0.45f
 private const val HIGHLIGHT_MS = 420f
-private const val WIN_SCALE = 2.1f
+private const val WIN_SCALE = 1.6f
 private const val EXAGGERATION = 0.35f
 private const val FC_LIMIT = 9f
 private const val EMBLEM_SPACE = 40f
