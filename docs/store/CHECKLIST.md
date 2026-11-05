@@ -1,6 +1,6 @@
 # Checklist de publication sur le Google Play Store
 
-Mise à jour : 2026-11-02 (version 0.8.4, build 12). Statuts : ✅ fait · 🟡 en cours · ⬜ à faire · 👤 action du porteur
+Mise à jour : 2026-11-05 (version 0.8.5, build 13). Statuts : ✅ fait · 🟡 en cours · ⬜ à faire · 👤 action du porteur
 du projet (compte, identité, décision). Décisions : V1 **sans compte** (phase 4 en V2), **modes de jeu après la
 publication**, **F-Droid après le Play Store**.
 
@@ -53,7 +53,7 @@ publication**, **F-Droid après le Play Store**.
 | Protection contre le tapjacking sur « accepter un téléphone » | ✅ | et sur « Supprimer toutes mes données » |
 | Vérification des dépendances, osv-scanner, SBOM | ✅ | 2026-11-02 ; `verification-metadata.xml`, SBOM CycloneDX + osv-scanner en CI ; Guava relevée (GHSA-xxph-c9ww-hj94) |
 | Analyse statique MobSF (ou mobsfscan) | ⬜ 👤 | outil externe à installer (Docker pour MobSF, `pipx` pour mobsfscan) : à lancer avec ton accord |
-| Registre des traitements (`docs/privacy/REGISTRE.md`) | ⬜ | presque vide sans compte |
+| Registre des traitements (`docs/privacy/REGISTRE.md`) | 🟡 👤 | 2026-11-05 : 4 traitements (e-mails, rapports de plantage, vulnérabilités, testeurs) ; durées de conservation et double authentification du compte Google à valider |
 | `SECURITY.md` et `security.txt` | ✅ | `security.txt` sur le site |
 | Test d'intrusion léger | ⬜ 👤 | |
 
