@@ -360,8 +360,12 @@ class GameViewModelTest {
                 assertEquals(GameEffect.Validated("Alice", 12), awaitItem().withoutPins())
                 assertEquals(GameEffect.Twelve(strike = false), awaitItem())
                 assertEquals("Alice", (awaitItem() as GameEffect.Won).name)
+                assertNull(games.observeOngoingGameId().first { it == null })
                 vm.undo()
                 vm.awaitState { !it.finished }
+                // La partie rouverte prouve que le ViewModel a traité l'annulation : sans cette attente, Room peut
+                // livrer l'annulation et le lancer suivant ensemble, qui se traitent alors comme un rattrapage.
+                assertEquals(gameId, games.observeOngoingGameId().first { it == gameId })
                 // Lancers arrivés par le journal (comme d'un autre téléphone) : ils se jouent aussi.
                 play(1, 2, 3, 4, 5, 6, 7)
                 assertEquals(GameEffect.Validated("Alice", 7), awaitItem().withoutPins())
