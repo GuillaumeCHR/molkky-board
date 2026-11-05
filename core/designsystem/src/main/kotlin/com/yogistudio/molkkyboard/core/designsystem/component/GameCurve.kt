@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -91,8 +93,9 @@ object GameCurveTimeline {
  * scène stylisée — traits épais et arrondis, courbes souples, chutes légèrement exagérées, aucune grille, une ligne
  * de repère safran sur l'objectif. Les points restent à leur valeur exacte.
  *
- * [timeMs] pilote l'animation ([GameCurveTimeline]) : tracé de gauche à droite avec des lignes de vitesse derrière la
- * pointe et une caméra qui suit la course, bref zoom sur [highlight], zoom final sur le point gagnant, image d'impact
+ * [timeMs] pilote l'animation ([GameCurveTimeline]), lu au dessin seulement (aucune recomposition par image) : tracé
+ * de gauche à droite avec des lignes de vitesse derrière la pointe et une caméra qui suit la course, bref zoom sur
+ * [highlight], zoom final sur le point gagnant, image d'impact
  * figée sur un aplat safran (un seul flash, jamais de blanc), éclat radial et quilles-confettis aux couleurs du
  * vainqueur, puis dézoom vers la vue complète, qui reste affichée. Sans vainqueur, la courbe se trace puis se dézoome.
  * Graine fixe : rendu déterministe pour les captures. [selectedRound] trace un repère vertical sur ce tour ;
@@ -103,7 +106,7 @@ fun GameCurve(
     lines: List<GameCurveLine>,
     rounds: Int,
     target: Int,
-    timeMs: Float,
+    timeMs: () -> Float,
     modifier: Modifier = Modifier,
     highlight: GameCurveHighlight? = null,
     selectedRound: Int? = null,
@@ -124,6 +127,8 @@ fun GameCurve(
                 .size.width
                 .toFloat()
         }
+    // Le geste garde la dernière version du rappel (l'état « animation finie » change après le premier tap possible).
+    val currentOnTap by rememberUpdatedState(onTap)
     val tap =
         if (onTap == null) {
             Modifier
@@ -131,17 +136,20 @@ fun GameCurve(
             Modifier.pointerInput(rounds) {
                 detectTapGestures { offset ->
                     val frame = Frame(size.width.toFloat(), size.height.toFloat(), rounds, target, labelWidth, density)
-                    onTap(frame.roundAt(offset.x))
+                    currentOnTap?.invoke(frame.roundAt(offset.x))
                 }
             }
         }
+    // Le temps n'est lu qu'au dessin : l'animation ne recompose rien, elle redessine seulement le Canvas.
     val painter =
-        CurvePainter(
-            CurveData(lines, rounds, target, highlight, selectedRound, roundsLabel),
-            CurveLook(colors, style, initialStyle, measurer, glyphs, assets),
-            labelWidth,
-        )
-    Canvas(modifier.fillMaxWidth().height(height).then(tap)) { with(painter) { paint(timeMs) } }
+        remember(lines, rounds, target, highlight, selectedRound, roundsLabel, colors, style, labelWidth) {
+            CurvePainter(
+                CurveData(lines, rounds, target, highlight, selectedRound, roundsLabel),
+                CurveLook(colors, style, initialStyle, measurer, glyphs, assets),
+                labelWidth,
+            )
+        }
+    Canvas(modifier.fillMaxWidth().height(height).then(tap)) { with(painter) { paint(timeMs()) } }
 }
 
 /** Ce que raconte la courbe. */

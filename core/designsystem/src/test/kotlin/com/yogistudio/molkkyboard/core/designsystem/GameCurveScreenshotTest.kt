@@ -83,7 +83,7 @@ class GameCurveScreenshotTest {
                         lines = lines,
                         rounds = rounds,
                         target = 50,
-                        timeMs = time,
+                        timeMs = { time },
                         highlight = GameCurveHighlight(0, 6),
                         modifier = Modifier.padding(16.dp),
                     )
