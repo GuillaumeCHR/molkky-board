@@ -36,6 +36,9 @@ Le compte à rebours démarre au premier jour où **au moins 12 testeurs** sont 
 | 2026-11-08 | Rapport Testers Community (service de testeurs payant) | Aucun plantage ni bug ; fiche du store jugée pauvre en mots-clés | Fiche réécrite (mots-clés « score keeper », « quilles finlandaises », passage obsolète sur la saisie rapide corrigé) | fiche |
 | 2026-11-08 | Rapport Testers Community | Pas de choix du thème clair, sombre ou système | Réglages › Affichage › Thème | 0.8.7 |
 | 2026-11-08 | Rapport Testers Community | Pas de rubrique Aide ni FAQ, pas de tutoriel visible | Écran « Aide et règles » depuis l'accueil et les Réglages : questions sur l'app, règles, FAQ, recherche, « Poser une question » par e-mail | 0.8.7 |
+| 2026-11-08 | Rapport Testers Community | Tutoriel pour les nouveaux joueurs | La partie guidée (4 bulles) est proposée dès l'accueil au premier lancement (« Première fois ? ») | 0.8.8 |
+| 2026-11-08 | Rapport Testers Community | Pas de bouton pour noter l'app | À propos › « Noter sur Google Play » (simple lien vers la fiche, sans API Google propriétaire) | 0.8.8 |
+| 2026-11-08 | Porteur du projet | « Thème » et « Plein soleil » se recouvrent | Plein soleil devient le 4e choix de la carte Thème | 0.8.8 |
 
 ## Réponses préparées pour la demande d'accès à la production
 À compléter à la fin des 14 jours avec les chiffres réels. Les questions de Google évoluent : les relire au moment de la
