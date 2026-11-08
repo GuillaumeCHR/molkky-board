@@ -35,7 +35,7 @@
     <!-- Réglages -->
     <string name="settings_display">Affichage</string>
     <string name="settings_sunlight">Plein soleil</string>
-    <string name="settings_sunlight_hint">Contraste renforcé pour jouer en plein soleil</string>
+    <string name="settings_sunlight_hint">Thème clair au contraste renforcé, pour jouer dehors</string>
     <string name="settings_language">Langue</string>
     <string name="settings_language_fr">Français</string>
     <string name="settings_language_en">English</string>
@@ -199,7 +199,6 @@
     <string name="settings_theme_system">Comme le téléphone</string>
     <string name="settings_theme_light">Clair</string>
     <string name="settings_theme_dark">Sombre</string>
-    <string name="settings_theme_sunlight">Plein soleil est activé : il passe avant le thème.</string>
     <string name="help_title">Aide</string>
     <string name="help_contact_title">Pas trouvé votre réponse ?</string>
     <string name="help_contact">Posez votre question ou signalez un problème à Yogi Studio par e-mail (%1$s). Votre messagerie s\'ouvre : vous relisez le message avant de l\'envoyer.</string>

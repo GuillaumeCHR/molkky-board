@@ -35,7 +35,7 @@
     <!-- Settings -->
     <string name="settings_display">Display</string>
     <string name="settings_sunlight">Bright sunlight</string>
-    <string name="settings_sunlight_hint">Higher contrast for playing in bright sunlight</string>
+    <string name="settings_sunlight_hint">Light theme with higher contrast, for playing outdoors</string>
     <string name="settings_language">Language</string>
     <string name="settings_language_fr">Français</string>
     <string name="settings_language_en">English</string>
@@ -200,7 +200,6 @@
     <string name="settings_theme_system">Same as the phone</string>
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_dark">Dark</string>
-    <string name="settings_theme_sunlight">Bright sunlight is on: it takes priority over the theme.</string>
     <string name="help_title">Help</string>
     <string name="help_contact_title">Didn’t find your answer?</string>
     <string name="help_contact">Ask your question or report a problem to Yogi Studio by e-mail (%1$s). Your e-mail app opens: you read the message before sending it.</string>

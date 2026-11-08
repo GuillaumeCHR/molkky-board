@@ -64,7 +64,12 @@ class SettingsViewModel
 
         fun setSunlight(enabled: Boolean) = launch { repository.setSunlight(enabled) }
 
-        fun setThemeMode(mode: ThemeMode) = launch { repository.setThemeMode(mode) }
+        /** Un des trois thèmes : quitte « Plein soleil » s'il était choisi. */
+        fun chooseTheme(mode: ThemeMode) =
+            launch {
+                repository.setSunlight(false)
+                repository.setThemeMode(mode)
+            }
 
         fun setInputMode(mode: InputMode) = launch { repository.setInputMode(mode) }
 

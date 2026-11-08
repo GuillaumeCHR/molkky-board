@@ -101,12 +101,11 @@ internal fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(MBDimens.Gap),
         ) {
             SectionTitle(R.string.settings_display)
-            ThemeCard(settings.themeMode, settings.sunlight, viewModel::setThemeMode)
-            SettingsSwitch(
-                R.string.settings_sunlight,
-                R.string.settings_sunlight_hint,
+            ThemeCard(
+                settings.themeMode,
                 settings.sunlight,
-                onChange = viewModel::setSunlight,
+                onTheme = viewModel::chooseTheme,
+                onSunlight = { viewModel.setSunlight(true) },
             )
             LanguageCard()
 
@@ -323,12 +322,16 @@ private fun dataMessage(message: DataMessage): String =
 
 private const val BACKUP_MIME = "application/json"
 
-/** Thème : appliqué tout de suite, ce qui en donne l'aperçu. « Plein soleil » passe avant. */
+/**
+ * Thème, appliqué tout de suite (ce qui en donne l'aperçu). « Plein soleil » est un quatrième choix : un thème clair à
+ * contraste renforcé qui remplace les autres. Le quitter revient au thème choisi avant.
+ */
 @Composable
 private fun ThemeCard(
     current: ThemeMode,
     sunlight: Boolean,
-    onChange: (ThemeMode) -> Unit,
+    onTheme: (ThemeMode) -> Unit,
+    onSunlight: () -> Unit,
 ) {
     SettingsCard {
         Column(Modifier.padding(vertical = 8.dp)) {
@@ -338,32 +341,47 @@ private fun ThemeCard(
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
             )
             ThemeMode.entries.forEach { mode ->
-                val selected = current == mode
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .selectable(selected = selected, role = Role.RadioButton) { onChange(mode) }
-                            .heightIn(min = MBDimens.MinTouch)
-                            .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RadioButton(selected = selected, onClick = null)
-                    Text(
-                        stringResource(
-                            when (mode) {
-                                ThemeMode.SYSTEM -> R.string.settings_theme_system
-                                ThemeMode.LIGHT -> R.string.settings_theme_light
-                                ThemeMode.DARK -> R.string.settings_theme_dark
-                            },
-                        ),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(start = 12.dp),
-                    )
-                }
+                ThemeOption(
+                    label =
+                        when (mode) {
+                            ThemeMode.SYSTEM -> R.string.settings_theme_system
+                            ThemeMode.LIGHT -> R.string.settings_theme_light
+                            ThemeMode.DARK -> R.string.settings_theme_dark
+                        },
+                    selected = !sunlight && current == mode,
+                    onClick = { onTheme(mode) },
+                )
             }
-            if (sunlight) {
-                Box(Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) { Hint(R.string.settings_theme_sunlight) }
+            ThemeOption(R.string.settings_sunlight, sunlight, onSunlight, hint = R.string.settings_sunlight_hint)
+        }
+    }
+}
+
+@Composable
+private fun ThemeOption(
+    @StringRes label: Int,
+    selected: Boolean,
+    onClick: () -> Unit,
+    @StringRes hint: Int? = null,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+                .heightIn(min = MBDimens.MinTouch)
+                .padding(horizontal = 12.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = null)
+        Column(Modifier.padding(start = 12.dp)) {
+            Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
+            if (hint != null) {
+                Text(
+                    stringResource(hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

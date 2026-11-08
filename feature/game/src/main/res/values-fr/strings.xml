@@ -297,7 +297,7 @@
     <string name="help_share_q">Comment partager une partie ?</string>
     <string name="help_share_a">À la fin de la partie, touchez Partager ce moment : une image, une courte vidéo ou un GIF est créé sur le téléphone, prêt pour vos messageries ou réseaux sociaux.</string>
     <string name="help_theme_q">Y a-t-il un mode sombre ?</string>
-    <string name="help_theme_a">Oui : Réglages › Affichage › Thème permet de suivre le téléphone, ou d\'imposer le thème clair ou sombre. Le mode Plein soleil renforce le contraste en extérieur.</string>
+    <string name="help_theme_a">Oui : Réglages › Affichage › Thème permet de suivre le téléphone, ou d\'imposer le thème clair ou sombre. Le quatrième choix, Plein soleil, est un thème clair au contraste renforcé pour jouer dehors.</string>
     <string name="help_backup_q">Comment garder mes parties en changeant de téléphone ?</string>
     <string name="help_backup_a">Réglages › Données › Sauvegarder mes données enregistre un fichier où vous voulez. Sur le nouveau téléphone, choisissez Restaurer une sauvegarde. Les photos ne sont pas incluses.</string>
     <string name="help_guide_q">Comment revoir la prise en main ?</string>

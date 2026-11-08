@@ -297,7 +297,7 @@
     <string name="help_share_q">How do I share a game?</string>
     <string name="help_share_a">At the end of the game, tap Share this moment: an image, a short video or a GIF is created on the phone, ready for your messaging apps or social networks.</string>
     <string name="help_theme_q">Is there a dark mode?</string>
-    <string name="help_theme_a">Yes: Settings › Display › Theme lets you follow the phone, or always use light or dark. Bright sunlight mode increases contrast outdoors.</string>
+    <string name="help_theme_a">Yes: Settings › Display › Theme lets you follow the phone, or always use light or dark. The fourth choice, Bright sunlight, is a high-contrast light theme for playing outdoors.</string>
     <string name="help_backup_q">How do I keep my games when I change phones?</string>
     <string name="help_backup_a">Settings › Data › Back up my data saves a file wherever you like. On the new phone, choose Restore a backup. Photos are not included.</string>
     <string name="help_guide_q">How do I replay the walkthrough?</string>
