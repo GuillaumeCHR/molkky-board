@@ -252,10 +252,13 @@ private fun ProductionStats() {
                     val numeric = value.all { it.isDigit() }
                     val style =
                         if (numeric) MolkkyBoardTheme.typography.scoreSmall else MaterialTheme.typography.titleMedium
+                    // Une phrase partage la largeur avec le libellé : les deux passent à la ligne au besoin, sans
+                    // que le libellé soit écrasé.
                     Text(
                         value,
                         style = style,
                         textAlign = TextAlign.End,
+                        modifier = if (value.length > SHORT_VALUE) Modifier.weight(1f) else Modifier,
                     )
                 }
             }
@@ -288,4 +291,7 @@ private fun Sparkle(play: Boolean) {
 }
 
 private const val END_SLACK = 24
+
+/** Au-delà, une valeur des chiffres de production partage la largeur avec son libellé (retour à la ligne au besoin). */
+private const val SHORT_VALUE = 24
 private const val SPARKLE_MS = 700
