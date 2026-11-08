@@ -14,6 +14,10 @@
     <string name="home_join">Rejoindre</string>
     <string name="home_no_game">Aucune partie en cours</string>
     <string name="home_no_game_hint">Ajoutez les joueurs, lancez la partie : Molkky Board compte les points.</string>
+    <string name="home_guide_title">Première fois ?</string>
+    <string name="home_guide_hint">Une partie guidée vous montre l’essentiel en 4 bulles : ajouter les joueurs, toucher les quilles, valider, annuler.</string>
+    <string name="home_guide_start">Lancer la partie guidée</string>
+    <string name="home_guide_skip">Non merci</string>
     <string name="home_ongoing">Partie en cours</string>
     <string name="home_ongoing_turn">Au tour de %1$s</string>
     <string name="home_resume">Reprendre</string>
@@ -186,6 +190,9 @@
     <string name="about_contact_subject">Molkky Board</string>
     <string name="about_privacy_policy">Politique de confidentialité</string>
     <string name="about_terms">Conditions d\'utilisation</string>
+    <string name="about_rate_title">Molkky Board vous plaît ?</string>
+    <string name="about_rate_hint">Une note ou un avis sur Google Play aide d’autres joueurs à trouver l’app.</string>
+    <string name="about_rate">Noter sur Google Play</string>
     <string name="about_privacy_policy_url">https://guillaumechr.github.io/molkky-board-site/fr/confidentialite.html</string>
     <string name="about_terms_url">https://guillaumechr.github.io/molkky-board-site/fr/conditions.html</string>
     <string name="settings_theme">Thème</string>

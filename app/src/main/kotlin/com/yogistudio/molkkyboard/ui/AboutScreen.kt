@@ -93,6 +93,16 @@ internal fun AboutScreen(onBack: () -> Unit, onLicenses: () -> Unit) {
                 ) { Text(stringResource(R.string.about_terms)) }
             }
             LicenseCard()
+            // Un simple lien vers la fiche : pas d'API In-App Review (bibliothèque Google propriétaire, exclue de
+            // F-Droid), et jamais de sollicitation pendant le jeu.
+            val storeUrl = stringResource(R.string.about_rate_url)
+            AboutCard(R.string.about_rate_title) {
+                Text(stringResource(R.string.about_rate_hint), style = MaterialTheme.typography.bodyLarge)
+                OutlinedButton(
+                    onClick = { openUrl(context, storeUrl) },
+                    modifier = Modifier.heightIn(min = MBDimens.MinTouch),
+                ) { Text(stringResource(R.string.about_rate)) }
+            }
             if (BuildConfig.FEEDBACK) {
                 val subject = stringResource(R.string.about_feedback_subject)
                 val body = stringResource(R.string.about_feedback_body, deviceSummary())

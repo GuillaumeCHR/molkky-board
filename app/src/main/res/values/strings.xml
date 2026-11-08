@@ -15,6 +15,10 @@
     <string name="home_join">Join</string>
     <string name="home_no_game">No game in progress</string>
     <string name="home_no_game_hint">Add the players, start the game: Molkky Board keeps the score.</string>
+    <string name="home_guide_title">First time?</string>
+    <string name="home_guide_hint">A guided game shows you the essentials in 4 tips: add the players, tap the pins, confirm, undo.</string>
+    <string name="home_guide_start">Start the guided game</string>
+    <string name="home_guide_skip">No thanks</string>
     <string name="home_ongoing">Game in progress</string>
     <string name="home_ongoing_turn">%1$s to throw</string>
     <string name="home_resume">Resume</string>
@@ -188,6 +192,10 @@
     <string name="about_terms">Terms of use</string>
     <string name="about_privacy_policy_url">https://guillaumechr.github.io/molkky-board-site/privacy.html</string>
     <string name="about_terms_url">https://guillaumechr.github.io/molkky-board-site/terms.html</string>
+    <string name="about_rate_title">Enjoying Molkky Board?</string>
+    <string name="about_rate_hint">A rating or a review on Google Play helps other players find the app.</string>
+    <string name="about_rate">Rate on Google Play</string>
+    <string name="about_rate_url" translatable="false">https://play.google.com/store/apps/details?id=com.yogistudio.molkkyboard</string>
     <string name="settings_theme">Theme</string>
     <string name="settings_theme_system">Same as the phone</string>
     <string name="settings_theme_light">Light</string>

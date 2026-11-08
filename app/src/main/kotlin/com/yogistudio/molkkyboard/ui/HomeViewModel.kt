@@ -3,6 +3,7 @@ package com.yogistudio.molkkyboard.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yogistudio.molkkyboard.core.data.GameRepository
+import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** Partie en cours à reprendre : scores et joueur dont c'est le tour. */
@@ -25,7 +27,19 @@ class HomeViewModel
     @Inject
     constructor(
         games: GameRepository,
+        private val settings: SettingsRepository,
     ) : ViewModel() {
+        /** Prise en main pas encore faite ni passée : l'accueil propose la partie guidée. */
+        val firstTime: StateFlow<Boolean> =
+            settings.settings
+                .map { !it.onboardingDone }
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), false)
+
+        /** « Non merci » : comme « Passer le guide » ; on la retrouve dans Réglages › « Revoir la prise en main ». */
+        fun skipGuide() {
+            viewModelScope.launch { settings.setOnboardingDone(true) }
+        }
+
         @OptIn(ExperimentalCoroutinesApi::class)
         val ongoing: StateFlow<OngoingGame?> =
             games

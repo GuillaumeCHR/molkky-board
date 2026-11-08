@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -46,6 +47,7 @@ internal fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val ongoing by viewModel.ongoing.collectAsStateWithLifecycle()
+    val firstTime by viewModel.firstTime.collectAsStateWithLifecycle()
     Column(
         modifier =
             Modifier
@@ -74,7 +76,14 @@ internal fun HomeScreen(
         )
         Spacer(Modifier.height(16.dp))
         val game = ongoing
-        if (game != null) OngoingCard(game, onResume) else NoGameCard()
+        when {
+            game != null -> OngoingCard(game, onResume)
+
+            // Première fois : la partie guidée est proposée ici, sans attendre la création d'une partie.
+            firstTime -> GuideCard(onStart = onNewGame, onSkip = viewModel::skipGuide)
+
+            else -> NoGameCard()
+        }
         // Pour qui n'a jamais joué : installer les quilles, apprendre les règles et trouver de l'aide avec l'app seule.
         Row(horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap)) {
             HomeLink(stringResource(R.string.home_placement), MBIcons.Pins, onPlacement, Modifier.weight(1f))
@@ -131,6 +140,35 @@ private fun OngoingCard(game: OngoingGame, onResume: (String) -> Unit) {
                 kind = BigActionKind.Validate,
                 modifier = Modifier.fillMaxWidth(),
             )
+        }
+    }
+}
+
+/** « Première fois ? » : la partie guidée (4 bulles) se lance depuis l'accueil ; « Non merci » la range. */
+@Composable
+private fun GuideCard(onStart: () -> Unit, onSkip: () -> Unit) {
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.home_guide_title), style = MaterialTheme.typography.titleLarge)
+            Text(
+                stringResource(R.string.home_guide_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            BigActionButton(
+                text = stringResource(R.string.home_guide_start),
+                onClick = onStart,
+                kind = BigActionKind.Validate,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            TextButton(
+                onClick = onSkip,
+                modifier = Modifier.align(Alignment.CenterHorizontally).heightIn(min = MBDimens.MinTouch),
+            ) { Text(stringResource(R.string.home_guide_skip)) }
         }
     }
 }
