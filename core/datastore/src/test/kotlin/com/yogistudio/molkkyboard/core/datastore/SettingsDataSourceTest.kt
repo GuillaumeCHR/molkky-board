@@ -8,6 +8,7 @@ import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.InputMode
 import com.yogistudio.molkkyboard.core.model.TeamId
 import com.yogistudio.molkkyboard.core.model.TeamOverride
+import com.yogistudio.molkkyboard.core.model.ThemeMode
 import com.yogistudio.molkkyboard.core.model.UserSettings
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -47,6 +48,8 @@ class SettingsDataSourceTest {
                 assertEquals(InputMode.QUICK, awaitItem().inputMode)
                 source.setSunlight(true)
                 assertTrue(awaitItem().sunlight)
+                source.setThemeMode(ThemeMode.DARK)
+                assertEquals(ThemeMode.DARK, awaitItem().themeMode)
                 source.setVoiceAnnouncements(true)
                 assertTrue(awaitItem().voiceAnnouncements)
                 source.setSounds(true)
@@ -54,6 +57,17 @@ class SettingsDataSourceTest {
                 source.setOnboardingDone(true)
                 assertTrue(awaitItem().onboardingDone)
             }
+        }
+
+    @Test
+    fun `theme inconnu ramene au theme du telephone`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val store =
+                PreferenceDataStoreFactory.create(
+                    scope = backgroundScope,
+                ) { folder.newFile("t.preferences_pb") }
+            store.edit { it[stringPreferencesKey("theme_mode")] = "SEPIA" }
+            assertEquals(ThemeMode.SYSTEM, SettingsDataSource(store).settings.first().themeMode)
         }
 
     @Test

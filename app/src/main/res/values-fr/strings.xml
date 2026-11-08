@@ -18,7 +18,7 @@
     <string name="home_ongoing_turn">Au tour de %1$s</string>
     <string name="home_resume">Reprendre</string>
     <string name="home_placement">Placer les quilles</string>
-    <string name="home_rules">Règles du jeu</string>
+    <string name="home_help">Aide et règles</string>
     <string name="shortcut_new_game">Nouvelle partie</string>
     <string name="shortcut_placement">Placer les quilles</string>
     <string name="shortcut_rules">Règles du jeu</string>
@@ -60,8 +60,8 @@
     <string name="notification_permission_later">Plus tard</string>
     <string name="settings_coming_hint">Choc de l\'intro, « 12 ! », victoire et élimination : des sons maison, coupés seulement en mode silencieux.</string>
     <string name="settings_about">À propos</string>
-    <string name="settings_rules">Règles du jeu</string>
-    <string name="settings_rules_hint">Installation des quilles, points, 50 exactement, ratés, questions fréquentes.</string>
+    <string name="settings_help">Aide et règles</string>
+    <string name="settings_help_hint">Utiliser l\'app, règles du jeu, questions fréquentes, et une question à Yogi Studio.</string>
     <string name="settings_playful_rules">Règles du mode Ludique</string>
     <string name="settings_playful_rules_hint">Choisir les exceptions aux règles officielles : élimination, dépassement, cible…</string>
 
@@ -188,4 +188,14 @@
     <string name="about_terms">Conditions d\'utilisation</string>
     <string name="about_privacy_policy_url">https://guillaumechr.github.io/molkky-board-site/fr/confidentialite.html</string>
     <string name="about_terms_url">https://guillaumechr.github.io/molkky-board-site/fr/conditions.html</string>
+    <string name="settings_theme">Thème</string>
+    <string name="settings_theme_system">Comme le téléphone</string>
+    <string name="settings_theme_light">Clair</string>
+    <string name="settings_theme_dark">Sombre</string>
+    <string name="settings_theme_sunlight">Plein soleil est activé : il passe avant le thème.</string>
+    <string name="help_title">Aide</string>
+    <string name="help_contact_title">Pas trouvé votre réponse ?</string>
+    <string name="help_contact">Posez votre question ou signalez un problème à Yogi Studio par e-mail (%1$s). Votre messagerie s\'ouvre : vous relisez le message avant de l\'envoyer.</string>
+    <string name="help_contact_button">Poser une question</string>
+    <string name="help_contact_subject">Molkky Board : une question</string>
 </resources>

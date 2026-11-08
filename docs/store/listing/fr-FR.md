@@ -10,9 +10,9 @@ Molkky Board : compteur Mölkky
 
 Comptez vos parties de Mölkky à plusieurs téléphones, sans compte ni Internet
 
-## Description longue (4 000 max) — 3878 caractères
+## Description longue (4 000 max) — 3962 caractères
 
-Molkky Board compte les points de vos parties de Mölkky à votre place, pour que tout le monde garde les yeux sur les quilles. L'app applique les règles, corrige les erreurs sans drame et fait vivre chaque lancer.
+Molkky Board est le compteur de points de vos parties de Mölkky, le jeu de quilles finlandaises : l'app tient le tableau des scores, et tout le monde garde les yeux sur les quilles. L'app applique les règles, corrige les erreurs sans drame et fait vivre chaque lancer.
 
 Plusieurs téléphones, une seule partie
 • Scannez le QR code de l'organisateur : votre téléphone rejoint la partie en quelques secondes.
@@ -21,7 +21,7 @@ Plusieurs téléphones, une seule partie
 • L'organisateur accepte chaque arrivée et peut déconnecter un téléphone à tout moment. Chaque téléphone est prévenu quand quelqu'un part ou que la partie se termine.
 
 Une saisie rapide et sans erreur
-• Deux façons de saisir : toucher les quilles tombées, ou utiliser le pavé rapide, avec un choix clair entre « quille seule » et « nombre de quilles ».
+• Deux façons de saisir : toucher les quilles tombées, ou taper directement les points du lancer (0 à 12) sur le pavé rapide.
 • Un aperçu avant validation (« +7 → 38 ») : rien n'est enregistré sans « Valider », donc pas de tour sauté par erreur.
 • Un lancer mal saisi ? Corrigez ou supprimez n'importe quel lancer, même plusieurs tours plus tard : scores, retours à 25, éliminations et vainqueur sont recalculés.
 • Le dernier lancer s'annule d'un simple tap.
@@ -35,7 +35,7 @@ Toutes les règles, appliquées pour vous
 • Matchs en deux manches avec le départage officiel, le Mölkkout.
 
 Pour découvrir le jeu
-• Un guide des règles avec des schémas animés et les réponses aux questions les plus fréquentes.
+• Une aide intégrée, avec une recherche : utilisation de l'app, règles illustrées de schémas animés et questions fréquentes.
 • La formation de départ des quilles et la distance de lancer, d'un coup d'œil.
 • Une première partie guidée en quelques bulles, sans vidéo à regarder.
 
@@ -49,7 +49,7 @@ Chaque lancer devient un moment
 
 Fiable, même en plein soleil
 • La partie est enregistrée à chaque lancer : si l'app se ferme, vous reprenez là où vous en étiez.
-• Des scores lisibles avec les grandes tailles de police, un mode « Plein soleil » à fort contraste et l'écran maintenu allumé.
+• Des scores lisibles avec les grandes tailles de police, un thème clair ou sombre, un mode « Plein soleil » à fort contraste et l'écran maintenu allumé.
 • Fonctionne entièrement hors ligne. En français et en anglais.
 
 Respect de votre vie privée

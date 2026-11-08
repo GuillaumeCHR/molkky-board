@@ -2,16 +2,21 @@ package com.yogistudio.molkkyboard
 
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.graphics.Color
 import android.os.Bundle
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.designsystem.theme.MolkkyBoardTheme
+import com.yogistudio.molkkyboard.core.model.ThemeMode
 import com.yogistudio.molkkyboard.core.nearby.JoinLink
 import com.yogistudio.molkkyboard.crash.CrashReports
 import com.yogistudio.molkkyboard.navigation.LaunchTarget
@@ -62,7 +67,26 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val startup by startupLoader.state.collectAsStateWithLifecycle()
             val settings by settingsRepository.settings.collectAsStateWithLifecycle(initialValue = null)
-            MolkkyBoardTheme(sunlight = settings?.sunlight ?: false) {
+            val dark =
+                when (settings?.themeMode) {
+                    ThemeMode.LIGHT -> false
+                    ThemeMode.DARK -> true
+                    ThemeMode.SYSTEM, null -> isSystemInDarkTheme()
+                }
+            val sunlight = settings?.sunlight ?: false
+            // Icônes des barres système accordées au thème choisi, et non à celui du téléphone.
+            val darkBars = dark && !sunlight
+            DisposableEffect(darkBars) {
+                val style =
+                    if (darkBars) {
+                        SystemBarStyle.dark(Color.TRANSPARENT)
+                    } else {
+                        SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+                    }
+                enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
+                onDispose {}
+            }
+            MolkkyBoardTheme(darkTheme = dark, sunlight = sunlight) {
                 val open by target.collectAsStateWithLifecycle()
                 val crash by crashReport.collectAsStateWithLifecycle()
                 MolkkyBoardNavHost(

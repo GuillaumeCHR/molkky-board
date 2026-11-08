@@ -279,6 +279,8 @@ class GameEndViewModelTest {
 
         override suspend fun setSunlight(enabled: Boolean) = Unit
 
+        override suspend fun setThemeMode(mode: com.yogistudio.molkkyboard.core.model.ThemeMode) = Unit
+
         override suspend fun setVoiceAnnouncements(enabled: Boolean) = Unit
 
         override suspend fun setSounds(enabled: Boolean) = Unit

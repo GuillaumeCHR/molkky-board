@@ -33,6 +33,9 @@ Le compte à rebours démarre au premier jour où **au moins 12 testeurs** sont 
 | 2026-11-02 | Porteur du projet (Fairphone 6) | Saisie rapide : le choix « quille seule / nombre de quilles » ne sert à rien | Saisie directe du score (0 à 12) ; testée sur téléphone : score, ratés, retour à 25, « 12 ! », déroulé, ancienne partie conformes | 0.8.5 |
 | 2026-11-02 | Porteur du projet (Fairphone 6) | GIF « Quelle remontée ! » : le titre déborde de l'image | Tous les textes du clip et du GIF (même moteur de rendu) réduits pour tenir dans les marges ; test sur les textes les plus longs, en vidéo et en GIF | 0.8.5 |
 | 2026-11-02 | Porteur du projet (Fairphone 6 hôte, émulateur Android 17 invité, même Wi-Fi) | Partie à côté après la revue de sécurité (TLS imposé, trames bornées, délai d'admission) | Connexion, validation par l'organisateur et lancer saisi sur l'invité reçu par l'hôte : conformes | 0.8.5 |
+| 2026-11-08 | Rapport Testers Community (service de testeurs payant) | Aucun plantage ni bug ; fiche du store jugée pauvre en mots-clés | Fiche réécrite (mots-clés « score keeper », « quilles finlandaises », passage obsolète sur la saisie rapide corrigé) | fiche |
+| 2026-11-08 | Rapport Testers Community | Pas de choix du thème clair, sombre ou système | Réglages › Affichage › Thème | 0.8.7 |
+| 2026-11-08 | Rapport Testers Community | Pas de rubrique Aide ni FAQ, pas de tutoriel visible | Écran « Aide et règles » depuis l'accueil et les Réglages : questions sur l'app, règles, FAQ, recherche, « Poser une question » par e-mail | 0.8.7 |
 
 ## Réponses préparées pour la demande d'accès à la production
 À compléter à la fin des 14 jours avec les chiffres réels. Les questions de Google évoluent : les relire au moment de la

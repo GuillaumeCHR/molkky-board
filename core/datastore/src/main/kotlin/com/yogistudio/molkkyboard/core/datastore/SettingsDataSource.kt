@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.InputMode
+import com.yogistudio.molkkyboard.core.model.ThemeMode
 import com.yogistudio.molkkyboard.core.model.UserSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -30,6 +31,8 @@ class SettingsDataSource
         suspend fun setInputMode(mode: InputMode) = dataStore.edit { it[Keys.INPUT_MODE] = mode.name }
 
         suspend fun setSunlight(enabled: Boolean) = dataStore.edit { it[Keys.SUNLIGHT] = enabled }
+
+        suspend fun setThemeMode(mode: ThemeMode) = dataStore.edit { it[Keys.THEME_MODE] = mode.name }
 
         suspend fun setVoiceAnnouncements(enabled: Boolean) = dataStore.edit { it[Keys.VOICE] = enabled }
 
@@ -66,6 +69,7 @@ class SettingsDataSource
             UserSettings(
                 inputMode = decodeInputMode(this[Keys.INPUT_MODE]),
                 sunlight = this[Keys.SUNLIGHT] ?: false,
+                themeMode = ThemeMode.entries.firstOrNull { it.name == this[Keys.THEME_MODE] } ?: ThemeMode.SYSTEM,
                 voiceAnnouncements = this[Keys.VOICE] ?: false,
                 voiceRate = this[Keys.VOICE_RATE] ?: 1f,
                 voiceVolume = this[Keys.VOICE_VOLUME] ?: 1f,
@@ -97,6 +101,7 @@ class SettingsDataSource
         private object Keys {
             val INPUT_MODE = stringPreferencesKey("input_mode")
             val SUNLIGHT = booleanPreferencesKey("sunlight")
+            val THEME_MODE = stringPreferencesKey("theme_mode")
             val VOICE = booleanPreferencesKey("voice_announcements")
             val VOICE_RATE = floatPreferencesKey("voice_rate")
             val VOICE_VOLUME = floatPreferencesKey("voice_volume")

@@ -60,6 +60,7 @@ import com.yogistudio.molkkyboard.notification.NotificationPermissionPrompt
 import com.yogistudio.molkkyboard.startup.StartupState
 import com.yogistudio.molkkyboard.ui.AboutScreen
 import com.yogistudio.molkkyboard.ui.EmptyStateScreen
+import com.yogistudio.molkkyboard.ui.HelpScreen
 import com.yogistudio.molkkyboard.ui.HomeScreen
 import com.yogistudio.molkkyboard.ui.LicensesScreen
 import com.yogistudio.molkkyboard.ui.SettingsScreen
@@ -149,7 +150,7 @@ fun MolkkyBoardNavHost(
                         onNewGame = { navController.navigate(SetupRoute) },
                         onJoin = { navController.navigate(JoinRoute()) },
                         onResume = { navController.navigate(GameRoute(it)) },
-                        onRules = { navController.navigate(RulesRoute) },
+                        onHelp = { navController.navigate(HelpRoute) },
                         onPlacement = { navController.navigate(PlacementRoute) },
                         logotypeModifier = with(shared) { sharedLogotype(this@readable) },
                     )
@@ -167,7 +168,7 @@ fun MolkkyBoardNavHost(
                     SettingsScreen(
                         onAbout = { navController.navigate(AboutRoute) },
                         onPlayfulRules = { navController.navigate(PlayfulRulesRoute) },
-                        onRules = { navController.navigate(RulesRoute) },
+                        onHelp = { navController.navigate(HelpRoute) },
                         onReplayGuide = { navController.navigate(SetupRoute) },
                     )
                 }
@@ -180,6 +181,7 @@ fun MolkkyBoardNavHost(
                 readable<LicensesRoute> { LicensesScreen(onBack = navController::navigateUp) }
                 readable<PlayfulRulesRoute> { PlayfulRulesScreen(onBack = navController::navigateUp) }
                 readable<RulesRoute> { RulesScreen(onBack = navController::navigateUp) }
+                readable<HelpRoute> { HelpScreen(onBack = navController::navigateUp) }
                 readable<PlacementRoute> { PlacementScreen(onBack = navController::navigateUp) }
                 readable<JoinRoute> { entry ->
                     JoinScreen(
@@ -280,6 +282,7 @@ private fun showsBottomBar(d: NavDestination): Boolean =
             LicensesRoute::class,
             PlayfulRulesRoute::class,
             RulesRoute::class,
+            HelpRoute::class,
             PlacementRoute::class,
             StatsRoute::class,
         ).any { d.hasRoute(it) }

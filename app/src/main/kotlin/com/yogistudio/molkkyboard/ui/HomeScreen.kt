@@ -40,7 +40,7 @@ internal fun HomeScreen(
     onNewGame: () -> Unit,
     onJoin: () -> Unit,
     onResume: (String) -> Unit,
-    onRules: () -> Unit = {},
+    onHelp: () -> Unit = {},
     onPlacement: () -> Unit = {},
     logotypeModifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
@@ -75,10 +75,10 @@ internal fun HomeScreen(
         Spacer(Modifier.height(16.dp))
         val game = ongoing
         if (game != null) OngoingCard(game, onResume) else NoGameCard()
-        // Pour qui n'a jamais joué : installer les quilles et apprendre les règles avec l'app seule.
+        // Pour qui n'a jamais joué : installer les quilles, apprendre les règles et trouver de l'aide avec l'app seule.
         Row(horizontalArrangement = Arrangement.spacedBy(MBDimens.SmallGap)) {
             HomeLink(stringResource(R.string.home_placement), MBIcons.Pins, onPlacement, Modifier.weight(1f))
-            HomeLink(stringResource(R.string.home_rules), MBIcons.Book, onRules, Modifier.weight(1f))
+            HomeLink(stringResource(R.string.home_help), MBIcons.Book, onHelp, Modifier.weight(1f))
         }
     }
 }

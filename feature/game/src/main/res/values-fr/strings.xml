@@ -281,4 +281,27 @@
         <item quantity="other">%1$d tours</item>
     </plurals>
     <string name="end_curve_replay">Rejouer</string>
+    <!-- Aide : questions sur l'utilisation de l'app -->
+    <string name="help_search">Rechercher dans l\'aide et les règles</string>
+    <string name="help_app_title">Utiliser l\'app</string>
+    <string name="help_fix_q">Je me suis trompé en saisissant un lancer ?</string>
+    <string name="help_fix_a">Touchez Annuler en haut de l\'écran de jeu pour annuler le dernier lancer. Pour un lancer plus ancien, ouvrez le menu ⋮ › Déroulé de la partie, puis touchez le lancer pour le modifier ou le supprimer : scores, retours à 25, éliminations et vainqueur sont recalculés.</string>
+    <string name="help_resume_q">L\'app s\'est fermée pendant une partie ?</string>
+    <string name="help_resume_a">Rien n\'est perdu : la partie est enregistrée après chaque lancer. Rouvrez l\'app et touchez Reprendre sur l\'accueil.</string>
+    <string name="help_players_q">Quelqu\'un arrive en retard ou doit partir ?</string>
+    <string name="help_players_a">Ouvrez le menu ⋮ › Gérer les joueurs. Un retardataire part de 0 et lance à la fin du tour ; un joueur qui part est classé dernier. L\'ordre de passage se change aussi là, entre deux tours.</string>
+    <string name="help_quick_q">Comment saisir les points plus vite ?</string>
+    <string name="help_quick_a">Passez en Saisie rapide sur l\'écran de jeu et touchez directement les points du lancer, de 0 à 12 (0 = raté). Le mode de saisie par défaut se règle dans Réglages › Mode de saisie. Les lancers saisis ainsi ne comptent pas dans les statistiques par quille.</string>
+    <string name="help_phones_q">Comment jouer sur plusieurs téléphones ?</string>
+    <string name="help_phones_a">L\'organisateur ouvre le menu ⋮ › Gérer les téléphones › Partager la partie : un QR code s\'affiche. Les autres touchent Rejoindre sur l\'accueil et le scannent, puis l\'organisateur les accepte. Les téléphones passent par le même Wi-Fi ou par un point d\'accès créé par le téléphone de l\'organisateur : ni compte ni Internet.</string>
+    <string name="help_share_q">Comment partager une partie ?</string>
+    <string name="help_share_a">À la fin de la partie, touchez Partager ce moment : une image, une courte vidéo ou un GIF est créé sur le téléphone, prêt pour vos messageries ou réseaux sociaux.</string>
+    <string name="help_theme_q">Y a-t-il un mode sombre ?</string>
+    <string name="help_theme_a">Oui : Réglages › Affichage › Thème permet de suivre le téléphone, ou d\'imposer le thème clair ou sombre. Le mode Plein soleil renforce le contraste en extérieur.</string>
+    <string name="help_backup_q">Comment garder mes parties en changeant de téléphone ?</string>
+    <string name="help_backup_a">Réglages › Données › Sauvegarder mes données enregistre un fichier où vous voulez. Sur le nouveau téléphone, choisissez Restaurer une sauvegarde. Les photos ne sont pas incluses.</string>
+    <string name="help_guide_q">Comment revoir la prise en main ?</string>
+    <string name="help_guide_a">Réglages › Revoir la prise en main lance une nouvelle partie avec les 4 bulles d\'aide.</string>
+    <string name="help_privacy_q">Quelles données l\'app collecte-t-elle ?</string>
+    <string name="help_privacy_a">Aucune. Molkky Board n\'a ni compte, ni publicité, ni traceur, et ne se connecte jamais à Internet. Quand plusieurs téléphones jouent ensemble, ils échangent directement entre eux, en chiffré, sur le réseau local.</string>
 </resources>

@@ -137,6 +137,24 @@ private val PARTS =
         ),
     )
 
+/** Questions sur l'utilisation de l'app : affichées seulement dans l'écran « Aide ». */
+private val APP_HELP =
+    RulePart(
+        R.string.help_app_title,
+        listOf(
+            RuleItem(R.string.help_fix_q, R.string.help_fix_a),
+            RuleItem(R.string.help_resume_q, R.string.help_resume_a),
+            RuleItem(R.string.help_players_q, R.string.help_players_a),
+            RuleItem(R.string.help_quick_q, R.string.help_quick_a),
+            RuleItem(R.string.help_phones_q, R.string.help_phones_a),
+            RuleItem(R.string.help_share_q, R.string.help_share_a),
+            RuleItem(R.string.help_theme_q, R.string.help_theme_a),
+            RuleItem(R.string.help_backup_q, R.string.help_backup_a),
+            RuleItem(R.string.help_guide_q, R.string.help_guide_a),
+            RuleItem(R.string.help_privacy_q, R.string.help_privacy_a),
+        ),
+    )
+
 /** Minuscules sans accents : « reglés » trouve « Règles ». */
 private fun String.searchable(): String =
     Normalizer.normalize(lowercase(Locale.ROOT), Normalizer.Form.NFD).replace(DIACRITICS, "")
@@ -149,16 +167,22 @@ private val DIACRITICS = Regex("\\p{Mn}+")
  * règles (titre et texte, sans tenir compte des accents).
  */
 @Composable
-fun RulesContent(modifier: Modifier = Modifier) {
+fun RulesContent(
+    modifier: Modifier = Modifier,
+    appHelp: Boolean = false,
+    footer: (@Composable () -> Unit)? = null,
+) {
     var query by rememberSaveable { mutableStateOf("") }
     val resources = LocalResources.current
     val needle = query.trim().searchable()
+    // Dans l'aide, les questions sur l'app viennent en premier : c'est ce qu'on y cherche le plus souvent.
+    val all = remember(appHelp) { if (appHelp) listOf(APP_HELP) + PARTS else PARTS }
     val parts =
-        remember(needle, resources) {
+        remember(needle, resources, all) {
             if (needle.isEmpty()) {
-                PARTS
+                all
             } else {
-                PARTS.mapNotNull { part ->
+                all.mapNotNull { part ->
                     val rules =
                         part.rules.filter { rule ->
                             (
@@ -171,7 +195,7 @@ fun RulesContent(modifier: Modifier = Modifier) {
                 }
             }
         }
-    val requesters = remember { PARTS.associate { it.title to BringIntoViewRequester() } }
+    val requesters = remember(all) { all.associate { it.title to BringIntoViewRequester() } }
     val scope = rememberCoroutineScope()
     Column(
         modifier
@@ -183,14 +207,14 @@ fun RulesContent(modifier: Modifier = Modifier) {
         OutlinedTextField(
             value = query,
             onValueChange = { query = it.take(MAX_QUERY) },
-            label = { Text(stringResource(R.string.rules_search)) },
+            label = { Text(stringResource(if (appHelp) R.string.help_search else R.string.rules_search)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
         if (needle.isEmpty()) {
             // Sommaire : un tap fait défiler jusqu'à la partie.
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PARTS.forEach { part ->
+                all.forEach { part ->
                     // TalkBack distingue l'entrée du sommaire de l'intertitre du même nom.
                     val goTo = stringResource(R.string.rules_go_to, stringResource(part.title))
                     AssistChip(
@@ -208,6 +232,7 @@ fun RulesContent(modifier: Modifier = Modifier) {
             Part(part.title, Modifier.bringIntoViewRequester(requesters.getValue(part.title)))
             part.rules.forEach { Rule(it) }
         }
+        footer?.invoke()
     }
 }
 

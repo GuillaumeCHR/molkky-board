@@ -6,13 +6,13 @@ Paste each block into Play Console › Grow users › Store presence › Main st
 
 Molkky Board: Mölkky Scorer
 
-## Short description (80 max) — 72 characters
+## Short description (80 max) — 75 characters
 
-Score your Mölkky games on several phones, no account or internet needed
+Mölkky score keeper on one or several phones, no account or internet needed
 
-## Full description (4000 max) — 3377 characters
+## Full description (4000 max) — 3470 characters
 
-Molkky Board keeps score of your Mölkky games so everyone can keep their eyes on the pins. The app applies the rules, fixes mistakes without fuss and brings every throw to life.
+Molkky Board is the score keeper for your Mölkky games, the Finnish skittles lawn game: the app runs the scoreboard so everyone can keep their eyes on the pins. The app applies the rules, fixes mistakes without fuss and brings every throw to life.
 
 Several phones, one game
 • Scan the organizer's QR code and your phone joins the game in seconds.
@@ -21,7 +21,7 @@ Several phones, one game
 • The organizer approves every newcomer and can disconnect a phone at any time. Every phone is told when someone leaves or the game ends.
 
 Fast, mistake-proof scoring
-• Two ways to enter a throw: tap the fallen pins, or use the quick pad, with a clear choice between "single pin" and "number of pins".
+• Two ways to enter a throw: tap the fallen pins, or type the points of the throw (0 to 12) on the quick pad.
 • A preview before you confirm ("+7 → 38"): nothing is saved until you tap OK, so no turn is skipped by accident.
 • Entered a throw wrong? Edit or delete any throw, even several rounds later: scores, drops back to 25, eliminations and the winner are all recalculated.
 • Undo the last throw with a single tap.
@@ -35,7 +35,7 @@ Every rule, applied for you
 • Two-set matches with the official tie-break, the Mölkkout.
 
 New to the game?
-• A rules guide with simple animated diagrams and answers to the most common questions.
+• Built-in help with search: using the app, rules with simple animated diagrams, and frequently asked questions.
 • The starting formation of the pins and the throwing distance, at a glance.
 • A guided first game with a few tips, no video to watch.
 
@@ -49,7 +49,7 @@ Every throw becomes a moment
 
 Reliable, even in bright sunlight
 • The game is saved after every throw: if the app closes, you pick up right where you left off.
-• Scores stay readable with large font sizes, a high-contrast "Bright sunlight" mode, and the screen stays on.
+• Scores stay readable with large font sizes, a light or dark theme, a high-contrast "Bright sunlight" mode, and the screen stays on.
 • Works fully offline. In English and French.
 
 Your privacy, respected

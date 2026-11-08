@@ -9,10 +9,18 @@ enum class InputMode {
     QUICK,
 }
 
+/** Thème de l'interface : celui du téléphone par défaut, ou imposé. « Plein soleil » reste prioritaire. */
+enum class ThemeMode {
+    SYSTEM,
+    LIGHT,
+    DARK,
+}
+
 /** Réglages de l'utilisateur (la langue est gérée à part, par la langue de l'application Android). */
 data class UserSettings(
     val inputMode: InputMode = InputMode.PINS,
     val sunlight: Boolean = false,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val voiceAnnouncements: Boolean = false,
     /** Débit des annonces vocales (1 = normal). */
     val voiceRate: Float = 1f,

@@ -281,4 +281,27 @@
         <item quantity="other">%1$d rounds</item>
     </plurals>
     <string name="end_curve_replay">Replay</string>
+    <!-- Aide : questions sur l'utilisation de l'app -->
+    <string name="help_search">Search help and rules</string>
+    <string name="help_app_title">Using the app</string>
+    <string name="help_fix_q">I entered a throw wrong?</string>
+    <string name="help_fix_a">Tap Undo at the top of the game screen to cancel the last throw. For an older throw, open the menu ⋮ › Game log, then tap the throw to edit or delete it: scores, drops back to 25, eliminations and the winner are all recalculated.</string>
+    <string name="help_resume_q">The app closed during a game?</string>
+    <string name="help_resume_a">Nothing is lost: the game is saved after every throw. Open the app again and tap Resume on the home screen.</string>
+    <string name="help_players_q">Someone arrives late or has to leave?</string>
+    <string name="help_players_a">Open the menu ⋮ › Manage players. A latecomer starts at 0 and throws at the end of the round; a player who leaves is ranked last. The throwing order can be changed there too, between two rounds.</string>
+    <string name="help_quick_q">How do I enter points faster?</string>
+    <string name="help_quick_a">Switch to Quick input on the game screen and tap the points of the throw directly, from 0 to 12 (0 is a miss). The default input mode is in Settings › Input mode. Quick throws do not count in per-pin statistics.</string>
+    <string name="help_phones_q">How do we play on several phones?</string>
+    <string name="help_phones_a">The organizer opens the menu ⋮ › Manage phones › Share the game: a QR code appears. The others tap Join on the home screen and scan it, then the organizer accepts them. Phones use the same Wi-Fi or a hotspot created by the organizer’s phone: no account and no Internet needed.</string>
+    <string name="help_share_q">How do I share a game?</string>
+    <string name="help_share_a">At the end of the game, tap Share this moment: an image, a short video or a GIF is created on the phone, ready for your messaging apps or social networks.</string>
+    <string name="help_theme_q">Is there a dark mode?</string>
+    <string name="help_theme_a">Yes: Settings › Display › Theme lets you follow the phone, or always use light or dark. Bright sunlight mode increases contrast outdoors.</string>
+    <string name="help_backup_q">How do I keep my games when I change phones?</string>
+    <string name="help_backup_a">Settings › Data › Back up my data saves a file wherever you like. On the new phone, choose Restore a backup. Photos are not included.</string>
+    <string name="help_guide_q">How do I replay the walkthrough?</string>
+    <string name="help_guide_a">Settings › Replay the walkthrough starts a new game with the 4 help bubbles.</string>
+    <string name="help_privacy_q">What data does the app collect?</string>
+    <string name="help_privacy_a">None. Molkky Board has no account, no ads and no trackers, and never connects to the Internet. When several phones play together, they talk directly to each other, encrypted, on the local network.</string>
 </resources>

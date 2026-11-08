@@ -23,9 +23,13 @@ data object SettingsRoute
 @Serializable
 data object AboutRoute
 
-/** Réglages › Règles du jeu. */
+/** Raccourci « Règles du jeu » de l'icône. */
 @Serializable
 data object RulesRoute
+
+/** Accueil ou Réglages › Aide et règles : questions sur l'app, règles, FAQ et contact. */
+@Serializable
+data object HelpRoute
 
 /** Réglages › Règles du mode Ludique. */
 @Serializable

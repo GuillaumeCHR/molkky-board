@@ -6,6 +6,7 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -54,6 +55,7 @@ import com.yogistudio.molkkyboard.core.designsystem.component.ObscuredTouchGuard
 import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.theme.MBDimens
 import com.yogistudio.molkkyboard.core.model.InputMode
+import com.yogistudio.molkkyboard.core.model.ThemeMode
 import java.time.LocalDate
 import java.util.Locale
 
@@ -83,7 +85,7 @@ private enum class AppLanguage(
 internal fun SettingsScreen(
     onAbout: () -> Unit,
     onPlayfulRules: () -> Unit,
-    onRules: () -> Unit,
+    onHelp: () -> Unit,
     onReplayGuide: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -99,6 +101,7 @@ internal fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(MBDimens.Gap),
         ) {
             SectionTitle(R.string.settings_display)
+            ThemeCard(settings.themeMode, settings.sunlight, viewModel::setThemeMode)
             SettingsSwitch(
                 R.string.settings_sunlight,
                 R.string.settings_sunlight_hint,
@@ -137,7 +140,7 @@ internal fun SettingsScreen(
                     Hint(R.string.settings_input_hint)
                 }
             }
-            SettingsLink(R.string.settings_rules, R.string.settings_rules_hint, onRules)
+            SettingsLink(R.string.settings_help, R.string.settings_help_hint, onHelp)
             SettingsLink(R.string.settings_playful_rules, R.string.settings_playful_rules_hint, onPlayfulRules)
             SettingsSwitch(
                 R.string.settings_ready_card,
@@ -319,6 +322,52 @@ private fun dataMessage(message: DataMessage): String =
     }
 
 private const val BACKUP_MIME = "application/json"
+
+/** Thème : appliqué tout de suite, ce qui en donne l'aperçu. « Plein soleil » passe avant. */
+@Composable
+private fun ThemeCard(
+    current: ThemeMode,
+    sunlight: Boolean,
+    onChange: (ThemeMode) -> Unit,
+) {
+    SettingsCard {
+        Column(Modifier.padding(vertical = 8.dp)) {
+            Text(
+                stringResource(R.string.settings_theme),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+            )
+            ThemeMode.entries.forEach { mode ->
+                val selected = current == mode
+                Row(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .selectable(selected = selected, role = Role.RadioButton) { onChange(mode) }
+                            .heightIn(min = MBDimens.MinTouch)
+                            .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RadioButton(selected = selected, onClick = null)
+                    Text(
+                        stringResource(
+                            when (mode) {
+                                ThemeMode.SYSTEM -> R.string.settings_theme_system
+                                ThemeMode.LIGHT -> R.string.settings_theme_light
+                                ThemeMode.DARK -> R.string.settings_theme_dark
+                            },
+                        ),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(start = 12.dp),
+                    )
+                }
+            }
+            if (sunlight) {
+                Box(Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) { Hint(R.string.settings_theme_sunlight) }
+            }
+        }
+    }
+}
 
 /** Langue de l'application (Android 13+ : la même que dans les réglages système de l'app). */
 @Composable

@@ -10,6 +10,7 @@ import com.yogistudio.molkkyboard.core.data.RestoreException
 import com.yogistudio.molkkyboard.core.data.RestoreReport
 import com.yogistudio.molkkyboard.core.data.SettingsRepository
 import com.yogistudio.molkkyboard.core.model.InputMode
+import com.yogistudio.molkkyboard.core.model.ThemeMode
 import com.yogistudio.molkkyboard.core.model.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -62,6 +63,8 @@ class SettingsViewModel
         val data: StateFlow<DataState> = mutableData.asStateFlow()
 
         fun setSunlight(enabled: Boolean) = launch { repository.setSunlight(enabled) }
+
+        fun setThemeMode(mode: ThemeMode) = launch { repository.setThemeMode(mode) }
 
         fun setInputMode(mode: InputMode) = launch { repository.setInputMode(mode) }
 

@@ -3,6 +3,7 @@ package com.yogistudio.molkkyboard.core.data
 import com.yogistudio.molkkyboard.core.datastore.SettingsDataSource
 import com.yogistudio.molkkyboard.core.model.GameConfig
 import com.yogistudio.molkkyboard.core.model.InputMode
+import com.yogistudio.molkkyboard.core.model.ThemeMode
 import com.yogistudio.molkkyboard.core.model.UserSettings
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -14,6 +15,8 @@ interface SettingsRepository {
     suspend fun setInputMode(mode: InputMode)
 
     suspend fun setSunlight(enabled: Boolean)
+
+    suspend fun setThemeMode(mode: ThemeMode)
 
     suspend fun setVoiceAnnouncements(enabled: Boolean)
 
@@ -52,6 +55,10 @@ class DataStoreSettingsRepository
 
         override suspend fun setSunlight(enabled: Boolean) {
             source.setSunlight(enabled)
+        }
+
+        override suspend fun setThemeMode(mode: ThemeMode) {
+            source.setThemeMode(mode)
         }
 
         override suspend fun setVoiceAnnouncements(enabled: Boolean) {
