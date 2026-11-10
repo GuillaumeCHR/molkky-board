@@ -12,6 +12,7 @@ qui le corrige.
 | — | — | — | 0.8.3 (11) | Construite, jamais envoyée (remplacée par la 0.8.4) |
 | 2026-11-02 | — | — | 0.8.4 (12) | AAB construit depuis `2666242` avec « Send feedback », à envoyer en test fermé à la place de la 0.8.2 |
 | 2026-11-10 | — | — | 0.8.8 (16) | En test fermé (tag `v0.8.8`) ; 12 testeurs inscrits depuis 11 jours sans interruption |
+| 2026-11-10 | — | — | 1.0.0 (17) | AAB de production construit (tag `v1.0.0`), à envoyer une fois l'accès accordé |
 
 Le compte à rebours démarre au premier jour où **au moins 12 testeurs** sont inscrits ; s'il passe sous 12, il repart
 à zéro.
@@ -42,31 +43,66 @@ Le compte à rebours démarre au premier jour où **au moins 12 testeurs** sont 
 | 2026-11-08 | Porteur du projet | « Thème » et « Plein soleil » se recouvrent | Plein soleil devient le 4e choix de la carte Thème | 0.8.8 |
 
 ## Réponses préparées pour la demande d'accès à la production
-À compléter à la fin des 14 jours avec les chiffres réels. Les questions de Google évoluent : les relire au moment de la
-demande.
+Rédigées le 2026-11-10 avec des faits exacts (décision du 2026-11-08 : pas les réponses d'un modèle tout fait). En
+anglais, la langue la plus sûre pour l'examen. Les questions et leurs limites de longueur évoluent : les relire dans la
+Play Console au moment de la demande. **À vérifier avant l'envoi** : les points entre crochets.
 
-**Comment avez-vous recruté vos testeurs ?**
-Famille, amis et joueurs de Mölkky de l'entourage du développeur [à compléter : club, réseaux, service de testeurs le
-cas échéant].
+### Votre test fermé
 
-**Quelle a été la facilité de recrutement ?** [à compléter]
+**How did you recruit users for your closed test?**
+Through Testers Community, a testing service that provided a group of Android testers who installed the app and kept it
+for the whole test. In parallel, I tested the multi-phone mode myself on two real phones (a Fairphone 6 and a Pixel 7a
+on Android 17), because it needs two devices on the same Wi-Fi network or local hotspot.
 
-**Décrivez l'engagement des testeurs.**
-[nombre de testeurs actifs, parties jouées, retours reçus par e-mail et par « Send feedback »]
+**How easy was it to recruit testers for your app?**
+Easy through the testing service. Mölkky is a niche outdoor game, so finding enough players around me to commit to 14
+days of testing would have been harder.
 
-**Résumé des retours reçus.** [à compléter à partir du tableau ci-dessus]
+**Describe the engagement you received from testers during your closed test.**
+12 testers stayed enrolled for 14 consecutive days without interruption [à vérifier : date de fin]. The main feedback
+was a consolidated report from the testing service on November 8, which found no crash and no bug and suggested
+usability improvements. I complemented it with my own test sessions on real devices, including full games, the
+multi-phone mode on the same Wi-Fi and on a local hotspot, sharing and backup. [À vérifier dans Android vitals : aucun
+plantage ni ANR.]
 
-**Public visé.** Joueurs de Mölkky, amateurs et clubs, adolescents et adultes (13 ans et plus), qui veulent compter les
-points sans papier ni calcul, sur un ou plusieurs téléphones.
+**Provide a summary of the feedback that you received from testers.**
+No crash and no bug were reported. The suggestions were: improve the store listing keywords, add a light/dark/system
+theme choice, add a help and FAQ section, offer a tutorial to new players, and add a way to rate the app. My own device
+tests led to fixes in the multi-phone mode (QR code renewal, permissions on Android 17, disconnect options), in quick
+input and in the share video.
 
-**Valeur apportée.** Calcul des points et application des règles officielles, correction de n'importe quel lancer,
-plusieurs téléphones sur la même partie sans compte ni Internet, historique et statistiques ; aucune publicité, aucun
-traceur.
+### Votre application
 
-**Installations attendues la première année.** [estimation à donner]
+**Who is the intended audience of your app?**
+Mölkky players, casual and club players, teenagers and adults (13+), who want to keep score without paper or mental
+arithmetic, on one or several phones.
 
-**Modifications faites grâce au test.** Voir le tableau « Retours et corrections ».
+**Describe how your app provides value to users.**
+Players tap the pins that fell and the app applies the official rules (exactly 50 points, back to 25 when going over,
+elimination after three misses). Any past throw can be corrected and everything is recalculated. Several phones can
+follow and enter the same game directly, with no account and no internet. It keeps history, a Hall of Fame and
+statistics, and lets players share the moment as a picture or a short video. No ads, no trackers, no data collected.
 
-**Comment avez-vous décidé que l'app est prête ?**
-Tous les retours bloquants corrigés, tests automatisés (moteur de score, protocole, captures d'écran) et tests sur
-téléphones réels au vert, aucun plantage remonté pendant [N] jours.
+**How many installs do you expect your app to have in your first year?**
+More than 10,000 (choix du porteur du projet ; réponse proposée par la Play Console sous forme de tranche).
+
+### Préparation pour la production
+
+**What changes did you make to your app based on what you learned during closed testing?**
+Theme choice (system, light, dark, bright sunlight); a Help and rules screen with FAQ and search; the guided first
+game offered on the home screen; a "Rate on Google Play" link; a rewritten store listing. Before that, multi-phone
+fixes: automatic QR code renewal, local network permission on Android 17, disconnect and phone management, a referee
+role. Version 1.0.0 also makes going over 50 visible on the game curve.
+
+**How did you decide that your app is ready for production?**
+All feedback was addressed and verified on real phones. Every change passes automated checks: unit tests of the score
+engine (100% line coverage), of the multi-phone protocol and its security cases, screenshot tests, lint, a tracker
+check (0 trackers) and a known-vulnerability scan of the dependencies. No crash was reported during the test
+[à vérifier dans Android vitals].
+
+### Points d'attention
+- **Engagement** : le test repose sur un service de testeurs et peu de retours directs. Google refuse parfois l'accès
+  quand l'engagement lui paraît faible ; il faudrait alors refaire 14 jours de test avec des testeurs plus actifs.
+  Ne pas gonfler les réponses : Google voit l'activité réelle des testeurs.
+- **Installations** : « plus de 10 000 » est une ambition, sans effet sur l'examen ; une tranche plus basse reste
+  crédible pour une app de niche.
