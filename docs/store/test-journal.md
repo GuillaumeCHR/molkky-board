@@ -11,6 +11,7 @@ qui le corrige.
 | 2026-10-29 | — | — | 0.8.2 (10) | Test fermé envoyé à l'examen de Google |
 | — | — | — | 0.8.3 (11) | Construite, jamais envoyée (remplacée par la 0.8.4) |
 | 2026-11-02 | — | — | 0.8.4 (12) | AAB construit depuis `2666242` avec « Send feedback », à envoyer en test fermé à la place de la 0.8.2 |
+| 2026-11-10 | — | — | 0.8.8 (16) | En test fermé (tag `v0.8.8`) ; 12 testeurs inscrits depuis 11 jours sans interruption |
 
 Le compte à rebours démarre au premier jour où **au moins 12 testeurs** sont inscrits ; s'il passe sous 12, il repart
 à zéro.

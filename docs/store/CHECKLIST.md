@@ -29,7 +29,7 @@ publication**, **F-Droid après le Play Store**.
 | Fiche créée (`com.yogistudio.molkkyboard`, Application, Sports, gratuite) | ✅ | 2026-10-29 |
 | AAB signé | ✅ | à construire pour chaque envoi avec `-Pmolkky.feedback=true` (test fermé) ; dernière version : 0.8.8 (16), tag `v0.8.8` |
 | Test interne | ✅ | 0.8.1 (9) publié le 2026-10-29 |
-| Test fermé | 🟡 👤 | 0.8.2 (10) envoyé le 2026-10-29 ; versions suivantes jusqu'à la 0.8.8 (16), notes dans `docs/store/release-notes/` (0.8.4, 0.8.6, 0.8.7, 0.8.8) ; **dernière version envoyée à confirmer** |
+| Test fermé | 🟡 👤 | 0.8.2 (10) envoyé le 2026-10-29 ; 0.8.8 (16) en test fermé (confirmé le 2026-11-10) ; notes dans `docs/store/release-notes/` |
 | Release minifiée testée sur téléphone | 🟡 👤 | 0.8.0 sur Fairphone (partie, reprise, partage, sauvegarde) ; à refaire avec la 0.8.8 depuis le Play Store, dont la partie à côté |
 | targetSdk (API 36 minimum) | ✅ | 37 |
 | Grands écrans (≥ 600 dp, portrait ignoré au targetSdk 37) | ✅ | mise en page adaptative 0.8.3 (`docs/qa/FORM_FACTORS.md`) |
