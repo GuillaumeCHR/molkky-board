@@ -1,6 +1,6 @@
 # Checklist de publication sur le Google Play Store
 
-Mise à jour : 2026-11-10 (version 0.8.8, build 16). Statuts : ✅ fait · 🟡 en cours · ⬜ à faire · 👤 action du porteur
+Mise à jour : 2026-11-10 (version 1.0.0, build 17). Statuts : ✅ fait · 🟡 en cours · ⬜ à faire · 👤 action du porteur
 du projet (compte, identité, décision). Décisions : V1 **sans compte** (phase 4 en V2), **modes de jeu après la
 publication**, **F-Droid après le Play Store**.
 
@@ -27,7 +27,7 @@ publication**, **F-Droid après le Play Store**.
 | Point | Statut | Note |
 |---|---|---|
 | Fiche créée (`com.yogistudio.molkkyboard`, Application, Sports, gratuite) | ✅ | 2026-10-29 |
-| AAB signé | ✅ | à construire pour chaque envoi avec `-Pmolkky.feedback=true` (test fermé) ; dernière version : 0.8.8 (16), tag `v0.8.8` |
+| AAB signé | ✅ | production : 1.0.0 (17), construit le 2026-11-10 sans `-Pmolkky.feedback` (pas de « Send feedback »), signé avec la clé d'envoi (`71:A7:…:DF:B0`), tag `v1.0.0` ; test fermé : `-Pmolkky.feedback=true` |
 | Test interne | ✅ | 0.8.1 (9) publié le 2026-10-29 |
 | Test fermé | 🟡 👤 | 0.8.2 (10) envoyé le 2026-10-29 ; 0.8.8 (16) en test fermé (confirmé le 2026-11-10) ; notes dans `docs/store/release-notes/` |
 | Release minifiée testée sur téléphone | 🟡 👤 | 0.8.0 sur Fairphone (partie, reprise, partage, sauvegarde) ; à refaire avec la 0.8.8 depuis le Play Store, dont la partie à côté |
@@ -44,7 +44,7 @@ publication**, **F-Droid après le Play Store**.
 | Aide et partie guidée | ✅ | écran « Aide et règles » (0.8.7) ; partie guidée proposée dès l'accueil (0.8.8) |
 | Choix du thème (comme le téléphone, clair, sombre, Plein soleil) | ✅ | 0.8.7, Plein soleil intégré en 0.8.8 |
 | Lien « Noter sur Google Play » | ✅ | À propos (0.8.8), simple lien, sans API In-App Review (propriétaire) |
-| Version publique : versionName 1.0.0 | ⬜ | à la demande d'accès à la production |
+| Version publique : versionName 1.0.0 | ✅ | build 17, notes dans `docs/store/release-notes/1.0.0.md` ; à envoyer en production une fois l'accès accordé 👤 |
 | Suppression du compte | ✅ sans objet | pas de compte en V1 |
 
 ## Sécurité et vie privée

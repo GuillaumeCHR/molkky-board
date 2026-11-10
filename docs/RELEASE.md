@@ -53,23 +53,18 @@ Committe le changement de version, puis pose un tag : `git tag -a v1.0.0 -m "Mol
 ## 4. Construire
 
 ```bash
-./gradlew --stop
-./gradlew --no-configuration-cache --max-workers=1 detekt ktlintCheck lintDebug test \
-  :app:checkReleasePermissions
+./gradlew detekt ktlintCheck lintDebug test :app:checkReleasePermissions :app:assembleDebug
 python3 -I tools/trackers/check_trackers.py app/build/outputs/apk/debug/app-debug.apk
-./gradlew --no-configuration-cache --max-workers=1 :app:bundleRelease
+./gradlew :app:bundleRelease
 ```
 
 - Le fichier d'envoi est `app/build/outputs/bundle/release/app-release.aab`.
 - **Test fermé** : ajoute `-Pmolkky.feedback=true` pour inclure le bouton « Envoyer un retour » (À propos). Sans
   cette option (production), il n'y est pas.
-- Si le démon Gradle plante pendant `minifyReleaseWithR8` (« daemon disappeared », SIGSEGV), relance avec
-  `-Dorg.gradle.jvmargs="-Xmx3g -XX:MaxMetaspaceSize=768m -XX:+UseSerialGC -Dfile.encoding=UTF-8"`.
 - Avec `~/.config/molkkyboard/upload-key.properties`, l'AAB est signé avec la clé d'envoi. Sans ce fichier, la release
   se construit **sans signature** (utile pour vérifier R8, inutilisable sur le Play Store).
 - Un autre emplacement du fichier de propriétés se donne par la variable `MOLKKY_UPLOAD_KEY_PROPERTIES`.
-- Machine modeste : la minification R8 prend environ 5 minutes et beaucoup de mémoire ; ferme l'émulateur et le
-  navigateur avant.
+- Le projet se construit avec le **JDK 21** (`JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64`).
 
 Vérifier la signature :
 
@@ -93,7 +88,7 @@ nouvelle ou mise à jour (y compris par Dependabot) fait échouer le build tant 
 avoir vérifié la mise à jour, régénérer les empreintes en lançant les tâches de la CI :
 
 ```bash
-./gradlew --write-verification-metadata sha256 --no-configuration-cache --max-workers=1 \
+./gradlew --write-verification-metadata sha256 \
   ktlintCheck detekt lintDebug test :app:assembleDebug :app:bundleRelease :app:cyclonedxDirectBom
 ```
 
@@ -105,7 +100,8 @@ L'AAB ne s'installe pas directement. Pour tester exactement ce qui sera envoyé,
 (`./gradlew :app:assembleRelease`) et installe-le sur un téléphone :
 `adb install -r app/build/outputs/apk/release/app-release.apk`. Ce build porte l'identifiant
 `com.yogistudio.molkkyboard` (sans `.debug`) : il s'installe à côté de la version de debug, sans en reprendre les
-données. Vérifie au minimum une partie complète, la partie à côté (même Wi-Fi et point d'accès), le partage et la
+données. Si la version du Play Store est installée sur le téléphone, désinstalle-la d'abord : Google la signe avec la
+clé de l'app, pas avec la clé d'envoi, et Android refuse de l'écraser. Vérifie au minimum une partie complète, la partie à côté (même Wi-Fi et point d'accès), le partage et la
 sauvegarde.
 
 ## 6. Envoyer
