@@ -368,7 +368,7 @@ private class Frame(
     width: Float,
     height: Float,
     val rounds: Int,
-    private val target: Int,
+    val target: Int,
     labelWidth: Float,
     density: Float,
 ) {
@@ -422,67 +422,18 @@ private fun DrawScope.drawTarget(
 }
 
 /**
- * Courbe souple entre les points (spline monotone : jamais de bosse entre deux tours) ; une chute (retour en arrière)
- * plonge un peu sous sa valeur avant de s'y poser : la forme est exagérée, jamais les valeurs.
+ * Courbe souple entre les points ; un retour en arrière passe d'abord en pic au-dessus de la cible (voir [curvePath]).
  */
 private fun DrawScope.drawLine(frame: Frame, line: GameCurveLine, color: Color) {
     if (line.dots.size < 2) return
-    val points = line.dots.map(frame::at)
-    val tangents = monotoneTangents(points)
-    val path = Path()
-    path.moveTo(points.first().x, points.first().y)
-    for (i in 1 until points.size) {
-        val a = points[i - 1]
-        val b = points[i]
-        val dx = b.x - a.x
-        if (dx <= 0f) {
-            path.lineTo(b.x, b.y)
-            continue
-        }
-        val dip = if (line.dots[i].mark == CurveDotMark.RESET) (b.y - a.y) * EXAGGERATION else 0f
-        path.cubicTo(
-            a.x + dx / 3f,
-            a.y + tangents[i - 1] * dx / 3f,
-            b.x - dx / 3f,
-            b.y - tangents[i] * dx / 3f + dip,
-            b.x,
-            b.y,
+    val path =
+        curvePath(
+            points = line.dots.map(frame::at),
+            resets = line.dots.map { it.mark == CurveDotMark.RESET },
+            peakY = frame.y(frame.target) - OVERSHOOT.dp.toPx(),
         )
-    }
     val width = (if (line.winner) 7.dp else 5.dp).toPx()
     drawPath(path, color, style = Stroke(width, cap = StrokeCap.Round, join = StrokeJoin.Round))
-}
-
-/** Pentes de Fritsch-Carlson : la courbe passe par chaque point sans dépasser ses voisins. */
-private fun monotoneTangents(points: List<Offset>): FloatArray {
-    val n = points.size
-    val slopes =
-        FloatArray(n - 1) { i ->
-            val dx = points[i + 1].x - points[i].x
-            if (dx <= 0f) 0f else (points[i + 1].y - points[i].y) / dx
-        }
-    val t = FloatArray(n)
-    t[0] = slopes[0]
-    t[n - 1] = slopes[n - 2]
-    for (i in 1 until n - 1) {
-        t[i] = if (slopes[i - 1] * slopes[i] <= 0f) 0f else (slopes[i - 1] + slopes[i]) / 2f
-    }
-    for (i in 0 until n - 1) {
-        if (slopes[i] == 0f) {
-            t[i] = 0f
-            t[i + 1] = 0f
-            continue
-        }
-        val a = t[i] / slopes[i]
-        val b = t[i + 1] / slopes[i]
-        val h = a * a + b * b
-        if (h > FC_LIMIT) {
-            val k = 3f / kotlin.math.sqrt(h)
-            t[i] = k * a * slopes[i]
-            t[i + 1] = k * b * slopes[i]
-        }
-    }
-    return t
 }
 
 private fun DrawScope.drawMark(
@@ -699,8 +650,9 @@ private const val FOLLOW_SCALE = 1.25f
 private const val HIGHLIGHT_ZOOM = 0.45f
 private const val HIGHLIGHT_MS = 420f
 private const val WIN_SCALE = 1.6f
-private const val EXAGGERATION = 0.35f
-private const val FC_LIMIT = 9f
+
+/** Hauteur du pic de dépassement au-dessus de la ligne de la cible (dp). */
+private const val OVERSHOOT = 10f
 private const val EMBLEM_SPACE = 40f
 private const val SPEED_LINES = 3
 private const val BURST_POINTS = 10
