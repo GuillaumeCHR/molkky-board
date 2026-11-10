@@ -116,6 +116,14 @@ object MBIcons {
         }
     }
 
+    val ChevronLeft: ImageVector by lazy {
+        stroke("chevron-left") {
+            moveTo(15f, 5.5f)
+            lineTo(8.5f, 12f)
+            lineTo(15f, 18.5f)
+        }
+    }
+
     val ChevronRight: ImageVector by lazy {
         stroke("chevron") {
             moveTo(9f, 5.5f)

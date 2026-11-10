@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -44,7 +45,6 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yogistudio.molkkyboard.core.designsystem.component.CurveDot
 import com.yogistudio.molkkyboard.core.designsystem.component.CurveDotMark
@@ -52,6 +52,7 @@ import com.yogistudio.molkkyboard.core.designsystem.component.GameCurve
 import com.yogistudio.molkkyboard.core.designsystem.component.GameCurveHighlight
 import com.yogistudio.molkkyboard.core.designsystem.component.GameCurveLine
 import com.yogistudio.molkkyboard.core.designsystem.component.GameCurveTimeline
+import com.yogistudio.molkkyboard.core.designsystem.icon.MBIcons
 import com.yogistudio.molkkyboard.core.designsystem.icon.emblemIcon
 import com.yogistudio.molkkyboard.core.designsystem.sound.Sound
 import com.yogistudio.molkkyboard.core.designsystem.sound.rememberSoundEffects
@@ -255,7 +256,7 @@ private fun RoundScores(curve: CurveUi, round: Int, onRound: (Int) -> Unit) {
             onClick = { onRound(round - 1) },
             enabled = round > 1,
             modifier = Modifier.semantics { contentDescription = previous },
-        ) { Text("‹", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black) }
+        ) { Icon(MBIcons.ChevronLeft, contentDescription = null) }
         Text(
             stringResource(R.string.end_curve_round, round),
             style = MaterialTheme.typography.titleMedium,
@@ -266,7 +267,7 @@ private fun RoundScores(curve: CurveUi, round: Int, onRound: (Int) -> Unit) {
             onClick = { onRound(round + 1) },
             enabled = round < curve.rounds,
             modifier = Modifier.semantics { contentDescription = next },
-        ) { Text("›", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black) }
+        ) { Icon(MBIcons.ChevronRight, contentDescription = null) }
     }
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(MBDimens.Gap),

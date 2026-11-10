@@ -76,7 +76,7 @@ publication**, **F-Droid après le Play Store**.
 | Textes en anglais (défaut) et en français | ✅ | `docs/store/listing/en-US.md`, `fr-FR.md` ; réécrits le 2026-11-08 (mots-clés « score keeper », « Finnish skittles », « quilles finlandaises ») ; à recopier dans la Play Console si ce n'est pas fait 👤 |
 | Icône 512 × 512 | ✅ | `docs/store/icon-512.png` |
 | Image de présentation 1 024 × 500 | ✅ | `docs/store/screenshots/<langue>/feature-graphic.png` |
-| Captures (8, en et fr) | 🟡 | grille centrée (0.8.3) ; `tools/store/compose_screenshots.py` ; à régénérer avec la 0.8.8 (thème, courbe de la partie) puis **à remplacer dans la Play Console** |
+| Captures (8, en et fr) | ✅ | régénérées avec la 0.8.8 le 2026-11-10 (courbe de la partie sur l'écran de fin, image de présentation) ; `tools/store/compose_screenshots.py` ; **05-end et feature-graphic à remplacer dans la Play Console** 👤 |
 | Vidéo YouTube de la fiche | ⬜ | facultatif |
 
 ## Déclarations Play Console

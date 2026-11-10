@@ -2,7 +2,9 @@ package com.yogistudio.molkkyboard.feature.game
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureScreenRoboImage
@@ -30,16 +32,17 @@ class StoreScreenshotTest {
         val lang: String,
         val chloe: String,
         val out: String,
+        val lastScore: String,
     )
 
-    private val fr = Names("fr", "Chloé", "Denis")
-    private val en = Names("en", "Chloe", "Dan")
+    private val fr = Names("fr", "Chloé", "Denis", "Chloé : 12")
+    private val en = Names("en", "Chloe", "Dan", "Chloe: 12")
 
     private fun teams(n: Names) =
         listOf(
             TeamUi(TeamId("A"), "Alice", 0, 38, 1, active = true, out = false, remaining = 12, avatar = "🦊"),
             TeamUi(TeamId("B"), "Bruno", 1, 27, 0, active = false, out = false, remaining = 23, avatar = "🐻"),
-            TeamUi(TeamId("C"), n.chloe, 2, 12, 2, active = false, out = false, remaining = 38),
+            TeamUi(TeamId("C"), n.chloe, 2, 12, 2, active = false, out = false, remaining = 38, avatar = "sun"),
         )
 
     private fun playing(n: Names) =
@@ -128,7 +131,12 @@ class StoreScreenshotTest {
             playing(
                 n,
             ).copy(finished = true, winnerName = "Alice", ranking = ranked, teams = ranked, round = 7, end = end)
-        capture("end", n) { GameContent(finished, GameActions()) }
+        compose.setContent {
+            MolkkyBoardTheme(darkTheme = false, reducedMotion = true) { GameContent(finished, GameActions()) }
+        }
+        // La carte de la courbe se termine au-dessus de la barre « Revanche » (sinon ses scores sont coupés).
+        compose.onNodeWithText(n.lastScore, substring = true).performScrollTo()
+        compose.onRoot().captureRoboImage("src/test/screenshots/store/end_${n.lang}.png")
     }
 
     @Test
