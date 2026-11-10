@@ -22,6 +22,7 @@ kover {
                 classes(
                     "com.yogistudio.molkkyboard.core.model.UserSettings",
                     "com.yogistudio.molkkyboard.core.model.InputMode",
+                    "com.yogistudio.molkkyboard.core.model.ThemeMode",
                 )
             }
         }
