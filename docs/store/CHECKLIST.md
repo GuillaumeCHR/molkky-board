@@ -97,7 +97,7 @@ publication**, **F-Droid après le Play Store**.
 | Liste de testeurs | ✅ | « Molkky board test list » |
 | Instructions pour les testeurs | ✅ | remarque sur les tablettes à retirer (sans objet depuis la 0.8.3) 👤 |
 | Plan de test | ✅ | `docs/store/closed-test-plan.md` (14 jours, 30 questions) |
-| 12 testeurs ou plus pendant 14 jours consécutifs (viser 15 à 20) | ⬜ 👤 | démarre après l'approbation de Google |
+| 12 testeurs ou plus pendant 14 jours consécutifs (viser 15 à 20) | 🟡 👤 | 2026-11-10 : 12 inscrits depuis 11 jours sans interruption (Play Console) ; fin prévue le 2026-11-13 si personne ne se désinscrit ; aucune marge, un départ remet le compteur à zéro |
 | Journal des retours et des corrections | 🟡 | `docs/store/test-journal.md` (rapport Testers Community du 2026-11-08 intégré) |
 | Demande d'accès à la production | ⬜ 👤 | réponses préparées dans le journal |
 
