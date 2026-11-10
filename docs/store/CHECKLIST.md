@@ -1,6 +1,6 @@
 # Checklist de publication sur le Google Play Store
 
-Mise à jour : 2026-11-05 (version 0.8.5, build 13). Statuts : ✅ fait · 🟡 en cours · ⬜ à faire · 👤 action du porteur
+Mise à jour : 2026-11-10 (version 0.8.8, build 16). Statuts : ✅ fait · 🟡 en cours · ⬜ à faire · 👤 action du porteur
 du projet (compte, identité, décision). Décisions : V1 **sans compte** (phase 4 en V2), **modes de jeu après la
 publication**, **F-Droid après le Play Store**.
 
@@ -27,10 +27,10 @@ publication**, **F-Droid après le Play Store**.
 | Point | Statut | Note |
 |---|---|---|
 | Fiche créée (`com.yogistudio.molkkyboard`, Application, Sports, gratuite) | ✅ | 2026-10-29 |
-| AAB signé | ✅ | 0.8.4 (12), construit le 2026-11-02 avec `-Pmolkky.feedback=true` pour le test fermé |
+| AAB signé | ✅ | à construire pour chaque envoi avec `-Pmolkky.feedback=true` (test fermé) ; dernière version : 0.8.8 (16), tag `v0.8.8` |
 | Test interne | ✅ | 0.8.1 (9) publié le 2026-10-29 |
-| Test fermé | 🟡 | 0.8.2 (10) envoyé le 2026-10-29 ; 0.8.4 (12) à envoyer (notes : `docs/store/release-notes/0.8.4.md`) |
-| Release minifiée testée sur téléphone | 🟡 👤 | 0.8.0 sur Fairphone (partie, reprise, partage, sauvegarde) ; à refaire avec la 0.8.3 depuis le Play Store, dont la partie à côté |
+| Test fermé | 🟡 👤 | 0.8.2 (10) envoyé le 2026-10-29 ; versions suivantes jusqu'à la 0.8.8 (16), notes dans `docs/store/release-notes/` (0.8.4, 0.8.6, 0.8.7, 0.8.8) ; **dernière version envoyée à confirmer** |
+| Release minifiée testée sur téléphone | 🟡 👤 | 0.8.0 sur Fairphone (partie, reprise, partage, sauvegarde) ; à refaire avec la 0.8.8 depuis le Play Store, dont la partie à côté |
 | targetSdk (API 36 minimum) | ✅ | 37 |
 | Grands écrans (≥ 600 dp, portrait ignoré au targetSdk 37) | ✅ | mise en page adaptative 0.8.3 (`docs/qa/FORM_FACTORS.md`) |
 | Permission « réseau local » (Android 17), hôte et invité | ✅ | testé sur Pixel 7a |
@@ -40,7 +40,10 @@ publication**, **F-Droid après le Play Store**.
 | Aucun traceur | ✅ | contrôle Exodus en CI ; analyse Exodus Privacy après publication ⬜ |
 | Langues : anglais (défaut) et français | ✅ | |
 | Liens vers la politique de confidentialité et les conditions dans l'app | ✅ | À propos (0.8.2) |
-| Bouton « Send feedback » pour les testeurs | ✅ | release construite avec `-Pmolkky.feedback=true` (0.8.3) |
+| Bouton « Send feedback » pour les testeurs | ✅ | release construite avec `-Pmolkky.feedback=true` (depuis la 0.8.3) |
+| Aide et partie guidée | ✅ | écran « Aide et règles » (0.8.7) ; partie guidée proposée dès l'accueil (0.8.8) |
+| Choix du thème (comme le téléphone, clair, sombre, Plein soleil) | ✅ | 0.8.7, Plein soleil intégré en 0.8.8 |
+| Lien « Noter sur Google Play » | ✅ | À propos (0.8.8), simple lien, sans API In-App Review (propriétaire) |
 | Version publique : versionName 1.0.0 | ⬜ | à la demande d'accès à la production |
 | Suppression du compte | ✅ sans objet | pas de compte en V1 |
 
@@ -70,10 +73,10 @@ publication**, **F-Droid après le Play Store**.
 ## Fiche du Play Store
 | Point | Statut | Note |
 |---|---|---|
-| Textes en anglais (défaut) et en français | ✅ | `docs/store/listing/en-US.md`, `fr-FR.md` ; autres variantes d'anglais reprises automatiquement |
+| Textes en anglais (défaut) et en français | ✅ | `docs/store/listing/en-US.md`, `fr-FR.md` ; réécrits le 2026-11-08 (mots-clés « score keeper », « Finnish skittles », « quilles finlandaises ») ; à recopier dans la Play Console si ce n'est pas fait 👤 |
 | Icône 512 × 512 | ✅ | `docs/store/icon-512.png` |
 | Image de présentation 1 024 × 500 | ✅ | `docs/store/screenshots/<langue>/feature-graphic.png` |
-| Captures (8, en et fr) | ✅ | grille centrée (0.8.3) ; `tools/store/compose_screenshots.py` ; **à remplacer dans la Play Console** |
+| Captures (8, en et fr) | 🟡 | grille centrée (0.8.3) ; `tools/store/compose_screenshots.py` ; à régénérer avec la 0.8.8 (thème, courbe de la partie) puis **à remplacer dans la Play Console** |
 | Vidéo YouTube de la fiche | ⬜ | facultatif |
 
 ## Déclarations Play Console
@@ -92,10 +95,10 @@ publication**, **F-Droid après le Play Store**.
 | Point | Statut | Note |
 |---|---|---|
 | Liste de testeurs | ✅ | « Molkky board test list » |
-| Instructions pour les testeurs | ✅ | retirer la remarque sur les tablettes avec la 0.8.3 |
+| Instructions pour les testeurs | ✅ | remarque sur les tablettes à retirer (sans objet depuis la 0.8.3) 👤 |
 | Plan de test | ✅ | `docs/store/closed-test-plan.md` (14 jours, 30 questions) |
 | 12 testeurs ou plus pendant 14 jours consécutifs (viser 15 à 20) | ⬜ 👤 | démarre après l'approbation de Google |
-| Journal des retours et des corrections | 🟡 | `docs/store/test-journal.md` |
+| Journal des retours et des corrections | 🟡 | `docs/store/test-journal.md` (rapport Testers Community du 2026-11-08 intégré) |
 | Demande d'accès à la production | ⬜ 👤 | réponses préparées dans le journal |
 
 ## Tests sur téléphone encore ouverts
@@ -104,4 +107,4 @@ publication**, **F-Droid après le Play Store**.
 | Partie à côté : même Wi-Fi et point d'accès | ✅ | Fairphone 6 + Pixel 7a, 2026-10-28 |
 | Point d'accès sans réseau mobile (plage) | ⬜ 👤 | |
 | Coupures, hôte écran éteint, refus de permissions | ⬜ 👤 | `docs/qa/PARTIE_A_COTE.md` |
-| Version Play Store 0.8.3 : photo de joueur, langue, liens d'À propos, partie à côté | ⬜ 👤 | |
+| Version Play Store 0.8.8 : photo de joueur, langue, liens d'À propos, partie à côté, thème, partie guidée | ⬜ 👤 | |
