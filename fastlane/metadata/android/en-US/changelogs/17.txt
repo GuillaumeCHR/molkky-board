@@ -1,0 +1,8 @@
+First public release of Molkky Board!
+- Tap the pins, the app keeps score with the official Mölkky rules
+- Fix any past throw: everything is recalculated
+- Several phones on the same game, no account, no internet
+- Game curve, history, Hall of Fame and badges
+- Share the moment as a picture or a short video
+- No ads, no trackers
+Since the test: the curve now shows when a player goes over 50 before dropping to 25.
