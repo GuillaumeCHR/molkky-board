@@ -1,0 +1,8 @@
+Première version publique de Molkky Board !
+- Touchez les quilles, l'app compte les points selon les règles officielles du Mölkky
+- Corrigez n'importe quel lancer : tout est recalculé
+- Plusieurs téléphones sur la même partie, sans compte ni Internet
+- Courbe de la partie, historique, Hall of Fame et badges
+- Partagez le moment en image ou en courte vidéo
+- Aucune publicité, aucun traceur
+Depuis le test : la courbe montre le dépassement de 50 avant le retour à 25.
