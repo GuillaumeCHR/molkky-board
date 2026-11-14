@@ -44,7 +44,7 @@ publication**, **F-Droid après le Play Store**.
 | Aide et partie guidée | ✅ | écran « Aide et règles » (0.8.7) ; partie guidée proposée dès l'accueil (0.8.8) |
 | Choix du thème (comme le téléphone, clair, sombre, Plein soleil) | ✅ | 0.8.7, Plein soleil intégré en 0.8.8 |
 | Lien « Noter sur Google Play » | ✅ | À propos (0.8.8), simple lien, sans API In-App Review (propriétaire) |
-| Version publique : versionName 1.0.0 | ✅ | build 17, notes dans `docs/store/release-notes/1.0.0.md` ; à envoyer en production une fois l'accès accordé 👤 |
+| Version publique : versionName 1.0.0 | ✅ | build 17, notes dans `docs/store/release-notes/1.0.0.md` ; accès à la production accordé le 2026-11-14 ; AAB vérifié (AGP 9.5.1 comme le tag `v1.0.0`, signé par la clé d'envoi `71:A7:…:DF:B0`), envoi en production 👤 |
 | Suppression du compte | ✅ sans objet | pas de compte en V1 |
 
 ## Sécurité et vie privée
@@ -97,9 +97,9 @@ publication**, **F-Droid après le Play Store**.
 | Liste de testeurs | ✅ | « Molkky board test list » |
 | Instructions pour les testeurs | ✅ | remarque sur les tablettes à retirer (sans objet depuis la 0.8.3) 👤 |
 | Plan de test | ✅ | `docs/store/closed-test-plan.md` (14 jours, 30 questions) |
-| 12 testeurs ou plus pendant 14 jours consécutifs (viser 15 à 20) | 🟡 👤 | 2026-11-10 : 12 inscrits depuis 11 jours sans interruption (Play Console) ; fin prévue le 2026-11-13 si personne ne se désinscrit ; aucune marge, un départ remet le compteur à zéro |
+| 12 testeurs ou plus pendant 14 jours consécutifs (viser 15 à 20) | ✅ | 2026-11-10 : 12 inscrits depuis 11 jours sans interruption (Play Console) ; fin prévue le 2026-11-13 si personne ne se désinscrit ; aucune marge, un départ remet le compteur à zéro |
 | Journal des retours et des corrections | 🟡 | `docs/store/test-journal.md` (rapport Testers Community du 2026-11-08 intégré) |
-| Demande d'accès à la production | ⬜ 👤 | réponses préparées dans le journal |
+| Demande d'accès à la production | ✅ | accordée le 2026-11-14 (message de la Play Console) |
 
 ## Tests sur téléphone encore ouverts
 | Point | Statut | Note |
